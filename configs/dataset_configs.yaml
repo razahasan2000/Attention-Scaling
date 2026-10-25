@@ -1,0 +1,64 @@
+# Dataset-specific configurations for attention scaling fresh study
+
+# AG News configuration
+agnews:
+  name: "agnews"
+  task: "classification"
+  hf_dataset: "fancyzhx/ag_news"
+  hf_subset: null
+  text_column: "text"
+  label_column: "label"
+  num_classes: 4
+  max_len: 128
+  batch_size: 64
+  eval_batch_size: 64
+  train_subset_size: 10000
+  val_split_frac: 0.2
+  train_split_seed: 42
+
+# SST-2 configuration
+sst2:
+  name: "sst2"
+  task: "classification"
+  hf_dataset: "nyu-mll/glue"
+  hf_subset: "sst2"
+  text_column: "sentence"
+  label_column: "label"
+  num_classes: 2
+  max_len: 128
+  batch_size: 64
+  eval_batch_size: 64
+  train_subset_size: 10000
+  val_split_frac: 0.1
+  train_split_seed: 42
+
+# IMDB configuration
+imdb:
+  name: "imdb"
+  task: "classification"
+  hf_dataset: "stanfordnlp/imdb"
+  hf_subset: null
+  text_column: "text"
+  label_column: "label"
+  num_classes: 2
+  max_len: 128
+  batch_size: 64
+  eval_batch_size: 64
+  train_subset_size: 10000
+  val_split_frac: 0.2
+  train_split_seed: 42
+
+# WikiText-2 configuration
+wikitext2:
+  name: "wikitext2"
+  task: "language_modeling"
+  hf_dataset: "Salesforce/wikitext"
+  hf_subset: "wikitext-2-v1"
+  text_column: "text"
+  num_classes: null
+  max_len: 128
+  batch_size: 16
+  eval_batch_size: 32
+  train_subset_size: 5000
+  val_split_frac: null
+  train_split_seed: 42

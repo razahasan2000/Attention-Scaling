@@ -1,0 +1,106 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{vaswani2017}
+\citation{vaswani2017}
+\citation{dong2021,zhai2023,hinton2015}
+\providecommand \oddpage@label [2]{}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\citation{vaswani2017}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Method}{2}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Attention Variants}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1}Standard (baseline)}{2}{subsubsection.2.1.1}\protected@file@percent }
+\newlabel{eq:standard}{{1}{2}{Standard (baseline)}{equation.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2}Alternative scaling ($1/d_k$)}{2}{subsubsection.2.1.2}\protected@file@percent }
+\newlabel{eq:dk}{{2}{2}{Alternative scaling ($1/d_k$)}{equation.2}{}}
+\citation{xiong2020}
+\citation{zhang2015character}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Scaled Dot-Product Attention with scaling factor $s$}}{3}{algorithm.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{alg:attn}{{1}{3}{Scaled Dot-Product Attention with scaling factor $s$}{algorithm.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Model architecture: 2-layer pre-LN Transformer encoder with multi-head self-attention. Token embeddings + learned positional embeddings (max length 128) $\rightarrow $ 2 encoder blocks (LayerNorm $\rightarrow $ MHSA $\rightarrow $ Residual $\rightarrow $ LayerNorm $\rightarrow $ FFN $\rightarrow $ Residual) $\rightarrow $ Final LayerNorm $\rightarrow $ Masked mean pooling $\rightarrow $ Task-dependent head. $d_{\text  {model}}=128$, $h=4$ heads, $d_k=32$, FFN width=256.}}{3}{figure.caption.2}\protected@file@percent }
+\newlabel{fig:arch}{{1}{3}{Model architecture: 2-layer pre-LN Transformer encoder with multi-head self-attention. Token embeddings + learned positional embeddings (max length 128) $\rightarrow $ 2 encoder blocks (LayerNorm $\rightarrow $ MHSA $\rightarrow $ Residual $\rightarrow $ LayerNorm $\rightarrow $ FFN $\rightarrow $ Residual) $\rightarrow $ Final LayerNorm $\rightarrow $ Masked mean pooling $\rightarrow $ Task-dependent head. $d_{\text {model}}=128$, $h=4$ heads, $d_k=32$, FFN width=256}{figure.caption.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.3}Temperature scaling ($\tau = 2$)}{3}{subsubsection.2.1.3}\protected@file@percent }
+\newlabel{eq:temp}{{3}{3}{Temperature scaling ($\tau = 2$)}{equation.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.4}Alternative variants (E1--E4)}{3}{subsubsection.2.1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Encoder Architecture}{3}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Datasets}{3}{subsection.2.3}\protected@file@percent }
+\citation{socher2013glue}
+\citation{maas2011learning}
+\citation{merity2016wikitext}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Architecture and optimisation configuration, identical for all variants and all seeds.}}{4}{table.caption.1}\protected@file@percent }
+\newlabel{tab:arch}{{1}{4}{Architecture and optimisation configuration, identical for all variants and all seeds}{table.caption.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Matched-Seed Paired Design}{4}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Preregistration, Unit Checks, and Calibration}{4}{subsection.2.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}Measured Quantities and Statistical Protocol}{4}{subsection.2.6}\protected@file@percent }
+\citation{holm1979}
+\citation{cohen1988}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Test accuracy on SST-2 (1,821 test examples), mean $\pm $ SD across 5 seeds.}}{5}{table.caption.3}\protected@file@percent }
+\newlabel{tab:sst2}{{2}{5}{Test accuracy on SST-2 (1,821 test examples), mean $\pm $ SD across 5 seeds}{table.caption.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.7}Probes}{5}{subsection.2.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Results}{5}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}AG News (4-class Classification)}{5}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}SST-2}{5}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}IMDB}{5}{subsection.3.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Test accuracy on IMDB (25,000 test examples), mean $\pm $ SD across 5 seeds.}}{6}{table.caption.4}\protected@file@percent }
+\newlabel{tab:imdb}{{3}{6}{Test accuracy on IMDB (25,000 test examples), mean $\pm $ SD across 5 seeds}{table.caption.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Validation perplexity on WikiText-2 (5,000 steps), mean $\pm $ SD across 5 seeds.}}{6}{table.caption.5}\protected@file@percent }
+\newlabel{tab:wikitext2}{{4}{6}{Validation perplexity on WikiText-2 (5,000 steps), mean $\pm $ SD across 5 seeds}{table.caption.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}WikiText-2 (Language Modelling)}{6}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Paired Statistical Analysis}{6}{subsection.3.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Gradient Probing}{6}{subsection.3.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7}Head Diversity}{6}{subsection.3.7}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Predictive performance by attention variant on SST-2, IMDB, and WikiText-2 (AG News results in Table~\ref {tab:arch}---arch\_diagram). Dots show per-seed observations; bars show mean $\pm $ SD across 5 seeds.}}{7}{figure.caption.6}\protected@file@percent }
+\newlabel{fig:perf}{{2}{7}{Predictive performance by attention variant on SST-2, IMDB, and WikiText-2 (AG News results in Table~\ref {tab:arch}---arch\_diagram). Dots show per-seed observations; bars show mean $\pm $ SD across 5 seeds}{figure.caption.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Seed-matched paired comparisons against the standard variant ($n = 5$ pairs). $p_{\text  {Holm}}$ is Holm--Bonferroni adjusted across the two comparisons within each metric.}}{7}{table.caption.7}\protected@file@percent }
+\newlabel{tab:paired}{{5}{7}{Seed-matched paired comparisons against the standard variant ($n = 5$ pairs). $p_{\text {Holm}}$ is Holm--Bonferroni adjusted across the two comparisons within each metric}{table.caption.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.8}E1--E4: Extended Ablations at 5 Epochs}{7}{subsection.3.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.8.1}E1: SST-2 Multi-Scale Heads (5 epochs, seeds 0--9)}{7}{subsubsection.3.8.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.8.2}E2: SST-2 LR Compensation (dk\_lrcomp), 5 epochs, seeds 0--6}{7}{subsubsection.3.8.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.8.3}E3: IMDB Multi-Scale Heads (5 epochs, seeds 0--6)}{7}{subsubsection.3.8.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.8.4}E4: IMDB LR Compensation (dk\_lrcomp), 5 epochs, seeds 0--4}{7}{subsubsection.3.8.4}\protected@file@percent }
+\citation{zhai2023}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Gradient magnitude ratios relative to standard attention, compared against theoretical $1/s$ scaling. Empirical ratios close to the theory line (dashed line) confirm the $1/s$ scaling mechanism. Ratios $\approx 1$ indicate close agreement with theory.}}{8}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:grad}{{3}{8}{Gradient magnitude ratios relative to standard attention, compared against theoretical $1/s$ scaling. Empirical ratios close to the theory line (dashed line) confirm the $1/s$ scaling mechanism. Ratios $\approx 1$ indicate close agreement with theory}{figure.caption.8}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Gradient $1/s$ scaling verification: empirical ratio vs theoretical $1/s$, and scale-normalised residual (empirical/theory). Values $> 1.15$ or $< 0.85$ indicate deviation from theory.}}{8}{table.caption.9}\protected@file@percent }
+\newlabel{tab:grad}{{6}{8}{Gradient $1/s$ scaling verification: empirical ratio vs theoretical $1/s$, and scale-normalised residual (empirical/theory). Values $> 1.15$ or $< 0.85$ indicate deviation from theory}{table.caption.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.9}Residuals by Training Stage}{8}{subsection.3.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Discussion}{8}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Interpretation}{8}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Efficiency}{8}{subsection.4.2}\protected@file@percent }
+\citation{vaswani2017}
+\citation{su2024alternative}
+\citation{nakanishi2025scalable}
+\citation{hinton2015}
+\citation{hinton2015,zhai2023,dong2021}
+\citation{zhang2024selective}
+\citation{ram2025focal}
+\citation{chi2024attention}
+\citation{su2025softplus}
+\citation{liu2025information}
+\citation{chiang2022overcoming}
+\citation{peng2023yarn}
+\citation{press2021alibi}
+\citation{li2025scale}
+\citation{kazemnejad2023impact}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Inter-head cosine similarity by variant across datasets. Higher cosine similarity indicates less head diversity (heads attend more similarly). Larger scaling factors produce flatter attention distributions with higher entropy, reducing head diversity.}}{9}{figure.caption.10}\protected@file@percent }
+\newlabel{fig:heads}{{4}{9}{Inter-head cosine similarity by variant across datasets. Higher cosine similarity indicates less head diversity (heads attend more similarly). Larger scaling factors produce flatter attention distributions with higher entropy, reducing head diversity}{figure.caption.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Limitations}{9}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Relation to Prior Work}{9}{subsection.4.4}\protected@file@percent }
+\citation{vaswani2017,voita2019analyzing}
+\citation{zhai2023}
+\citation{holm1979}
+\citation{cohen1988}
+\citation{dong2021,zhai2023}
+\citation{nakanishi2025scalable}
+\citation{ram2025focal}
+\citation{zhang2024selective}
+\citation{zhang2024selective,ram2025focal,chi2024attention,su2025softplus}
+\bibstyle{plainnat}
+\bibdata{references}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Budget Dependence}{10}{subsection.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusion}{10}{section.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Scale-normalised residual $|g_Q|/(1/s)$ at initialization, after epoch 1, and at end of training. Values close to 1.0 indicate that gradients scale as $1/s$ as theory predicts. Ratios far from 1 indicate deviation from the theoretical scaling mechanism.}}{11}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:residual}{{5}{11}{Scale-normalised residual $|g_Q|/(1/s)$ at initialization, after epoch 1, and at end of training. Values close to 1.0 indicate that gradients scale as $1/s$ as theory predicts. Ratios far from 1 indicate deviation from the theoretical scaling mechanism}{figure.caption.15}{}}
+\gdef \@abspage@last{11}
