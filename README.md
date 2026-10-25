@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Attention Scaling Fresh Study
 
 A seed-matched empirical comparison of scaling functions in Transformer self-attention.
@@ -173,3 +174,6 @@ MIT License - see LICENSE file for details.
   note={Reproducibility package at https://github.com/username/attention-scaling-study}
 }
 ```
+=======
+# Attention-Scaling
+>>>>>>> 87f9fe250cc51b0e112ba43e80f0fa972928f39c
