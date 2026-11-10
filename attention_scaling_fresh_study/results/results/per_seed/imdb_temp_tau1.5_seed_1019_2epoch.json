@@ -1,0 +1,46 @@
+{
+  "run_id": "imdb_temp_tau1.5_seed_1019_2epoch",
+  "dataset": "imdb",
+  "task": "classification",
+  "variant": "temp",
+  "seed": 1019,
+  "config": {
+    "d_model": 128,
+    "n_heads": 4,
+    "n_layers": 2,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "scaling": "temp",
+    "tau": 1.5,
+    "max_seq_len": 128,
+    "vocab_size": 18855
+  },
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.45103930631955974,
+      "val_loss": 0.44796301094414315,
+      "val_accuracy": 0.8134,
+      "val_macro_f1": 0.8121055954470346,
+      "epoch_time_s": 6.457894599996507,
+      "train_examples_per_s": 3096.9845807038746
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.318419985258922,
+      "val_loss": 0.38868632403355613,
+      "val_accuracy": 0.8372,
+      "val_macro_f1": 0.8371837183718371,
+      "epoch_time_s": 5.347982099978253,
+      "train_examples_per_s": 3739.7282986570444
+    }
+  ],
+  "test_accuracy": 0.82132,
+  "test_macro_f1": 0.8212974231453263,
+  "test_loss": 0.4234872082310259,
+  "checkpoint_history": [
+    "results\\checkpoints\\imdb_temp_tau1.5_seed_1019_2epoch\\imdb_temp_tau1.5_seed_1019_2epoch_epoch_2.pt"
+  ],
+  "status": "completed",
+  "timestamp": "2026-11-09T19:05:43.976881"
+}

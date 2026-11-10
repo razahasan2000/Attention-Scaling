@@ -1,0 +1,24 @@
+# Model checkpoints and large binary artifacts (57+ GB) — not part of the paper evidence
+**/checkpoints/
+*.pt
+*.bin
+*.safetensors
+
+# Derived data caches (rebuilt deterministically by prepare.py)
+**/data/*.npz
+**/cache/
+**/__pycache__/
+*.pyc
+
+# LaTeX build intermediates
+*.aux
+*.out
+*.log
+!reports/*.log
+
+# Historical workspace snapshots kept locally for audit only
+attention-scaling-verify/
+attention-scaling-study/
+attention-scaling-pilot/
+attention_scaling_fresh_study/artifacts/
+artifacts/

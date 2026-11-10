@@ -1,0 +1,46 @@
+{
+  "run_id": "agnews_standard_seed_1003_25epoch",
+  "dataset": "agnews",
+  "task": "classification",
+  "variant": "standard",
+  "seed": 1003,
+  "config": {
+    "d_model": 128,
+    "n_heads": 4,
+    "n_layers": 2,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "scaling": "standard",
+    "tau": 2.0,
+    "max_seq_len": 128,
+    "vocab_size": 18855
+  },
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.365855942748487,
+      "val_loss": 0.2887845538457235,
+      "val_accuracy": 0.907,
+      "val_macro_f1": 0.9072681025881336,
+      "epoch_time_s": 60.78615549998358,
+      "train_examples_per_s": 1579.306985453718
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.22259513842066128,
+      "val_loss": 0.27084748769799866,
+      "val_accuracy": 0.9109583333333333,
+      "val_macro_f1": 0.9113713939035938,
+      "epoch_time_s": 59.17749899998307,
+      "train_examples_per_s": 1622.2382091549266
+    }
+  ],
+  "test_accuracy": 0.9135526315789474,
+  "test_macro_f1": 0.9138852245943688,
+  "test_loss": 0.2758405457149033,
+  "checkpoint_history": [
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\agnews_standard_seed_1003_25epoch\\agnews_standard_seed_1003_25epoch_epoch_2.pt"
+  ],
+  "status": "completed",
+  "timestamp": "2026-10-22T22:20:41.483708"
+}

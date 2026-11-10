@@ -1,0 +1,46 @@
+{
+  "run_id": "sst2_temp_seed_1019_25epoch",
+  "dataset": "sst2",
+  "task": "classification",
+  "variant": "temp",
+  "seed": 1019,
+  "config": {
+    "d_model": 128,
+    "n_heads": 4,
+    "n_layers": 2,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "scaling": "temp",
+    "tau": 2.0,
+    "max_seq_len": 128,
+    "vocab_size": 12940
+  },
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.4141615278257893,
+      "val_loss": 0.3067548991097093,
+      "val_accuracy": 0.875120647412577,
+      "val_macro_f1": 0.8734686680654922,
+      "epoch_time_s": 30.635282600007486,
+      "train_examples_per_s": 1758.7564215904063
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.24475216930134847,
+      "val_loss": 0.2707943005655049,
+      "val_accuracy": 0.892568119385255,
+      "val_macro_f1": 0.8914183461173534,
+      "epoch_time_s": 30.860412700043526,
+      "train_examples_per_s": 1745.9261003312508
+    }
+  ],
+  "test_accuracy": 0.805045871559633,
+  "test_macro_f1": 0.8050202292827418,
+  "test_loss": 0.45852477635656086,
+  "checkpoint_history": [
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\sst2_temp_seed_1019_25epoch\\sst2_temp_seed_1019_25epoch_epoch_2.pt"
+  ],
+  "status": "completed",
+  "timestamp": "2026-10-23T11:31:14.282253"
+}

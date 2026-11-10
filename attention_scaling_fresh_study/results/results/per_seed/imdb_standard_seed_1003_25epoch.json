@@ -1,0 +1,46 @@
+{
+  "run_id": "imdb_standard_seed_1003_25epoch",
+  "dataset": "imdb",
+  "task": "classification",
+  "variant": "standard",
+  "seed": 1003,
+  "config": {
+    "d_model": 128,
+    "n_heads": 4,
+    "n_layers": 2,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "scaling": "standard",
+    "tau": 2.0,
+    "max_seq_len": 128,
+    "vocab_size": 18855
+  },
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.4504499862464472,
+      "val_loss": 0.3860773783695849,
+      "val_accuracy": 0.827,
+      "val_macro_f1": 0.8269984429859869,
+      "epoch_time_s": 13.514983300003223,
+      "train_examples_per_s": 1479.8390464896268
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.3093644706681133,
+      "val_loss": 0.3752425558204892,
+      "val_accuracy": 0.8428,
+      "val_macro_f1": 0.8427395868396803,
+      "epoch_time_s": 12.419539800001075,
+      "train_examples_per_s": 1610.3656272350984
+    }
+  ],
+  "test_accuracy": 0.82208,
+  "test_macro_f1": 0.8220744202538192,
+  "test_loss": 0.41360934114898257,
+  "checkpoint_history": [
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\imdb_standard_seed_1003_25epoch\\imdb_standard_seed_1003_25epoch_epoch_2.pt"
+  ],
+  "status": "completed",
+  "timestamp": "2026-10-22T22:26:25.762117"
+}

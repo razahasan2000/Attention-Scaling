@@ -1,0 +1,11 @@
+{
+  "dataset": "sst2",
+  "task": "classification",
+  "num_classes": 2,
+  "train_size": 53880,
+  "val_size": 13469,
+  "test_size": 872,
+  "vocab_size": 12940,
+  "max_len": 128,
+  "train_split_seed": 42
+}

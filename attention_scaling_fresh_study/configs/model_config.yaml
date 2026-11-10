@@ -1,0 +1,62 @@
+# Model Configuration for Transformer Attention Scaling Study
+
+model:
+  # Base architecture configuration
+  architecture: "pre_ln_transformer_encoder"
+  d_model: 128
+  n_heads: 4
+  n_layers: 2
+  d_ff: 256
+  dropout: 0.1
+  max_seq_len: 128
+  vocab_size: 18855  # Will be updated based on dataset
+  tie_weights: true  # Tie input/output embeddings for LM
+  
+  # Scaling variants
+  # variant: "standard" | "dk" | "temp"
+  # Standard: softmax(QK^T / sqrt(d_k))
+  # dk: softmax(QK^T / d_k)
+  # temp: softmax(QK^T / (tau * sqrt(d_k)))
+  scaling_variants:
+    - standard
+    - dk
+    - temp
+  
+  # Temperature for temp variant
+  temperature: 2.0
+  
+  # For multi-scale heads experiment (E1, E3)
+  # per_head_scales: [sqrt(d_k), sqrt(d_k), d_k, d_k]
+  multiscale_v1:
+    per_head_scales: [5.656854249492381, 5.656854249492381, 32.0, 32.0]
+
+# Alternative model configurations for sensitivity analysis
+model_sizes:
+  small:
+    d_model: 64
+    n_heads: 2
+    n_layers: 2
+    d_ff: 128
+  baseline:
+    d_model: 128
+    n_heads: 4
+    n_layers: 2
+    d_ff: 256
+  medium:
+    d_model: 256
+    n_heads: 8
+    n_layers: 4
+    d_ff: 1024
+
+# Classification head configuration
+classification:
+  n_classes:
+    agnews: 4
+    sst2: 2
+    imdb: 2
+  pooling: "masked_mean"  # masked mean pooling over non-padding positions
+
+# Language modeling head
+lm_head:
+  tied_weights: true
+  bias: false

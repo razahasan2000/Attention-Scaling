@@ -1,0 +1,148 @@
+# Training Budget Configuration
+
+# Core classification grid (2 epochs)
+core_classification:
+  epochs: 2
+  checkpoint_epochs: [2]
+  description: "Core classification grid - 2 epochs, single checkpoint at epoch 2"
+  datasets: ["agnews", "sst2", "imdb"]
+  variants: ["standard", "temp", "dk"]
+  seeds: "primary"  # 25 seeds
+
+# Extended ablation experiments (5 epochs)
+classification_ablation:
+  epochs: 5
+  checkpoint_epochs: [1, 2, 3, 4, 5]
+  description: "Extended ablation experiments - 5 epochs with per-epoch checkpoints"
+  datasets: ["sst2", "imdb"]
+  variants: ["standard", "temp", "dk", "multiscale_v1", "dk_lrcomp"]
+  ablation_experiments:
+    e1_sst2_multiscale:
+      seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  # 10 seeds
+      variants: ["standard", "multiscale_v1"]
+    e2_sst2_lrcomp:
+      seeds: [0, 1, 2, 3, 4, 5, 6]
+      variants: ["standard", "dk", "dk_lrcomp"]
+    e3_imdb_multiscale:
+      seeds: [0, 1, 2, 3, 4, 5, 6]
+      variants: ["standard", "multiscale_v1"]
+    e4_imdb_lrcomp:
+      seeds: [0, 1, 2, 3, 4]
+      variants: ["standard", "dk", "dk_lrcomp"]
+
+# Extended budget (10 epochs with multiple checkpoints)
+extended_budget:
+  epochs: 10
+  checkpoint_epochs: [2, 5, 10]
+  description: "Extended budget - 10 epochs with checkpoints at 2, 5, 10"
+  datasets: ["sst2", "imdb"]
+  variants: ["standard", "temp", "dk"]
+  seeds: [1001, 1002, 1003, 1004, 1005]
+
+# Extended budget full (25 epochs with checkpoints)
+extended_budget_25:
+  epochs: 25
+  checkpoint_epochs: [2, 5, 10, 15, 20, 25]
+  description: "Full extended budget - 25 epochs with 6 checkpoints"
+  datasets: ["sst2", "imdb"]
+  variants: ["standard", "temp", "dk"]
+  seeds: [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1024, 1025]  # 25 seeds
+
+# WikiText-2 language modelling
+wikitext2_lm:
+  max_steps: 25000
+  eval_every: 5000
+  checkpoint_steps: [5000, 10000, 15000, 20000, 25000]
+  description: "WikiText-2 language modelling with step-based checkpoints"
+  variants: ["standard", "temp", "dk"]
+  seeds: [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1024, 1025]  # 25 seeds
+
+# Temperature sensitivity ablation
+temperature_ablation:
+  temperatures: [0.5, 1.0, 1.5, 2.0]
+  description: "Exploratory temperature sensitivity"
+  datasets: ["sst2", "imdb"]
+  variants: ["temp"]
+  seeds: [1001, 1002, 1003]
+
+# Sequence length sensitivity
+seq_len_sensitivity:
+  max_lengths: [64, 128, 256]
+  datasets: ["sst2", "imdb"]
+  variants: ["standard", "temp", "dk"]
+  seeds: [1001, 1002, 1003]
+
+# Model size sensitivity
+model_size_sensitivity:
+  configs:
+    small:
+      d_model: 64
+      n_heads: 2
+      n_layers: 2
+      d_ff: 128
+    baseline:
+      d_model: 128
+      n_heads: 4
+      n_layers: 2
+      d_ff: 256
+    medium:
+      d_model: 256
+      n_heads: 8
+      n_layers: 4
+      d_ff: 1024
+  seeds: [1001, 1002, 1003]
+
+# Training budget summary
+budget_summary:
+  core_classification:
+    total_runs: 300  # 3 variants × 4 datasets × 25 seeds
+    completed: 0
+    status: "planned"
+  
+  classification_ablation:
+    e1_sst2_multiscale: 20  # 2 variants × 10 seeds
+    e2_sst2_lrcomp: 21     # 3 variants × 7 seeds
+    e3_imdb_multiscale: 14 # 2 variants × 7 seeds
+    e4_imdb_lrcomp: 15     # 3 variants × 5 seeds
+    total: 70
+    status: "planned"
+  
+  extended_budget_10:
+    total_runs: 75  # 3 variants × 2 datasets × 5 seeds × 1 budget
+    status: "planned"
+  
+  extended_budget_25:
+    total_runs: 150  # 3 variants × 2 datasets × 25 seeds
+    status: "planned"
+  
+  wikitext2_lm:
+    total_runs: 75  # 3 variants × 25 seeds × 1 budget
+    status: "planned"
+  
+  temperature_ablation:
+    total_runs: 30  # 1 variant × 2 datasets × 4 temps × 3 seeds (approx)
+    status: "planned"
+  
+  seq_len_sensitivity:
+    total_runs: 54  # 3 variants × 2 datasets × 3 seq lens × 3 seeds
+    status: "planned"
+  
+  model_size_sensitivity:
+    total_runs: 27  # 3 configs × 3 seeds
+    status: "planned"
+
+# Total estimated primary runs
+total_primary_runs: 681
+
+# Checkpointing strategy
+checkpoint_strategy:
+  classification_core:
+    save_at_epochs: [2]
+  classification_ablation:
+    save_at_epochs: [1, 2, 3, 4, 5]
+  extended_budget:
+    save_at_epochs: [2, 5, 10]
+  wikitext2:
+    save_at_steps: [5000, 10000, 15000, 20000, 25000]
+  eval_every_n_epochs: 1
+  eval_every_n_steps: 5000

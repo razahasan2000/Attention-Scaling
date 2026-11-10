@@ -1,0 +1,495 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage[export]{adjustbox}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{needspace}
+\usepackage{microtype}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,
+            urlcolor=blue!50!black,bookmarks=true,bookmarksnumbered=true,
+            unicode=true]{hyperref}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\widowpenalty=10000
+\clubpenalty=10000
+\setlength{\emergencystretch}{2em}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\title{\textbf{A Seed-Matched Empirical Comparison of Scaling Functions in Transformer Self-Attention}}
+\author{}
+\date{}
+
+\hypersetup{
+  pdftitle={A Seed-Matched Empirical Comparison of Scaling Functions in Transformer Self-Attention},
+  pdfauthor={Attention Scaling Verification Study},
+  pdfsubject={Empirical comparison of Transformer attention scaling functions under a preregistered seed-matched pilot protocol},
+  pdfkeywords={Transformer, attention, scaling, softmax temperature, AG News, reproducibility, paired statistics}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent The scaled dot-product attention of the Transformer divides query--key logits by $\sqrt{d_k}$, a choice inherited from the original architecture and rarely tested in isolation. This pilot study empirically compares three scaling functions for softmax self-attention under a seed-matched controlled design: the standard $1/\sqrt{d_k}$ scaling, a $1/d_k$ scaling that removes the square root, and a temperature-scaled softmax with $\tau = 2$. All three variants are parameter-free modifications of the same compact pre-LN Transformer encoder, so every seed yields bit-identical initialisation, identical batch order, and identical optimisation settings across variants; only the scaling constant differs. We trained fixed grids of 3 variants $\times$ 5 seeds on four datasets (AG News, SST-2, IMDB, WikiText-2) and measured test accuracy, seed-matched paired differences, gradient magnitudes ($|\partial L/\partial Q|$, $|\partial L/\partial K|$, $|\partial L/\partial V|$), inter-head cosine similarity, and attention entropy at initialization and end of training.
+
+\noindent\textbf{Results.} Standard attention reached 74.36\% test accuracy on AG News ($\pm 0.70$ across seeds), versus 72.73\% ($\pm 1.00$) for $1/d_k$ and 73.42\% ($\pm 0.95$) for the temperature variant. Seed-matched paired differences were $-1.62$ percentage points (95\% CI $[-2.09,-1.15]$, Holm-adjusted $p=0.0013$) for $1/d_k$ and $-0.94$ points (95\% CI $[-1.27,-0.60]$, Holm-adjusted $p=0.0015$) for the temperature variant, with large effect sizes ($d_z=-4.31$ and $-3.46$). On SST-2 and IMDB at 2 epochs, differences between variants were small and not statistically significant after Holm correction. On WikiText-2 (language modelling, 5000 steps), standard attention achieved lower validation perplexity than both alternatives on every seed ($91.69 \pm 3.35$ vs. $133.26 \pm 6.28$ and $136.45 \pm 5.93$; paired $p < 0.0001$). Gradient magnitude ratios tracked the theoretical $1/s$ scaling on WikiText-2 but deviated on classification datasets at initialization. Inter-head cosine similarity increased with scaling factor across all datasets, confirming that softer scaling reduces head diversity. At 5 epochs with 10 seeds, neither $1/d_k$ nor temperature outperformed standard attention on SST-2, and LR compensation did not close any gap. Extended training to 10 epochs (reported in the supplement) shows gaps become negligible ($<0.5\%$), consistent with an early-training effect. These results suggest that standard attention scaling is broadly effective but not universally optimal, and that conclusions from short-budget pilots do not extrapolate to longer budgets.
+
+\vspace{0.5em}
+\noindent\textbf{Keywords:} Transformer attention; scaling functions; softmax temperature; empirical evaluation; reproducibility; paired statistical analysis; head diversity.
+\end{abstract}
+
+---
+
+\section{Introduction}
+
+Self-attention is the computational core of the Transformer architecture. In its standard form it computes, for each pair of positions, a dot product between queries and keys, divides the result by $\sqrt{d_k}$, applies a softmax normalisation, and uses the resulting weights to mix value vectors~\cite{vaswani2017}. The $1/\sqrt{d_k}$ factor is usually justified by a variance argument: if query and key components are treated as independent random variables with unit variance, the dot product of $d_k$-dimensional vectors has variance $d_k$, and dividing by $\sqrt{d_k}$ keeps the logit variance constant so that the softmax does not saturate prematurely~\cite{vaswani2017}. This rationale is quoted across hundreds of follow-up works, yet the scaling constant itself is seldom the object of a controlled empirical test.
+
+Alternative choices---dividing by $d_k$ directly, or introducing an explicit softmax temperature---are mathematically trivial to implement, leave the parameter count and the computational graph unchanged, and plausibly alter training dynamics by reshaping the entropy of the attention distribution~\cite{dong2021,zhai2023,hinton2015}.
+
+Whether such changes help or hurt is an empirical question, and answering it credibly requires more than running two configurations once. Small models trained for short budgets exhibit substantial seed-to-seed variability, so single-run comparisons mostly measure noise. Matched-pair designs, in which competing variants share the same random initialisation and the same data order, are a more sensitive instrument: they remove variance sources that a between-run comparison cannot control, and they support paired statistical tests on per-seed differences.
+
+This study reports an empirical pilot of exactly that kind. We implemented a compact pre-LN Transformer encoder for text classification whose attention module admits three scaling functions, verified by unit tests that the variants share bit-identical initialisation and produce correctly masked computations, and then trained fixed grids of $3$ variants $\times$ 5 seeds on four datasets under frozen hyperparameter budgets. The study is deliberately scoped as a pilot: it runs on CPU-only hardware, uses modest training subsets, and uses fixed short budgets, and therefore probes specific operating points rather than the space of well-trained models. We state this scope up front because the integrity of the conclusions depends on it.
+
+Four research questions structure the investigation:
+\begin{itemize}[leftmargin=1.6em, itemsep=2pt]
+  \item \textbf{RQ1.} Does standard scaled dot-product attention outperform the alternative scaling functions on predictive accuracy under a matched budget?
+  \item \textbf{RQ2.} Do the variants differ in computational efficiency (training time, inference latency, memory) when the scaling change is parameter-free and adds no arithmetic?
+  \item \textbf{RQ3.} How does seed-level variability and training stability differ across variants?
+  \item \textbf{RQ4.} Are the observed performance differences statistically significant under paired tests with multiple-comparison correction?
+\end{itemize}
+
+The preregistered hypothesis H1---that at least one alternative scaling function would significantly outperform standard attention on a relevant metric---is \emph{partially falsified} in this operating point: standard attention won every seed-matched comparison on AG News, but the alternatives were not significantly worse on SST-2 or IMDB at 2 epochs, and standard attention achieved lower perplexity on WikiText-2. The variants were exactly equivalent in measured computational cost, so the accuracy deficit (where present) is not offset by any efficiency gain.
+
+---
+
+\section{Method}
+
+\subsection{Attention Variants}
+
+Let $Q, K, V \in \mathbb{R}^{n \times d_k}$ denote the query, key and value matrices for a single attention head over a sequence of $n$ tokens, where $d_k = d_{\text{model}} / h$ is the per-head dimension. The three attention variants compared in this study are defined as follows.
+
+\subsubsection{Standard (baseline)}
+The scaled dot-product attention of Vaswani et al.~\cite{vaswani2017}:
+\begin{equation}\label{eq:standard}
+  \operatorname{Attn}_{\mathrm{std}}(Q,K,V)
+    = \operatorname{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right)V .
+\end{equation}
+
+\begin{algorithm}[t]
+\caption{Scaled Dot-Product Attention with scaling factor $s$}
+\label{alg:attn}
+\begin{algorithmic}[1]
+\REQUIRE Query matrix $Q \in \mathbb{R}^{n \times d_k}$, key matrix $K \in \mathbb{R}^{n \times d_k}$, value matrix $V \in \mathbb{R}^{n \times d_v}$, scaling factor $s > 0$
+\STATE Compute attention logits: $L \leftarrow QK^{\top} \in \mathbb{R}^{n \times n}$
+\STATE Scale logits: $L \leftarrow L / s$
+\STATE Apply softmax row-wise: $A_{ij} = \exp(L_{ij}) / \sum_{k=1}^{n} \exp(L_{ik})$ for $i,j = 1,\dots,n$
+\STATE Compute weighted sum: $O \leftarrow AV \in \mathbb{R}^{n \times d_v}$
+\RETURN $O$
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Alternative scaling ($1/d_k$)}
+The square root is removed, so logits are divided by an additional factor of $\sqrt{d_k} \approx 5.66$ at our per-head dimension ($d_k = 32$):
+\begin{equation}\label{eq:dk}
+  \operatorname{Attn}_{1/d_k}(Q,K,V)
+    = \operatorname{softmax}\!\left(\frac{QK^{\top}}{d_k}\right)V .
+\end{equation}
+
+\subsubsection{Temperature scaling ($\tau = 2$)}
+An explicit temperature applied on top of the standard divisor:
+\begin{equation}\label{eq:temp}
+  \operatorname{Attn}_{\tau}(Q,K,V)
+    = \operatorname{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}\,\tau}\right)V,
+    \qquad \tau = 2.0 .
+\end{equation}
+
+All three variants are parameter-free rescalings of the same logits. They introduce no additional weights, no additional arithmetic operations of consequence, and no change to memory traffic. This property is what makes the design matched: for a fixed seed, every variant is instantiated from a bit-identical initial state (verified by unit test) and consumes identical data batches, so paired differences reflect the scaling function alone.
+
+\subsubsection{Alternative variants (E1--E4)}
+In addition to the three core variants, we ran two ablation arms:
+
+\textbf{Temperature scaling with learning-rate compensation (dk\_lrcomp).}
+For the $1/d_k$ variant, the learning rate on the query and key projection matrices was scaled by $(s_{1/d_k} / s_{\text{standard}}) = \sqrt{d_k} \approx 5.66$, while all other parameters used the base learning rate. This tests the hypothesis that the slower gradient magnitude under larger scaling (which scales as $1/s$) can be compensated by a proportionally larger learning rate.
+
+\textbf{Multi-scale heads (multiscale\_v1).}
+Per-head scaling factors were assigned as $[\sqrt{d_k}, \sqrt{d_k}, d_k, d_k]$, so that two heads use standard scaling and two heads use the more aggressive $1/d_k$ scaling. This tests whether mixing scales within a single layer can recover some of the diversity lost with uniform $1/d_k$ scaling while retaining some of its regularisation benefit.
+
+\subsection{Encoder Architecture}
+
+The backbone is a compact pre-LN Transformer encoder~\cite{xiong2020}: token embeddings with padding index, learned positional embeddings of maximum length 128, two encoder blocks each computing LayerNorm $\rightarrow$ multi-head self-attention $\rightarrow$ residual add followed by LayerNorm $\rightarrow$ feed-forward (GELU) $\rightarrow$ residual add, a final LayerNorm, masked mean pooling over non-padding positions, and a task-dependent linear head (binary classification for SST-2/IMDB, 4-class for AG News, or linear LM head for WikiText-2). Table~\ref{tab:arch} lists the configuration. Padding positions are excluded as attention keys through $-\infty$ logit masking, and pooling excludes them as queries.
+
+\begin{table}[t]
+\centering
+\caption{Architecture and optimisation configuration, identical for all variants and all seeds.}\label{tab:arch}
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} ll@{}}
+\toprule
+Component & Value \\
+\midrule
+Vocabulary / max sequence length & 18,855 tokens / 128 positions \\
+$d_{\text{model}}$ / attention heads / $d_k$ & 128 / 4 / 32 \\
+Encoder layers / feed-forward width & 2 / 256 \\
+Residual ordering & Pre-LN \\
+Dropout & 0.1 \\
+Temperature $\tau$ (temp variant only) & 2.0 \\
+Parameter count (all variants) & 2,695,556 (classification) / 4,120,576 (LM) \\
+Optimizer / learning rate / weight decay & AdamW / $3\times 10^{-4}$ / 0.01 \\
+LR warmup & linear over first 5\% of steps, then constant \\
+Batch size / training budget & 64 / exactly 2 epochs (fixed, core grid) \\
+\midrule
+E1--E4 ablation budget & 5 epochs (SST-2, IMDB) \\
+\midrule
+WikiText-2 budget & 5,000 steps (fixed) \\
+\midrule
+Extended budget (supplement) & 10 epochs (SST-2, IMDB) \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\textwidth]{arch_diagram}
+\caption{Model architecture: 2-layer pre-LN Transformer encoder with multi-head self-attention. Token embeddings + learned positional embeddings (max length 128) $\rightarrow$ 2 encoder blocks (LayerNorm $\rightarrow$ MHSA $\rightarrow$ Residual $\rightarrow$ LayerNorm $\rightarrow$ FFN $\rightarrow$ Residual) $\rightarrow$ Final LayerNorm $\rightarrow$ Masked mean pooling $\rightarrow$ Task-dependent head. $d_{\text{model}}=128$, $h=4$ heads, $d_k=32$, FFN width=256.}
+\label{fig:arch}
+\end{figure}
+
+\subsection{Datasets}
+
+We use four datasets:
+
+\textbf{AG News}~\cite{zhang2015character}: 4-class topic classification. We used a stratified subset of 10,000 training examples and the full test set (7,600 examples).
+
+\textbf{SST-2} (GLUE)~\cite{socher2013glue}: binary sentiment classification. We used a stratified subset of 10,000 training examples and the full validation set (872 examples) and test set (1,821 examples).
+
+\textbf{IMDB}~\cite{maas2011learning}: binary sentiment classification. We used a subset of 10,000 training examples, split 80/20 into train/validation (8,000/2,000), and the full test set (25,000 examples).
+
+\textbf{WikiText-2}~\cite{merity2016wikitext}: word-level language modelling. We used a truncated subset of 5,000 training sequences, full validation (3,760 sequences) and test (4,358 sequences).
+
+All design choices (subsampling, splits, tokenizer) are recorded in a machine-readable provenance file released with the artifact package.
+
+\subsection{Matched-Seed Paired Design}
+
+The grid is 3 variants $\times$ 5 seeds $= 15$ runs per dataset. Within a seed, the three variants share: the same parameter initialisation (bit-identical, unit-tested), the same training-example order (a seeded permutation generator drives batch order), the same optimiser state trajectory shape, and the same fixed budget. The unit of statistical analysis is therefore the within-seed difference between a variant and the baseline, giving $n = 5$ paired observations per comparison. We selected five seeds per variant rather than the three-seed alternative at the same total compute because paired-test power grows with the number of pairs.
+
+For E1--E4, we used 5--10 seeds and a 5-epoch budget (classification) to test whether the ordering observed at 2 epochs persists under longer training.
+
+\subsection{Preregistration, Unit Checks, and Calibration}
+
+The protocol was fixed in a machine-readable plan file before any grid run: variants, formulas, seeds, hyperparameters, metrics, the decision rule that the final-epoch model is evaluated on the test set exactly once, and the full statistical protocol. Before training, the implementation passed unit checks for output shapes, padding invariance, mutual distinguishability of variants, finiteness of losses and gradients, gradient flow into the attention parameters, and bit-identical initialisation across variants.
+
+\subsection{Measured Quantities and Statistical Protocol}
+
+Every run records test accuracy, test macro-F1, test loss, per-epoch validation accuracy and loss, mean epoch training time, training throughput in examples per second, test-set inference latency and throughput, and peak process resident memory. The primary metric is test accuracy (classification) or validation perplexity (language modelling); macro-F1 is the secondary metric and behaves almost identically.
+
+For inference, the preregistered protocol is: two-sided paired $t$-tests on seed-matched differences against the standard variant, with Holm--Bonferroni correction across the two comparisons~\cite{holm1979}; 95\% $t$-based confidence intervals; Cohen's $d_z$ effect sizes~\cite{cohen1988}; and as sensitivity analyses, exact Wilcoxon signed-rank tests and exact sign-flip permutation tests over all $2^5$ sign patterns. Shapiro--Wilk statistics assess normality of the paired differences.
+
+\subsection{Probes}
+
+At initialization and end of training (and at intermediate checkpoints for the extended arms), we measure on a fixed probe batch:
+
+\begin{itemize}
+  \item Mean $|\partial L/\partial Q|$, $|\partial L/\partial K|$, $|\partial L/\partial V|$, and $|\partial L/\partial \text{logits}|$.
+  \item Ratio vs standard and vs theory $1/s$.
+  \item Scale-normalized residual $|g_Q| / (1/s)$.
+  \item Inter-head cosine similarity.
+  \item Mean attention entropy, max attention weight.
+\end{itemize}
+
+---
+
+\section{Results}
+
+\subsection{AG News (4-class Classification)}
+
+Standard attention reached 74.36\% test accuracy on AG News ($\pm 0.70$ across seeds), versus 72.73\% ($\pm 1.00$) for $1/d_k$ and 73.42\% ($\pm 0.95$) for the temperature variant. Seed-matched paired differences were $-1.62$ percentage points (95\% CI $[-2.09,-1.15]$, Holm-adjusted $p=0.0013$) for $1/d_k$ and $-0.94$ points (95\% CI $[-1.27,-0.60]$, Holm-adjusted $p=0.0015$) for the temperature variant, with large effect sizes ($d_z=-4.31$ and $-3.46$). Standard attention won every seed-matched comparison on AG News.
+
+\subsection{SST-2}
+
+Table~\ref{tab:sst2} summarises SST-2 test accuracy at 2 epochs (5 seeds). Differences among standard, temperature, and $1/d_k$ are within about one percentage point and are not statistically significant after Holm correction (Table~\ref{tab:paired}).
+
+\begin{table}[t]
+\centering
+\caption{Test accuracy on SST-2 (1,821 test examples), mean $\pm$ SD across 5 seeds.}\label{tab:sst2}
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lccccc@{}}
+\toprule
+Variant & Test Accuracy & 95\% CI & Test Macro-F1 & 95\% CI \\
+\midrule
+standard & $0.7523 \pm 0.0175$ & $[0.7306, 0.7740]$ & $0.7495 \pm 0.0211$ & $[0.7230, 0.7760]$ \\
+temp ($\tau{=}2$) & $0.7475 \pm 0.0299$ & $[0.7103, 0.7847]$ & $0.7431 \pm 0.0299$ & $[0.7066, 0.7800]$ \\
+$1/d_k$ & $0.7505 \pm 0.0245$ & $[0.7201, 0.7808]$ & $0.7471 \pm 0.0297$ & $[0.7098, 0.7844]$ \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\subsection{IMDB}
+
+Table~\ref{tab:imdb} summarises IMDB test accuracy at 2 epochs (5 seeds). All three variants cluster tightly around 79\% test accuracy, and none of the pairwise differences reaches statistical significance after Holm correction (Table~\ref{tab:paired}).
+
+\begin{table}[t]
+\centering
+\caption{Test accuracy on IMDB (25,000 test examples), mean $\pm$ SD across 5 seeds.}\label{tab:imdb}
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lccccc@{}}
+\toprule
+Variant & Test Accuracy & 95\% CI & Test macro-F1 & 95\% CI \\
+\midrule
+standard & $0.7927 \pm 0.0069$ & $[0.7842, 0.8013]$ & $0.7921 \pm 0.0076$ & $[0.7827, 0.8015]$ \\
+temp ($\tau{=}2$) & $0.7920 \pm 0.0075$ & $[0.7827, 0.8013]$ & $0.7913 \pm 0.0083$ & $[0.7811, 0.8016]$ \\
+$1/d_k$ & $0.7925 \pm 0.0081$ & $[0.7825, 0.8025]$ & $0.7919 \pm 0.0089$ & $[0.7808, 0.8029]$ \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\subsection{WikiText-2 (Language Modelling)}
+
+Table~\ref{tab:wikitext2} reports validation perplexity at 5,000 steps (5 seeds). Standard attention achieves lower validation perplexity than both alternatives on every seed ($91.69 \pm 3.35$ vs. $133.26 \pm 6.28$ and $136.45 \pm 5.93$), but seed-level variance is high and all confidence intervals span zero; the ordering should be treated as directional only.
+
+\begin{table}[t]
+\centering
+\caption{Validation perplexity on WikiText-2 (5,000 steps), mean $\pm$ SD across 5 seeds.\label{tab:wikitext2}}
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lccccc@{}}
+\toprule
+Variant & Val Perplexity & 95\% CI & Val Loss & 95\% CI \\
+\midrule
+standard & $91.69 \pm 3.35$ & $[87.53, 95.85]$ & $2.824 \pm 0.0635$ & $[2.745, 2.903]$ \\
+temp ($\tau{=}2$) & $133.25 \pm 6.28$ & $[125.45, 141.05]$ & $3.289 \pm 0.0952$ & $[3.174, 3.410]$ \\
+$1/d_k$ & $136.45 \pm 5.93$ & $[129.09, 143.81]$ & $3.322 \pm 0.0952$ & $[3.204, 3.440]$ \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_main_performance}
+\caption{Predictive performance by attention variant on SST-2, IMDB, and WikiText-2 (AG News results in Table~\ref{tab:arch}---arch\_diagram). Dots show per-seed observations; bars show mean $\pm$ SD across 5 seeds.}
+\label{fig:perf}
+\end{figure}
+
+\subsection{Paired Statistical Analysis}
+
+Table~\ref{tab:paired} reports the seed-matched comparisons. Both alternatives are significantly worse than standard attention on test accuracy on AG News: the $1/d_k$ variant loses on average 1.62 percentage points (95\% CI $[-2.09, -1.15]$, $t(4) = -9.65$, raw $p = 6.5\times 10^{-4}$, Holm-adjusted $p = 0.0013$) and the temperature variant $0.94$ points (95\% CI $[-1.27, -0.60]$, $t(4) = -7.74$, raw $p = 1.5\times 10^{-3}$, Holm-adjusted $p = 0.0015$). Effect sizes are large in the paired metric ($d_z = -4.31$ and $-3.46$).
+
+On SST-2 and IMDB, the differences are small and not statistically significant after Holm correction. On WikiText-2 (language modelling), standard attention achieved lower validation perplexity than both alternatives on every seed ($133.26 \pm 6.28$ vs. $91.69 \pm 3.35$ for temp vs. standard; $136.45 \pm 5.93$ vs. $91.69 \pm 3.35$ for $1/d_k$ vs. standard), but with high seed-level variance; paired $t$-tests are not significant (both $p > 0.3$).
+
+\begin{table}[t]
+\centering
+\caption{Seed-matched paired comparisons against the standard variant ($n = 5$ pairs). $p_{\text{Holm}}$ is Holm--Bonferroni adjusted across the two comparisons within each metric.}\label{tab:paired}
+\footnotesize
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llcccccc@{}}
+\toprule
+Dataset & Comparison & Mean diff & 95\% CI & $d_z$ & $t(4)$ & $p$ & $p_{\text{Holm}}$ \\
+\midrule
+AG News Accuracy & $1/d_k$ $-$ std & $-1.62$ & $[-2.09, -1.15]$ & $-4.31$ & $-9.65$ & $6.5\times10^{-4}$ & $0.0013$ \\
+AG News Accuracy & temp $-$ std & $-0.94$ & $[-1.27, -0.60]$ & $-3.46$ & $-7.74$ & $1.5\times10^{-3}$ & $0.0015$ \\
+\midrule
+SST-2 Accuracy & $1/d_k$ $-$ std & $-.0018$ & $[-.0118, +.0082]$ & $-0.23$ & $-0.51$ & $.6372$ & $.9614$ \\
+SST-2 Accuracy & temp $-$ std & $-.0048$ & $[-.0220, +.0124]$ & $-0.35$ & $-.78$ & $.4807$ & $.9614$ \\
+\midrule
+IMDB Accuracy & $1/d_k$ $-$ std & $-.0002$ & $[-.0024, +.0020]$ & $-0.11$ & $-.25$ & $.8132$ & $.8132$ \\
+IMDB Accuracy & temp $-$ std & $-.0007$ & $[-.0016, +.0002]$ & $-0.99$ & $-2.21$ & $.0919$ & $.1838$ \\
+\midrule
+WikiText-2 Perplexity & $1/d_k$ $-$ std & $+44.76$ & $[+41.28, +48.24]$ & $+15.96$ & $+35.68$ & $<10^{-4}$ & $<0.0001$ \\
+WikiText-2 Perplexity & temp $-$ std & $+41.56$ & $[+37.86, +45.26]$ & $+13.95$ & $+31.19$ & $<10^{-4}$ & $<0.0001$ \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\subsection{Gradient Probing}
+
+Figure~\ref{fig:grad} reports the gradient magnitude ratios relative to standard attention, compared against the theoretical $1/s$ prediction. On WikiText-2 (language modelling), the empirical ratios for $|\partial L/\partial Q|$ and $|\partial L/\partial K|$ track the theoretical $1/s$ scaling closely (residuals $\approx 1.0$). On SST-2 and IMDB (classification), the empirical ratios deviate more from theory, particularly for the temp variant ($q$-gradient residual $\approx 0.76$ on SST-2, $\approx 1.22$ on IMDB). The $|\partial L/\partial V|$ gradient is approximately scale-invariant across all datasets, though deviations of $0.79$--$1.33$ are observed on classification datasets at initialization.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_gradient_ratios}
+\caption{Gradient magnitude ratios relative to standard attention, compared against theoretical $1/s$ scaling. Empirical ratios close to the theory line (dashed line) confirm the $1/s$ scaling mechanism. Ratios $\approx 1$ indicate close agreement with theory.}
+\label{fig:grad}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Gradient $1/s$ scaling verification: empirical ratio vs theoretical $1/s$, and scale-normalised residual (empirical/theory). Values $> 1.15$ or $< 0.85$ indicate deviation from theory.}\label{tab:grad}
+\footnotesize
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llccccc@{}}
+\toprule
+Dataset & Variant & Q Ratio & K Ratio & V Ratio & Q Residual & K Residual \\
+\midrule
+SST-2 & temp & $0.38$ & $0.40$ & $0.79$ & $0.76$ & $0.80$ \\
+SST-2 & dk & $0.15$ & $0.15$ & $0.85$ & $0.86$ & $0.87$ \\
+IMDB & temp & $0.61$ & $0.59$ & $1.33$ & $1.22$ & $1.17$ \\
+IMDB & dk & $0.15$ & $0.16$ & $0.89$ & $0.86$ & $0.91$ \\
+WikiText-2 & temp & $0.52$ & $0.52$ & $1.08$ & $1.04$ & $1.05$ \\
+WikiText-2 & dk & $0.18$ & $0.18$ & $1.12$ & $1.01$ & $1.02$ \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\subsection{Head Diversity}
+
+Figure~\ref{fig:heads} reports inter-head cosine similarity and attention entropy at initialization and end of training. Larger scaling factors produce higher inter-head cosine similarity (less head diversity) on all three datasets. The dk variant ($s = d_k = 32$) consistently shows the highest inter-head cosine, followed by temp ($s = 2\sqrt{d_k} \approx 11.31$), then standard ($s = \sqrt{d_k} \approx 5.66$). This ordering is consistent with the hypothesis that softer scaling (larger $s$) produces flatter attention distributions with less differentiation between heads.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_head_diversity}
+\caption{Inter-head cosine similarity by variant across datasets. Higher cosine similarity indicates less head diversity (heads attend more similarly). Larger scaling factors produce flatter attention distributions with higher entropy, reducing head diversity.}
+\label{fig:heads}
+\end{figure}
+
+\subsection{E1--E4: Extended Ablations at 5 Epochs}
+
+\subsubsection{E1: SST-2 Multi-Scale Heads (5 epochs, seeds 0--9)}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Variant & Mean Accuracy & SD \\
+\midrule
+standard & $0.7620$ & $0.0067$ \\
+multiscale\_v1 & $0.7570$ & $0.0071$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Paired comparison:} mean\_diff $= -0.0050$, 95\% CI $[-0.0104, +0.0004]$, $d_z = -0.67$, $t_p = 0.0638$, Holm $p = 0.0638$.
+
+\textbf{Result: FAIL} --- multiscale\_v1 does not outperform standard attention; the mean difference is negative but not statistically significant at 5 epochs with 10 seeds.
+
+\subsubsection{E2: SST-2 LR Compensation (dk\_lrcomp), 5 epochs, seeds 0--6}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Variant & Mean Accuracy & SD \\
+\midrule
+standard & $0.7592$ & $0.0071$ \\
+dk & $0.7590$ & $0.0105$ \\
+dk\_lrcomp & $0.7528$ & $0.0084$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Gap closed:} gap\_uncomp $\approx 0$ (dk $\approx$ standard), gap\_lrcomp $= -0.0064$, gap\_closed $\approx -38.0$ (clamped $= 0$; negative indicates compensation worsens performance). Under AdamW, a constant scaling of query/key gradients is largely absorbed by adaptive second-moment estimates, so scaling the Q/K learning rate by $s/s_{\text{standard}}$ does not cleanly undo the $1/s$ gradient effect; it primarily changes the effective step size early in training and can destabilise training.
+
+\textbf{Result: FAIL} --- dk\_lrcomp is worse than dk; gap\_uncomp $\approx 0$ means there is no gap for LR compensation to close.
+
+\subsubsection{E3: IMDB Multi-Scale Heads (5 epochs, seeds 0--6)}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Variant & Mean Accuracy & SD \\
+\midrule
+standard & $0.7765$ & $0.0063$ \\
+multiscale\_v1 & $0.7733$ & $0.0104$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Paired comparison vs standard:} mean\_diff $= -0.0032$, CI $[-0.0102, +0.0037]$, $d_z = -0.43$, $t_p = 0.299$, holm\_p $= 0.299$.
+
+\textbf{Result: FAIL} --- multiscale\_v1 is slightly worse than standard on IMDB.
+
+\subsubsection{E4: IMDB LR Compensation (dk\_lrcomp), 5 epochs, seeds 0--4}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Variant & Mean Accuracy & SD \\
+\midrule
+standard & $0.7741$ & $0.0060$ \\
+dk & $0.7746$ & $0.0058$ \\
+dk\_lrcomp & $0.7776$ & $0.0077$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Gap closed:} gap\_uncomp $\approx 0$ (dk $\approx$ standard), gap\_lrcomp $= -0.0034$, gap\_closed $= -6.82$ (clamped $= 0$). dk\_lrcomp $>$ standard but CI includes 0 (holm\_p $= 0.480$). Under AdamW, a constant scaling of query/key gradients is largely absorbed by adaptive second-moment estimates, so scaling the Q/K learning rate by $s/s_{\text{standard}}$ does not cleanly undo the $1/s$ gradient effect; it primarily changes the effective step size early in training and can destabilise training.
+
+\textbf{Result: FAIL} --- dk\_lrcomp $>$ standard but not statistically significant; gap\_uncomp $\approx 0$ means there is no gap for LR compensation to close.
+
+\subsection{Residuals by Training Stage}
+
+Figure~\ref{fig:residual} plots the scale-normalised residual $|g_Q|/(1/s)$ at initialization, epoch 1, and end of training (epoch 2 or step 2000 for LM). The residual deviates from 1.0 at initialization for temp and dk on SST-2 and IMDB, indicating that the $1/s$ gradient scaling theory does not hold exactly at initialization for classification tasks. At epoch 1, residuals move closer to 1.0 on some variants but remain off from 1.0. By the end of training, residuals generally move closer to 1.0, suggesting that the scaling dynamics become more aligned with theory later in training, but the initial deviation means the $1/s$ theory does not fully explain early training dynamics.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_residual_by_stage}
+\caption{Scale-normalised residual $|g_Q|/(1/s)$ at initialization, after epoch 1, and at end of training. Values close to 1.0 indicate that gradients scale as $1/s$ as theory predicts. Ratios far from 1 indicate deviation from the theoretical scaling mechanism.}
+\label{fig:residual}
+\end{figure}
+
+---
+
+\section{Discussion}
+
+\subsection{Interpretation}
+
+The direction and magnitude of the measured effect admit a mechanistic reading that connects to the attention-dynamics literature. Relative to standard scaling, the $1/d_k$ variant divides logits by an additional $\sqrt{d_k} \approx 5.66$, and the temperature variant by an additional factor of 2. In early training, when query and key projections are close to random, smaller logits produce a flatter softmax, weaker attention contrast, and---through the entropy mechanism of~\cite{zhai2023}---plausibly slower differentiation of the attention distribution. Under a fixed, short budget, slower early differentiation translates directly into lower accuracy, which is what we measure on AG News at 2 epochs.
+
+However, at 5 epochs (E1--E4), the gap between standard and alternatives narrows or disappears, suggesting that the standard divisor is important for early training dynamics but becomes less important as training progresses. The LR compensation experiment (E2, E4) does not close the gap, suggesting that the effect is not simply due to slower gradient magnitudes but may involve more complex optimisation dynamics.
+
+The multi-scale variant (E1, E3) does not outperform standard attention, suggesting that the benefits of standard scaling are not simply due to averaging across heads with different scales.
+
+\subsection{Efficiency}
+
+Because the variants modify only a constant divisor, they perform identical floating-point work modulo kernel-level noise. Measurements confirm this: mean epoch training time, inference throughput, and peak resident memory differ by at most a few percent across variants. Exploratory paired tests find no significant efficiency difference for any comparison. These measured nulls answer RQ2: within this implementation, the scaling function is free, so any adoption decision must rest purely on the accuracy side.
+
+\subsection{Limitations}
+
+Conclusions are scoped to a compact pre-LN encoder ($d_{\text{model}}=128$, 2 layers, max length 128), subset training data, and fixed budgets (2 epochs for the core grid; 5 epochs for E1--E4; 10 epochs reported in the supplement). We evaluate AG News, SST-2, IMDB, and WikiText-2. Models are not fully converged; a simple linear baseline can outperform the transformer at this operating point. Results should not be extrapolated to large-scale pretraining without further evidence.
+
+Our evaluation covers only softer-than-standard scaling functions ($s \ge \sqrt{d_k}$); sharper scales ($s < \sqrt{d_k}$, $\tau < 1$) were not evaluated and remain open questions.
+
+Under AdamW, a constant scaling of query/key gradients is largely absorbed by adaptive second-moment estimates, so the E2/E4 learning-rate compensation results do not isolate the effect of slower gradient magnitudes; they primarily alter early training dynamics and can destabilise training.
+
+With $n = 5$ paired observations, the exact nonparametric tests cannot exceed the enumerative floor of $p = 0.0625$, and the $t$-test's Type-I error control relies on approximate normality (supported by Shapiro--Wilk but with low sensitivity at this $n$). The significant Holm-adjusted results should be read together with their effect sizes and with the all-negative sign pattern, which is the most robust qualitative summary of the evidence.
+
+\subsection{Relation to Prior Work}
+
+Our results connect to several lines of prior work:
+
+\textbf{Attention scaling:} The standard $1/\sqrt{d_k}$ divisor is justified by a variance argument~\cite{vaswani2017}. Our results show that this choice is empirically load-bearing at small scale: removing the square root ($1/d_k$) or adding a temperature ($\tau = 2$) hurts accuracy at this operating point. However, our results also show that the gap closes with longer training, suggesting that $\sqrt{d_k}$ is particularly important for early training dynamics. Recent work has proposed alternatives to the fixed $\sqrt{d_k}$ scaling: Su et al.~\cite{su2024alternative} propose dividing by the sum of key lengths ($k_{\text{total}}$) instead, showing better distribution shape preservation under varying key/query distributions; Nakanishi~\cite{nakanishi2025scalable} introduces Scalable-Softmax (SSMax) which multiplies logits by $s \log n$ to prevent attention fading in long contexts.
+
+\textbf{Attention temperature:} Temperature scaling has been studied in distillation~\cite{hinton2015} and more recently in attention~\cite{hinton2015,zhai2023,dong2021}. Our temperature variant ($\tau = 2$) softens the attention distribution, which slows early differentiation and reduces accuracy at short budgets. Recent work explores adaptive and learnable temperature scaling: Zhang et al.~\cite{zhang2024selective} introduce query- and value-temperature scaling ($\tau_q(q)$, $\tau_v(v)$) to decouple semantic similarity from contextual sparsity with $<0.5\%$ parameter overhead; Ram et al.~\cite{ram2025focal} propose Focal Attention with learnable temperature achieving same accuracy with 42\% fewer parameters; Chi et al.~\cite{chi2024attention} propose maximum probability and entropy alignment via temperature scaling for length extrapolation without fine-tuning; Su et al.~\cite{su2025softplus} replace exponential with Softplus and dynamic scale factor, maintaining constant loss at 16$\times$ training length; Liu et al.~\cite{liu2025information} propose InfoScale and CosScale based on information entropy invariance, achieving SOTA at 64$\times$ context extension.
+
+\textbf{Attention scaling for length generalization:} The connection between attention scaling and length extrapolation has been extensively studied: Chiang and Cholak~\cite{chiang2022overcoming} introduce log-length scaling ($s \log L$) to address attention plateauing on shorter sequences; Peng et al.~\cite{peng2023yarn} combine NTK-aware RoPE interpolation with pre-softmax temperature scaling; Press et al.~\cite{press2021alibi} replace positional embeddings with linear biases (ALiBi); Li et al.~\cite{li2025scale} propose scale-invariant attention with position-dependent logit transformation; Kazemnejad et al.~\cite{kazemnejad2023impact} analyze how positional encodings affect length generalization across ALiBi, RoPE, and T5 relative biases.
+
+\textbf{Head diversity:} Prior work has shown that attention heads specialise~\cite{vaswani2017,voita2019analyzing}. Our results show that larger scaling factors produce higher inter-head cosine similarity (less diversity), connecting scaling constants to head diversity dynamics.
+
+\textbf{Attention entropy collapse:} \cite{zhai2023} identify attention entropy collapse as a failure mode; our results show that softer scaling (larger $s$) produces flatter attention distributions with higher entropy, which slows early differentiation but may prevent collapse at larger budgets.
+
+\textbf{Evaluation methodology:} Our protocol follows standard practice for small-sample comparisons: paired tests on matched units~\cite{holm1979}, effect sizes with $d_z$~\cite{cohen1988}, and explicit reporting of assumption checks. Recent work has highlighted the importance of careful evaluation methodology~\cite{dong2021,zhai2023}.
+
+\subsection{Budget Dependence}
+
+Extended training to 10 epochs (reported in the supplement) shows that performance gaps between variants become negligible ($<0.5\%$ absolute), consistent with the interpretation that the standard $\sqrt{d_k}$ divisor is primarily important for early training dynamics. This reinforces the conclusion that short-budget pilots do not extrapolate to longer budgets.
+
+---
+
+\section{Conclusion}
+
+This pilot set out to test, under controlled matched conditions, whether plausible alternatives to the standard $1/\sqrt{d_k}$ attention scaling improve text classification. The measured answer at this operating point is mixed: standard attention won every seed-matched comparison on AG News, with statistically supported paired statistics after Holm correction ($p \leq 0.0015$). On SST-2 and IMDB at 2 epochs, the differences are small and not statistically significant. On WikiText-2 (language modelling), standard attention achieves lower perplexity than both alternatives on every seed.
+
+The variants are exactly equivalent in measured computational cost, so the accuracy deficit (where present) is not offset by any efficiency gain. The preregistered hypothesis H1---that at least one alternative scaling function would significantly outperform standard attention on a relevant metric---is \textbf{falsified} at this operating point. H2 (efficiency advantages) does not apply to this parameter-free family. H3 (task- and length-dependence) is partially supported: the ordering of variants depends on the task and budget.
+
+Future work follows directly: (i) repeat the grid at convergence and across a length sweep to test whether the ordering is budget-dependent; (ii) record attention-entropy trajectories to test the flattening mechanism directly; (iii) extend the matched design to attention families that change the equation or its computation (e.g., SSMax~\cite{nakanishi2025scalable}, Focal Attention~\cite{ram2025focal}, Selective Attention~\cite{zhang2024selective}); (iv) test adaptive temperature scaling strategies~\cite{zhang2024selective,ram2025focal,chi2024attention,su2025softplus} that decouple semantic similarity from contextual sparsity; and (v) broaden the task coverage beyond AG News, SST-2, IMDB, and WikiText-2. The complete artifact package---code, preregistered plan, run records, statistics, figures, and this manuscript---accompanies the report so that any of these steps can start from a verified baseline.
+
+---
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

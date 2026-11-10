@@ -1,0 +1,46 @@
+{
+  "run_id": "sst2_temp_tau1.5_seed_1017_2epoch",
+  "dataset": "sst2",
+  "task": "classification",
+  "variant": "temp",
+  "seed": 1017,
+  "config": {
+    "d_model": 128,
+    "n_heads": 4,
+    "n_layers": 2,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "scaling": "temp",
+    "tau": 1.5,
+    "max_seq_len": 128,
+    "vocab_size": 12940
+  },
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.41269277188387166,
+      "val_loss": 0.3032023737922099,
+      "val_accuracy": 0.874600935481476,
+      "val_macro_f1": 0.8737278173096792,
+      "epoch_time_s": 32.39906220010016,
+      "train_examples_per_s": 1663.0110978901553
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.24166145309310344,
+      "val_loss": 0.2707119343263843,
+      "val_accuracy": 0.8943499888633157,
+      "val_macro_f1": 0.893048156123772,
+      "epoch_time_s": 32.5305851000594,
+      "train_examples_per_s": 1656.2874548451211
+    }
+  ],
+  "test_accuracy": 0.8107798165137615,
+  "test_macro_f1": 0.8107078720423104,
+  "test_loss": 0.4477020353078842,
+  "checkpoint_history": [
+    "results\\checkpoints\\sst2_temp_tau1.5_seed_1017_2epoch\\sst2_temp_tau1.5_seed_1017_2epoch_epoch_2.pt"
+  ],
+  "status": "completed",
+  "timestamp": "2026-11-09T14:11:52.393877"
+}

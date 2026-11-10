@@ -1,0 +1,11 @@
+{
+  "dataset": "imdb",
+  "task": "classification",
+  "num_classes": 2,
+  "train_size": 20000,
+  "val_size": 5000,
+  "test_size": 25000,
+  "vocab_size": 18855,
+  "max_len": 128,
+  "train_split_seed": 42
+}

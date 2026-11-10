@@ -1,0 +1,2719 @@
+{
+  "runs": [
+    {
+      "run_id": "wikitext2_dk_seed_1004_25000steps",
+      "seed": 1004,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0771489571962576,
+      "status": "completed",
+      "ts": "2026-11-08T20:57:02.324164"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1005_25000steps",
+      "seed": 1005,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0774950041833533,
+      "status": "completed",
+      "ts": "2026-11-08T21:16:29.729939"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1006_25000steps",
+      "seed": 1006,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0830182559941444,
+      "status": "completed",
+      "ts": "2026-11-08T21:37:52.117582"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1007_25000steps",
+      "seed": 1007,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0811367982927764,
+      "status": "completed",
+      "ts": "2026-11-08T21:59:09.514227"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1008_25000steps",
+      "seed": 1008,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0827596694958543,
+      "status": "completed",
+      "ts": "2026-11-08T22:19:12.354577"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1009_25000steps",
+      "seed": 1009,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0827924368264874,
+      "status": "completed",
+      "ts": "2026-11-08T22:38:45.902260"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1010_25000steps",
+      "seed": 1010,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0851853299320735,
+      "status": "completed",
+      "ts": "2026-11-08T23:01:17.207514"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1011_25000steps",
+      "seed": 1011,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0860632325458774,
+      "status": "completed",
+      "ts": "2026-11-08T23:20:45.204677"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1012_25000steps",
+      "seed": 1012,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0847751956456304,
+      "status": "completed",
+      "ts": "2026-11-08T23:41:44.049728"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1013_25000steps",
+      "seed": 1013,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0823498825591977,
+      "status": "completed",
+      "ts": "2026-11-09T00:00:01.321971"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1014_25000steps",
+      "seed": 1014,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0740575653893496,
+      "status": "completed",
+      "ts": "2026-11-09T00:18:08.265025"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1015_25000steps",
+      "seed": 1015,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0839994179235848,
+      "status": "completed",
+      "ts": "2026-11-09T00:36:14.266806"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1008_25000steps",
+      "seed": 1008,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.0910104249403947,
+      "status": "completed",
+      "ts": "2026-11-09T00:54:30.301729"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1009_25000steps",
+      "seed": 1009,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.0897234270152614,
+      "status": "completed",
+      "ts": "2026-11-09T01:12:37.587361"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1010_25000steps",
+      "seed": 1010,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.080360009333368,
+      "status": "completed",
+      "ts": "2026-11-09T01:30:44.285794"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1011_25000steps",
+      "seed": 1011,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.0862537141823028,
+      "status": "completed",
+      "ts": "2026-11-09T01:48:51.253011"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1012_25000steps",
+      "seed": 1012,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.0941458737275231,
+      "status": "completed",
+      "ts": "2026-11-09T02:06:57.331815"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1013_25000steps",
+      "seed": 1013,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.0803688163797984,
+      "status": "completed",
+      "ts": "2026-11-09T02:25:00.390069"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1014_25000steps",
+      "seed": 1014,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.0837763733304628,
+      "status": "completed",
+      "ts": "2026-11-09T02:43:02.740195"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1015_25000steps",
+      "seed": 1015,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.087541573017738,
+      "status": "completed",
+      "ts": "2026-11-09T03:01:04.406611"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1016_25000steps",
+      "seed": 1016,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0825937563355776,
+      "status": "completed",
+      "ts": "2026-11-09T03:19:06.969415"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1017_25000steps",
+      "seed": 1017,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0784943742871442,
+      "status": "completed",
+      "ts": "2026-11-09T03:37:09.242303"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1018_25000steps",
+      "seed": 1018,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.08242858694593,
+      "status": "completed",
+      "ts": "2026-11-09T03:55:13.912772"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1019_25000steps",
+      "seed": 1019,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.082367924903295,
+      "status": "completed",
+      "ts": "2026-11-09T04:13:15.516969"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1020_25000steps",
+      "seed": 1020,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.083993457698757,
+      "status": "completed",
+      "ts": "2026-11-09T04:31:17.709023"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1021_25000steps",
+      "seed": 1021,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0804601161946357,
+      "status": "completed",
+      "ts": "2026-11-09T04:49:21.595682"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1022_25000steps",
+      "seed": 1022,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0803442248064024,
+      "status": "completed",
+      "ts": "2026-11-09T05:07:23.408743"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1023_25000steps",
+      "seed": 1023,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0810907929327043,
+      "status": "completed",
+      "ts": "2026-11-09T05:25:26.898061"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1024_25000steps",
+      "seed": 1024,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0760117929733053,
+      "status": "completed",
+      "ts": "2026-11-09T05:43:29.118145"
+    },
+    {
+      "run_id": "wikitext2_dk_seed_1025_25000steps",
+      "seed": 1025,
+      "dataset": "wikitext2",
+      "variant": "dk",
+      "test_perplexity": 1.0763595770684613,
+      "status": "completed",
+      "ts": "2026-11-09T06:01:30.586458"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1016_25000steps",
+      "seed": 1016,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.0836347387795184,
+      "status": "completed",
+      "ts": "2026-11-09T06:19:31.069204"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1017_25000steps",
+      "seed": 1017,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.090128861723863,
+      "status": "completed",
+      "ts": "2026-11-09T06:37:48.794960"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1018_25000steps",
+      "seed": 1018,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.0891476698266476,
+      "status": "completed",
+      "ts": "2026-11-09T06:55:53.353277"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1019_25000steps",
+      "seed": 1019,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.0891414076508759,
+      "status": "completed",
+      "ts": "2026-11-09T07:13:56.187212"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1020_25000steps",
+      "seed": 1020,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.0809535010597133,
+      "status": "completed",
+      "ts": "2026-11-09T07:32:38.541906"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1021_25000steps",
+      "seed": 1021,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.0791488180792612,
+      "status": "completed",
+      "ts": "2026-11-09T07:50:59.513537"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1022_25000steps",
+      "seed": 1022,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.080248431198598,
+      "status": "completed",
+      "ts": "2026-11-09T08:08:47.794312"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1023_25000steps",
+      "seed": 1023,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.082251573629205,
+      "status": "completed",
+      "ts": "2026-11-09T08:26:53.593602"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1024_25000steps",
+      "seed": 1024,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.083367048975932,
+      "status": "completed",
+      "ts": "2026-11-09T08:44:56.423259"
+    },
+    {
+      "run_id": "wikitext2_temp_seed_1025_25000steps",
+      "seed": 1025,
+      "dataset": "wikitext2",
+      "variant": "temp",
+      "test_perplexity": 1.0820605002461237,
+      "status": "completed",
+      "ts": "2026-11-09T09:02:57.732101"
+    },
+    {
+      "run_id": "wikitext2_standard_seed_1016_25000steps",
+      "seed": 1016,
+      "dataset": "wikitext2",
+      "variant": "standard",
+      "test_perplexity": 1.0849452208813717,
+      "status": "completed",
+      "ts": "2026-11-09T09:20:48.382332"
+    },
+    {
+      "run_id": "wikitext2_standard_seed_1017_25000steps",
+      "seed": 1017,
+      "dataset": "wikitext2",
+      "variant": "standard",
+      "test_perplexity": 1.0942367947390834,
+      "status": "completed",
+      "ts": "2026-11-09T09:39:37.790132"
+    },
+    {
+      "run_id": "wikitext2_standard_seed_1018_25000steps",
+      "seed": 1018,
+      "dataset": "wikitext2",
+      "variant": "standard",
+      "test_perplexity": 1.104379584775791,
+      "status": "completed",
+      "ts": "2026-11-09T09:57:57.403030"
+    },
+    {
+      "run_id": "wikitext2_standard_seed_1019_25000steps",
+      "seed": 1019,
+      "dataset": "wikitext2",
+      "variant": "standard",
+      "test_perplexity": 1.0903241492277127,
+      "status": "completed",
+      "ts": "2026-11-09T10:15:59.961437"
+    },
+    {
+      "run_id": "wikitext2_standard_seed_1020_25000steps",
+      "seed": 1020,
+      "dataset": "wikitext2",
+      "variant": "standard",
+      "test_perplexity": 1.0858136119540507,
+      "status": "completed",
+      "ts": "2026-11-09T10:34:21.816566"
+    },
+    {
+      "run_id": "wikitext2_standard_seed_1021_25000steps",
+      "seed": 1021,
+      "dataset": "wikitext2",
+      "variant": "standard",
+      "test_perplexity": 1.0876174746377574,
+      "status": "completed",
+      "ts": "2026-11-09T10:52:12.495640"
+    },
+    {
+      "run_id": "wikitext2_standard_seed_1022_25000steps",
+      "seed": 1022,
+      "dataset": "wikitext2",
+      "variant": "standard",
+      "test_perplexity": 1.0908871475711903,
+      "status": "completed",
+      "ts": "2026-11-09T11:10:32.422094"
+    },
+    {
+      "run_id": "wikitext2_standard_seed_1023_25000steps",
+      "seed": 1023,
+      "dataset": "wikitext2",
+      "variant": "standard",
+      "test_perplexity": 1.0898673459978119,
+      "status": "completed",
+      "ts": "2026-11-09T11:28:24.898552"
+    },
+    {
+      "run_id": "wikitext2_standard_seed_1024_25000steps",
+      "seed": 1024,
+      "dataset": "wikitext2",
+      "variant": "standard",
+      "test_perplexity": 1.0836902529321164,
+      "status": "completed",
+      "ts": "2026-11-09T11:47:04.447834"
+    },
+    {
+      "run_id": "wikitext2_standard_seed_1025_25000steps",
+      "seed": 1025,
+      "dataset": "wikitext2",
+      "variant": "standard",
+      "test_perplexity": 1.0907724877813498,
+      "status": "completed",
+      "ts": "2026-11-09T12:05:18.745951"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1001_2epoch",
+      "seed": 1001,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8142201834862385,
+      "status": "completed",
+      "ts": "2026-11-09T12:53:54.654677"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1002_2epoch",
+      "seed": 1002,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8130733944954128,
+      "status": "completed",
+      "ts": "2026-11-09T12:55:06.528787"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1003_2epoch",
+      "seed": 1003,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8119266055045872,
+      "status": "completed",
+      "ts": "2026-11-09T12:56:17.342665"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1004_2epoch",
+      "seed": 1004,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8061926605504587,
+      "status": "completed",
+      "ts": "2026-11-09T12:57:28.887645"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1005_2epoch",
+      "seed": 1005,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8107798165137615,
+      "status": "completed",
+      "ts": "2026-11-09T12:58:39.794689"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1006_2epoch",
+      "seed": 1006,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8211009174311926,
+      "status": "completed",
+      "ts": "2026-11-09T12:59:50.479660"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1007_2epoch",
+      "seed": 1007,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8061926605504587,
+      "status": "completed",
+      "ts": "2026-11-09T13:01:01.056848"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1008_2epoch",
+      "seed": 1008,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8038990825688074,
+      "status": "completed",
+      "ts": "2026-11-09T13:02:11.692691"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1009_2epoch",
+      "seed": 1009,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8061926605504587,
+      "status": "completed",
+      "ts": "2026-11-09T13:03:22.499060"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1010_2epoch",
+      "seed": 1010,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8165137614678899,
+      "status": "completed",
+      "ts": "2026-11-09T13:04:32.932946"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1011_2epoch",
+      "seed": 1011,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.819954128440367,
+      "status": "completed",
+      "ts": "2026-11-09T13:05:44.164485"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1012_2epoch",
+      "seed": 1012,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8188073394495413,
+      "status": "completed",
+      "ts": "2026-11-09T13:06:54.849268"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1013_2epoch",
+      "seed": 1013,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8061926605504587,
+      "status": "completed",
+      "ts": "2026-11-09T13:08:05.555940"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1014_2epoch",
+      "seed": 1014,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8142201834862385,
+      "status": "completed",
+      "ts": "2026-11-09T13:09:17.200730"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1015_2epoch",
+      "seed": 1015,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8038990825688074,
+      "status": "completed",
+      "ts": "2026-11-09T13:10:28.569986"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1016_2epoch",
+      "seed": 1016,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.805045871559633,
+      "status": "completed",
+      "ts": "2026-11-09T13:11:39.177783"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1017_2epoch",
+      "seed": 1017,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.805045871559633,
+      "status": "completed",
+      "ts": "2026-11-09T13:12:49.718641"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1018_2epoch",
+      "seed": 1018,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8153669724770642,
+      "status": "completed",
+      "ts": "2026-11-09T13:14:01.516222"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1019_2epoch",
+      "seed": 1019,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8061926605504587,
+      "status": "completed",
+      "ts": "2026-11-09T13:15:12.216694"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1020_2epoch",
+      "seed": 1020,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8073394495412844,
+      "status": "completed",
+      "ts": "2026-11-09T13:16:22.691457"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1021_2epoch",
+      "seed": 1021,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8107798165137615,
+      "status": "completed",
+      "ts": "2026-11-09T13:17:33.302597"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1022_2epoch",
+      "seed": 1022,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8107798165137615,
+      "status": "completed",
+      "ts": "2026-11-09T13:18:43.512204"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1023_2epoch",
+      "seed": 1023,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.819954128440367,
+      "status": "completed",
+      "ts": "2026-11-09T13:19:54.230265"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1024_2epoch",
+      "seed": 1024,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8096330275229358,
+      "status": "completed",
+      "ts": "2026-11-09T13:21:05.059671"
+    },
+    {
+      "run_id": "sst2_temp_tau0.5_seed_1025_2epoch",
+      "seed": 1025,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8061926605504587,
+      "status": "completed",
+      "ts": "2026-11-09T13:22:16.562248"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1001_2epoch",
+      "seed": 1001,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8119266055045872,
+      "status": "completed",
+      "ts": "2026-11-09T13:23:27.039511"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1002_2epoch",
+      "seed": 1002,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8130733944954128,
+      "status": "completed",
+      "ts": "2026-11-09T13:24:38.364038"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1003_2epoch",
+      "seed": 1003,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8176605504587156,
+      "status": "completed",
+      "ts": "2026-11-09T13:25:49.257038"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1004_2epoch",
+      "seed": 1004,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8004587155963303,
+      "status": "completed",
+      "ts": "2026-11-09T13:27:00.530029"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1005_2epoch",
+      "seed": 1005,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.801605504587156,
+      "status": "completed",
+      "ts": "2026-11-09T13:28:11.280514"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1006_2epoch",
+      "seed": 1006,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8222477064220184,
+      "status": "completed",
+      "ts": "2026-11-09T13:29:22.367089"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1007_2epoch",
+      "seed": 1007,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8061926605504587,
+      "status": "completed",
+      "ts": "2026-11-09T13:30:33.102045"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1008_2epoch",
+      "seed": 1008,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8038990825688074,
+      "status": "completed",
+      "ts": "2026-11-09T13:31:43.701612"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1009_2epoch",
+      "seed": 1009,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8061926605504587,
+      "status": "completed",
+      "ts": "2026-11-09T13:32:54.583730"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1010_2epoch",
+      "seed": 1010,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8119266055045872,
+      "status": "completed",
+      "ts": "2026-11-09T13:34:05.050016"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1011_2epoch",
+      "seed": 1011,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8107798165137615,
+      "status": "completed",
+      "ts": "2026-11-09T13:35:15.591111"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1012_2epoch",
+      "seed": 1012,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8153669724770642,
+      "status": "completed",
+      "ts": "2026-11-09T13:36:26.235690"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1013_2epoch",
+      "seed": 1013,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8038990825688074,
+      "status": "completed",
+      "ts": "2026-11-09T13:37:37.772852"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1014_2epoch",
+      "seed": 1014,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8176605504587156,
+      "status": "completed",
+      "ts": "2026-11-09T13:38:48.416505"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1015_2epoch",
+      "seed": 1015,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8004587155963303,
+      "status": "completed",
+      "ts": "2026-11-09T13:40:00.653756"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1016_2epoch",
+      "seed": 1016,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8061926605504587,
+      "status": "completed",
+      "ts": "2026-11-09T13:41:10.998390"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1017_2epoch",
+      "seed": 1017,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8061926605504587,
+      "status": "completed",
+      "ts": "2026-11-09T13:42:21.327237"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1018_2epoch",
+      "seed": 1018,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8096330275229358,
+      "status": "completed",
+      "ts": "2026-11-09T13:43:32.082725"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1019_2epoch",
+      "seed": 1019,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8038990825688074,
+      "status": "completed",
+      "ts": "2026-11-09T13:44:42.769682"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1020_2epoch",
+      "seed": 1020,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8038990825688074,
+      "status": "completed",
+      "ts": "2026-11-09T13:45:54.180108"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1021_2epoch",
+      "seed": 1021,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8096330275229358,
+      "status": "completed",
+      "ts": "2026-11-09T13:47:04.486190"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1022_2epoch",
+      "seed": 1022,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8107798165137615,
+      "status": "completed",
+      "ts": "2026-11-09T13:48:15.130824"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1023_2epoch",
+      "seed": 1023,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8130733944954128,
+      "status": "completed",
+      "ts": "2026-11-09T13:49:25.787239"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1024_2epoch",
+      "seed": 1024,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8061926605504587,
+      "status": "completed",
+      "ts": "2026-11-09T13:50:36.377309"
+    },
+    {
+      "run_id": "sst2_temp_tau1.0_seed_1025_2epoch",
+      "seed": 1025,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8038990825688074,
+      "status": "completed",
+      "ts": "2026-11-09T13:51:47.170048"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1001_2epoch",
+      "seed": 1001,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8130733944954128,
+      "status": "completed",
+      "ts": "2026-11-09T13:52:57.533545"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1002_2epoch",
+      "seed": 1002,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8107798165137615,
+      "status": "completed",
+      "ts": "2026-11-09T13:54:08.836787"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1003_2epoch",
+      "seed": 1003,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8176605504587156,
+      "status": "completed",
+      "ts": "2026-11-09T13:55:20.584830"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1004_2epoch",
+      "seed": 1004,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.7981651376146789,
+      "status": "completed",
+      "ts": "2026-11-09T13:56:30.978779"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1005_2epoch",
+      "seed": 1005,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8027522935779816,
+      "status": "completed",
+      "ts": "2026-11-09T13:57:41.758661"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1006_2epoch",
+      "seed": 1006,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.819954128440367,
+      "status": "completed",
+      "ts": "2026-11-09T13:58:52.305228"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1007_2epoch",
+      "seed": 1007,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8004587155963303,
+      "status": "completed",
+      "ts": "2026-11-09T14:00:03.082602"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1008_2epoch",
+      "seed": 1008,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8027522935779816,
+      "status": "completed",
+      "ts": "2026-11-09T14:01:14.055559"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1009_2epoch",
+      "seed": 1009,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8084862385321101,
+      "status": "completed",
+      "ts": "2026-11-09T14:02:25.369389"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1010_2epoch",
+      "seed": 1010,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8153669724770642,
+      "status": "completed",
+      "ts": "2026-11-09T14:03:36.258452"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1011_2epoch",
+      "seed": 1011,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8084862385321101,
+      "status": "completed",
+      "ts": "2026-11-09T14:04:46.710954"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1012_2epoch",
+      "seed": 1012,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8096330275229358,
+      "status": "completed",
+      "ts": "2026-11-09T14:05:57.483790"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1013_2epoch",
+      "seed": 1013,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8038990825688074,
+      "status": "completed",
+      "ts": "2026-11-09T14:07:08.219438"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1014_2epoch",
+      "seed": 1014,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8176605504587156,
+      "status": "completed",
+      "ts": "2026-11-09T14:08:18.741674"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1015_2epoch",
+      "seed": 1015,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8027522935779816,
+      "status": "completed",
+      "ts": "2026-11-09T14:09:30.694576"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1016_2epoch",
+      "seed": 1016,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8038990825688074,
+      "status": "completed",
+      "ts": "2026-11-09T14:10:42.018769"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1017_2epoch",
+      "seed": 1017,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8107798165137615,
+      "status": "completed",
+      "ts": "2026-11-09T14:11:52.393877"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1018_2epoch",
+      "seed": 1018,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8119266055045872,
+      "status": "completed",
+      "ts": "2026-11-09T14:13:02.933922"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1019_2epoch",
+      "seed": 1019,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.801605504587156,
+      "status": "completed",
+      "ts": "2026-11-09T14:14:13.669863"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1020_2epoch",
+      "seed": 1020,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8073394495412844,
+      "status": "completed",
+      "ts": "2026-11-09T14:15:24.685768"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1021_2epoch",
+      "seed": 1021,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8073394495412844,
+      "status": "completed",
+      "ts": "2026-11-09T14:16:34.842353"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1022_2epoch",
+      "seed": 1022,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8084862385321101,
+      "status": "completed",
+      "ts": "2026-11-09T14:17:45.702328"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1023_2epoch",
+      "seed": 1023,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8130733944954128,
+      "status": "completed",
+      "ts": "2026-11-09T18:27:24.210134"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1024_2epoch",
+      "seed": 1024,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8038990825688074,
+      "status": "completed",
+      "ts": "2026-11-09T18:28:34.094175"
+    },
+    {
+      "run_id": "sst2_temp_tau1.5_seed_1025_2epoch",
+      "seed": 1025,
+      "dataset": "sst2",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.805045871559633,
+      "status": "completed",
+      "ts": "2026-11-09T18:29:43.780454"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1001_2epoch",
+      "seed": 1001,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8226,
+      "status": "completed",
+      "ts": "2026-11-09T18:30:05.504677"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1002_2epoch",
+      "seed": 1002,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82372,
+      "status": "completed",
+      "ts": "2026-11-09T18:30:37.784274"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1003_2epoch",
+      "seed": 1003,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82332,
+      "status": "completed",
+      "ts": "2026-11-09T18:31:09.804709"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1004_2epoch",
+      "seed": 1004,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8228,
+      "status": "completed",
+      "ts": "2026-11-09T18:31:42.686722"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1005_2epoch",
+      "seed": 1005,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82364,
+      "status": "completed",
+      "ts": "2026-11-09T18:32:15.629069"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1006_2epoch",
+      "seed": 1006,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82132,
+      "status": "completed",
+      "ts": "2026-11-09T18:32:48.540250"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1007_2epoch",
+      "seed": 1007,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82588,
+      "status": "completed",
+      "ts": "2026-11-09T18:33:21.963567"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1008_2epoch",
+      "seed": 1008,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82076,
+      "status": "completed",
+      "ts": "2026-11-09T18:33:55.468905"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1009_2epoch",
+      "seed": 1009,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82368,
+      "status": "completed",
+      "ts": "2026-11-09T18:34:28.794887"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1010_2epoch",
+      "seed": 1010,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8232,
+      "status": "completed",
+      "ts": "2026-11-09T18:35:01.881335"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1011_2epoch",
+      "seed": 1011,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82452,
+      "status": "completed",
+      "ts": "2026-11-09T18:35:34.964572"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1012_2epoch",
+      "seed": 1012,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82528,
+      "status": "completed",
+      "ts": "2026-11-09T18:36:07.812119"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1013_2epoch",
+      "seed": 1013,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82392,
+      "status": "completed",
+      "ts": "2026-11-09T18:36:40.526831"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1014_2epoch",
+      "seed": 1014,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8238,
+      "status": "completed",
+      "ts": "2026-11-09T18:37:13.552177"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1015_2epoch",
+      "seed": 1015,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82356,
+      "status": "completed",
+      "ts": "2026-11-09T18:37:46.508039"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1016_2epoch",
+      "seed": 1016,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.81528,
+      "status": "completed",
+      "ts": "2026-11-09T18:38:19.364043"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1017_2epoch",
+      "seed": 1017,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82412,
+      "status": "completed",
+      "ts": "2026-11-09T18:38:52.208508"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1018_2epoch",
+      "seed": 1018,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82296,
+      "status": "completed",
+      "ts": "2026-11-09T18:39:25.564847"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1019_2epoch",
+      "seed": 1019,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82216,
+      "status": "completed",
+      "ts": "2026-11-09T18:39:58.723525"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1020_2epoch",
+      "seed": 1020,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8218,
+      "status": "completed",
+      "ts": "2026-11-09T18:40:31.104563"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1021_2epoch",
+      "seed": 1021,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82284,
+      "status": "completed",
+      "ts": "2026-11-09T18:41:03.823864"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1022_2epoch",
+      "seed": 1022,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82236,
+      "status": "completed",
+      "ts": "2026-11-09T18:41:37.095276"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1023_2epoch",
+      "seed": 1023,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.82072,
+      "status": "completed",
+      "ts": "2026-11-09T18:42:10.095784"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1024_2epoch",
+      "seed": 1024,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8256,
+      "status": "completed",
+      "ts": "2026-11-09T18:42:43.306396"
+    },
+    {
+      "run_id": "imdb_temp_tau0.5_seed_1025_2epoch",
+      "seed": 1025,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.8224,
+      "status": "completed",
+      "ts": "2026-11-09T18:43:16.648122"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1001_2epoch",
+      "seed": 1001,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82136,
+      "status": "completed",
+      "ts": "2026-11-09T18:43:49.662227"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1002_2epoch",
+      "seed": 1002,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82324,
+      "status": "completed",
+      "ts": "2026-11-09T18:44:22.535786"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1003_2epoch",
+      "seed": 1003,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82208,
+      "status": "completed",
+      "ts": "2026-11-09T18:44:55.634970"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1004_2epoch",
+      "seed": 1004,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8234,
+      "status": "completed",
+      "ts": "2026-11-09T18:45:28.526907"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1005_2epoch",
+      "seed": 1005,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82316,
+      "status": "completed",
+      "ts": "2026-11-09T18:46:00.578608"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1006_2epoch",
+      "seed": 1006,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82076,
+      "status": "completed",
+      "ts": "2026-11-09T18:46:30.986240"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1007_2epoch",
+      "seed": 1007,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82508,
+      "status": "completed",
+      "ts": "2026-11-09T18:47:01.426193"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1008_2epoch",
+      "seed": 1008,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.81972,
+      "status": "completed",
+      "ts": "2026-11-09T18:47:32.464968"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1009_2epoch",
+      "seed": 1009,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.823,
+      "status": "completed",
+      "ts": "2026-11-09T18:48:03.690720"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1010_2epoch",
+      "seed": 1010,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82328,
+      "status": "completed",
+      "ts": "2026-11-09T18:48:34.148742"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1011_2epoch",
+      "seed": 1011,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82436,
+      "status": "completed",
+      "ts": "2026-11-09T18:49:04.905645"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1012_2epoch",
+      "seed": 1012,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82528,
+      "status": "completed",
+      "ts": "2026-11-09T18:49:36.082210"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1013_2epoch",
+      "seed": 1013,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.8222,
+      "status": "completed",
+      "ts": "2026-11-09T18:50:06.721036"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1014_2epoch",
+      "seed": 1014,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82268,
+      "status": "completed",
+      "ts": "2026-11-09T18:50:37.330626"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1015_2epoch",
+      "seed": 1015,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82196,
+      "status": "completed",
+      "ts": "2026-11-09T18:51:07.941193"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1016_2epoch",
+      "seed": 1016,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.81548,
+      "status": "completed",
+      "ts": "2026-11-09T18:51:38.578837"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1017_2epoch",
+      "seed": 1017,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82452,
+      "status": "completed",
+      "ts": "2026-11-09T18:52:08.881970"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1018_2epoch",
+      "seed": 1018,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82248,
+      "status": "completed",
+      "ts": "2026-11-09T18:52:39.274952"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1019_2epoch",
+      "seed": 1019,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82148,
+      "status": "completed",
+      "ts": "2026-11-09T18:53:09.854561"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1020_2epoch",
+      "seed": 1020,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82048,
+      "status": "completed",
+      "ts": "2026-11-09T18:53:41.016981"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1021_2epoch",
+      "seed": 1021,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82188,
+      "status": "completed",
+      "ts": "2026-11-09T18:54:12.229267"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1022_2epoch",
+      "seed": 1022,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82096,
+      "status": "completed",
+      "ts": "2026-11-09T18:54:43.143155"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1023_2epoch",
+      "seed": 1023,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82084,
+      "status": "completed",
+      "ts": "2026-11-09T18:55:14.210211"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1024_2epoch",
+      "seed": 1024,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82456,
+      "status": "completed",
+      "ts": "2026-11-09T18:55:44.715496"
+    },
+    {
+      "run_id": "imdb_temp_tau1.0_seed_1025_2epoch",
+      "seed": 1025,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.82152,
+      "status": "completed",
+      "ts": "2026-11-09T18:56:15.137047"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1001_2epoch",
+      "seed": 1001,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82164,
+      "status": "completed",
+      "ts": "2026-11-09T18:56:45.649804"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1002_2epoch",
+      "seed": 1002,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8224,
+      "status": "completed",
+      "ts": "2026-11-09T18:57:16.459023"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1003_2epoch",
+      "seed": 1003,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82184,
+      "status": "completed",
+      "ts": "2026-11-09T18:57:47.463869"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1004_2epoch",
+      "seed": 1004,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82284,
+      "status": "completed",
+      "ts": "2026-11-09T18:58:17.752179"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1005_2epoch",
+      "seed": 1005,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82292,
+      "status": "completed",
+      "ts": "2026-11-09T18:58:48.115511"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1006_2epoch",
+      "seed": 1006,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82128,
+      "status": "completed",
+      "ts": "2026-11-09T18:59:19.058150"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1007_2epoch",
+      "seed": 1007,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82528,
+      "status": "completed",
+      "ts": "2026-11-09T18:59:50.195980"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1008_2epoch",
+      "seed": 1008,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82064,
+      "status": "completed",
+      "ts": "2026-11-09T19:00:21.477150"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1009_2epoch",
+      "seed": 1009,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82292,
+      "status": "completed",
+      "ts": "2026-11-09T19:00:51.985197"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1010_2epoch",
+      "seed": 1010,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8234,
+      "status": "completed",
+      "ts": "2026-11-09T19:01:22.637558"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1011_2epoch",
+      "seed": 1011,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82444,
+      "status": "completed",
+      "ts": "2026-11-09T19:01:53.176325"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1012_2epoch",
+      "seed": 1012,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8242,
+      "status": "completed",
+      "ts": "2026-11-09T19:02:23.561899"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1013_2epoch",
+      "seed": 1013,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82164,
+      "status": "completed",
+      "ts": "2026-11-09T19:02:53.960824"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1014_2epoch",
+      "seed": 1014,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8226,
+      "status": "completed",
+      "ts": "2026-11-09T19:03:24.281551"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1015_2epoch",
+      "seed": 1015,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82216,
+      "status": "completed",
+      "ts": "2026-11-09T19:03:54.719431"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1016_2epoch",
+      "seed": 1016,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.81528,
+      "status": "completed",
+      "ts": "2026-11-09T19:04:24.804831"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1017_2epoch",
+      "seed": 1017,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82428,
+      "status": "completed",
+      "ts": "2026-11-09T19:04:55.499125"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1018_2epoch",
+      "seed": 1018,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82188,
+      "status": "completed",
+      "ts": "2026-11-09T19:05:25.839152"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1019_2epoch",
+      "seed": 1019,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82132,
+      "status": "completed",
+      "ts": "2026-11-09T19:05:43.976881"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1020_2epoch",
+      "seed": 1020,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82024,
+      "status": "completed",
+      "ts": "2026-11-09T19:06:14.764823"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1021_2epoch",
+      "seed": 1021,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82104,
+      "status": "completed",
+      "ts": "2026-11-09T19:06:46.030661"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1022_2epoch",
+      "seed": 1022,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8238,
+      "status": "completed",
+      "ts": "2026-11-09T19:07:18.589052"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1023_2epoch",
+      "seed": 1023,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.8194,
+      "status": "completed",
+      "ts": "2026-11-09T19:07:51.370861"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1024_2epoch",
+      "seed": 1024,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82452,
+      "status": "completed",
+      "ts": "2026-11-09T19:08:23.938449"
+    },
+    {
+      "run_id": "imdb_temp_tau1.5_seed_1025_2epoch",
+      "seed": 1025,
+      "dataset": "imdb",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.82188,
+      "status": "completed",
+      "ts": "2026-11-09T19:08:56.489934"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1001_2epoch",
+      "seed": 1001,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9128947368421053,
+      "status": "completed",
+      "ts": "2026-11-09T19:11:10.802889"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1002_2epoch",
+      "seed": 1002,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.910921052631579,
+      "status": "completed",
+      "ts": "2026-11-09T19:13:25.940575"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1003_2epoch",
+      "seed": 1003,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9156578947368421,
+      "status": "completed",
+      "ts": "2026-11-09T19:15:40.952605"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1004_2epoch",
+      "seed": 1004,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.908157894736842,
+      "status": "completed",
+      "ts": "2026-11-09T19:17:55.368476"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1005_2epoch",
+      "seed": 1005,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9151315789473684,
+      "status": "completed",
+      "ts": "2026-11-09T19:20:09.211273"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1006_2epoch",
+      "seed": 1006,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9153947368421053,
+      "status": "completed",
+      "ts": "2026-11-09T19:22:21.337348"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1007_2epoch",
+      "seed": 1007,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9110526315789473,
+      "status": "completed",
+      "ts": "2026-11-09T19:24:26.154018"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1008_2epoch",
+      "seed": 1008,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.911578947368421,
+      "status": "completed",
+      "ts": "2026-11-09T19:26:32.029502"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1009_2epoch",
+      "seed": 1009,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9140789473684211,
+      "status": "completed",
+      "ts": "2026-11-09T19:28:37.139989"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1010_2epoch",
+      "seed": 1010,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9110526315789473,
+      "status": "completed",
+      "ts": "2026-11-09T19:30:41.645271"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1011_2epoch",
+      "seed": 1011,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9105263157894737,
+      "status": "completed",
+      "ts": "2026-11-09T19:32:46.521405"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1012_2epoch",
+      "seed": 1012,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9153947368421053,
+      "status": "completed",
+      "ts": "2026-11-09T19:34:50.284938"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1013_2epoch",
+      "seed": 1013,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9090789473684211,
+      "status": "completed",
+      "ts": "2026-11-09T19:36:54.466707"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1014_2epoch",
+      "seed": 1014,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9127631578947368,
+      "status": "completed",
+      "ts": "2026-11-09T19:38:59.697379"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1015_2epoch",
+      "seed": 1015,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9056578947368421,
+      "status": "completed",
+      "ts": "2026-11-09T19:41:05.167044"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1016_2epoch",
+      "seed": 1016,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9127631578947368,
+      "status": "completed",
+      "ts": "2026-11-09T19:43:09.405025"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1017_2epoch",
+      "seed": 1017,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9180263157894737,
+      "status": "completed",
+      "ts": "2026-11-09T19:45:13.666116"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1018_2epoch",
+      "seed": 1018,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9119736842105263,
+      "status": "completed",
+      "ts": "2026-11-09T19:47:17.941004"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1019_2epoch",
+      "seed": 1019,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9142105263157895,
+      "status": "completed",
+      "ts": "2026-11-09T19:49:22.364698"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1020_2epoch",
+      "seed": 1020,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9111842105263158,
+      "status": "completed",
+      "ts": "2026-11-09T19:51:14.119696"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1021_2epoch",
+      "seed": 1021,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9128947368421053,
+      "status": "completed",
+      "ts": "2026-11-09T19:53:19.109505"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1022_2epoch",
+      "seed": 1022,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9155263157894736,
+      "status": "completed",
+      "ts": "2026-11-09T19:55:25.245781"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1023_2epoch",
+      "seed": 1023,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9118421052631579,
+      "status": "completed",
+      "ts": "2026-11-09T19:57:31.356849"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1024_2epoch",
+      "seed": 1024,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9131578947368421,
+      "status": "completed",
+      "ts": "2026-11-09T19:59:35.213255"
+    },
+    {
+      "run_id": "agnews_temp_tau0.5_seed_1025_2epoch",
+      "seed": 1025,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 0.5,
+      "test_accuracy": 0.9131578947368421,
+      "status": "completed",
+      "ts": "2026-11-09T20:01:40.889335"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1001_2epoch",
+      "seed": 1001,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9114473684210527,
+      "status": "completed",
+      "ts": "2026-11-09T20:03:45.956882"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1002_2epoch",
+      "seed": 1002,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9072368421052631,
+      "status": "completed",
+      "ts": "2026-11-09T20:05:50.229585"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1003_2epoch",
+      "seed": 1003,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9135526315789474,
+      "status": "completed",
+      "ts": "2026-11-09T20:07:54.792121"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1004_2epoch",
+      "seed": 1004,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9086842105263158,
+      "status": "completed",
+      "ts": "2026-11-09T20:10:01.102518"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1005_2epoch",
+      "seed": 1005,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9140789473684211,
+      "status": "completed",
+      "ts": "2026-11-09T20:12:05.082385"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1006_2epoch",
+      "seed": 1006,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9138157894736842,
+      "status": "completed",
+      "ts": "2026-11-09T20:14:09.371739"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1007_2epoch",
+      "seed": 1007,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9127631578947368,
+      "status": "completed",
+      "ts": "2026-11-09T20:16:13.360314"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1008_2epoch",
+      "seed": 1008,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9138157894736842,
+      "status": "completed",
+      "ts": "2026-11-09T20:18:18.198902"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1009_2epoch",
+      "seed": 1009,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9140789473684211,
+      "status": "completed",
+      "ts": "2026-11-09T20:20:23.081377"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1010_2epoch",
+      "seed": 1010,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9098684210526315,
+      "status": "completed",
+      "ts": "2026-11-09T20:22:27.918881"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1011_2epoch",
+      "seed": 1011,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9082894736842105,
+      "status": "completed",
+      "ts": "2026-11-09T20:24:40.297326"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1012_2epoch",
+      "seed": 1012,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.915921052631579,
+      "status": "completed",
+      "ts": "2026-11-09T20:26:46.812716"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1013_2epoch",
+      "seed": 1013,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9106578947368421,
+      "status": "completed",
+      "ts": "2026-11-09T20:28:51.640456"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1014_2epoch",
+      "seed": 1014,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9142105263157895,
+      "status": "completed",
+      "ts": "2026-11-09T22:30:19.669824"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1015_2epoch",
+      "seed": 1015,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9056578947368421,
+      "status": "completed",
+      "ts": "2026-11-09T22:32:25.254607"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1016_2epoch",
+      "seed": 1016,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.915,
+      "status": "completed",
+      "ts": "2026-11-09T22:34:31.410206"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1017_2epoch",
+      "seed": 1017,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9164473684210527,
+      "status": "completed",
+      "ts": "2026-11-09T22:36:36.447600"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1018_2epoch",
+      "seed": 1018,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9122368421052631,
+      "status": "completed",
+      "ts": "2026-11-09T22:38:47.456143"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1019_2epoch",
+      "seed": 1019,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9148684210526316,
+      "status": "completed",
+      "ts": "2026-11-09T22:40:56.627629"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1020_2epoch",
+      "seed": 1020,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9111842105263158,
+      "status": "completed",
+      "ts": "2026-11-09T22:43:02.607937"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1021_2epoch",
+      "seed": 1021,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.911578947368421,
+      "status": "completed",
+      "ts": "2026-11-09T22:45:07.754261"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1022_2epoch",
+      "seed": 1022,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9138157894736842,
+      "status": "completed",
+      "ts": "2026-11-09T22:47:13.862208"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1023_2epoch",
+      "seed": 1023,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9126315789473685,
+      "status": "completed",
+      "ts": "2026-11-09T22:49:19.212636"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1024_2epoch",
+      "seed": 1024,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9118421052631579,
+      "status": "completed",
+      "ts": "2026-11-09T22:51:24.857729"
+    },
+    {
+      "run_id": "agnews_temp_tau1.0_seed_1025_2epoch",
+      "seed": 1025,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.0,
+      "test_accuracy": 0.9134210526315789,
+      "status": "completed",
+      "ts": "2026-11-09T22:53:30.109801"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1001_2epoch",
+      "seed": 1001,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9102631578947369,
+      "status": "completed",
+      "ts": "2026-11-09T22:55:36.552933"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1002_2epoch",
+      "seed": 1002,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9103947368421053,
+      "status": "completed",
+      "ts": "2026-11-09T22:57:33.145678"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1003_2epoch",
+      "seed": 1003,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.910921052631579,
+      "status": "completed",
+      "ts": "2026-11-09T22:59:46.527549"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1004_2epoch",
+      "seed": 1004,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9088157894736842,
+      "status": "completed",
+      "ts": "2026-11-09T23:01:59.187010"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1005_2epoch",
+      "seed": 1005,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9142105263157895,
+      "status": "completed",
+      "ts": "2026-11-09T23:04:12.017040"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1006_2epoch",
+      "seed": 1006,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9142105263157895,
+      "status": "completed",
+      "ts": "2026-11-09T23:06:25.020213"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1007_2epoch",
+      "seed": 1007,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9127631578947368,
+      "status": "completed",
+      "ts": "2026-11-09T23:08:34.788529"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1008_2epoch",
+      "seed": 1008,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9101315789473684,
+      "status": "completed",
+      "ts": "2026-11-09T23:10:49.255650"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1009_2epoch",
+      "seed": 1009,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9146052631578947,
+      "status": "completed",
+      "ts": "2026-11-09T23:13:04.185903"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1010_2epoch",
+      "seed": 1010,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9051315789473684,
+      "status": "completed",
+      "ts": "2026-11-09T23:15:19.743366"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1011_2epoch",
+      "seed": 1011,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9082894736842105,
+      "status": "completed",
+      "ts": "2026-11-09T23:17:33.348918"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1012_2epoch",
+      "seed": 1012,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9146052631578947,
+      "status": "completed",
+      "ts": "2026-11-09T23:19:46.920681"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1013_2epoch",
+      "seed": 1013,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9092105263157895,
+      "status": "completed",
+      "ts": "2026-11-09T23:22:02.220454"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1014_2epoch",
+      "seed": 1014,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9139473684210526,
+      "status": "completed",
+      "ts": "2026-11-09T23:24:17.032564"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1015_2epoch",
+      "seed": 1015,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9076315789473685,
+      "status": "completed",
+      "ts": "2026-11-09T23:26:30.113180"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1016_2epoch",
+      "seed": 1016,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9142105263157895,
+      "status": "completed",
+      "ts": "2026-11-09T23:28:42.751383"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1017_2epoch",
+      "seed": 1017,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9167105263157894,
+      "status": "completed",
+      "ts": "2026-11-09T23:30:56.702436"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1018_2epoch",
+      "seed": 1018,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9121052631578948,
+      "status": "completed",
+      "ts": "2026-11-09T23:33:03.655844"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1019_2epoch",
+      "seed": 1019,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9127631578947368,
+      "status": "completed",
+      "ts": "2026-11-09T23:35:07.040292"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1020_2epoch",
+      "seed": 1020,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9103947368421053,
+      "status": "completed",
+      "ts": "2026-11-09T23:37:10.742296"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1021_2epoch",
+      "seed": 1021,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9125,
+      "status": "completed",
+      "ts": "2026-11-09T23:39:15.917728"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1022_2epoch",
+      "seed": 1022,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9128947368421053,
+      "status": "completed",
+      "ts": "2026-11-09T23:41:19.241431"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1023_2epoch",
+      "seed": 1023,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9122368421052631,
+      "status": "completed",
+      "ts": "2026-11-09T23:43:22.643423"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1024_2epoch",
+      "seed": 1024,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.9132894736842105,
+      "status": "completed",
+      "ts": "2026-11-09T23:45:26.923939"
+    },
+    {
+      "run_id": "agnews_temp_tau1.5_seed_1025_2epoch",
+      "seed": 1025,
+      "dataset": "agnews",
+      "variant": "temp",
+      "tau": 1.5,
+      "test_accuracy": 0.91,
+      "status": "completed",
+      "ts": "2026-11-09T23:47:30.490865"
+    }
+  ],
+  "started": {
+    "ts": "2026-11-09T22:27:49.712872",
+    "device": "cuda",
+    "plan_counts": {},
+    "stages": [
+      "4"
+    ]
+  },
+  "ledger_updated": "2026-11-09T23:47:31.645002",
+  "summary": {
+    "ts": "2026-11-09T23:47:31.619715",
+    "completed": 75,
+    "planned": 75,
+    "errors": 0
+  }
+}

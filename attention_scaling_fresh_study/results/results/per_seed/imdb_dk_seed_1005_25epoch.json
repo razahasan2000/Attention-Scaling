@@ -1,0 +1,258 @@
+{
+  "run_id": "imdb_dk_seed_1005_25epoch",
+  "dataset": "imdb",
+  "task": "classification",
+  "variant": "dk",
+  "seed": 1005,
+  "config": {
+    "d_model": 128,
+    "n_heads": 4,
+    "n_layers": 2,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "scaling": "dk",
+    "tau": 2.0,
+    "max_seq_len": 128,
+    "vocab_size": 18855
+  },
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.48028953454364987,
+      "val_loss": 0.38767059543464755,
+      "val_accuracy": 0.8302,
+      "val_macro_f1": 0.8299672251312046,
+      "epoch_time_s": 11.120213399990462,
+      "train_examples_per_s": 1798.5266361900171
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.27066226436878543,
+      "val_loss": 0.3993486731867247,
+      "val_accuracy": 0.8388,
+      "val_macro_f1": 0.8387968791075795,
+      "epoch_time_s": 11.155574500007788,
+      "train_examples_per_s": 1792.8256406683527
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.17612085627100338,
+      "val_loss": 0.45652727575241764,
+      "val_accuracy": 0.8326,
+      "val_macro_f1": 0.8324850110109584,
+      "epoch_time_s": 11.08361539998441,
+      "train_examples_per_s": 1804.4653552331067
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.11525911093948367,
+      "val_loss": 0.5092305116638353,
+      "val_accuracy": 0.828,
+      "val_macro_f1": 0.8277767987311555,
+      "epoch_time_s": 11.130490300012752,
+      "train_examples_per_s": 1796.8660374266788
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.07831731832291657,
+      "val_loss": 0.6405136236284352,
+      "val_accuracy": 0.832,
+      "val_macro_f1": 0.8319857792763579,
+      "epoch_time_s": 11.147180200001458,
+      "train_examples_per_s": 1794.1757145001911
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.05386637449829866,
+      "val_loss": 0.7827322181267075,
+      "val_accuracy": 0.829,
+      "val_macro_f1": 0.8288639057323947,
+      "epoch_time_s": 11.123319100006483,
+      "train_examples_per_s": 1798.0244763443263
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.039188043239672246,
+      "val_loss": 0.8062105982363978,
+      "val_accuracy": 0.83,
+      "val_macro_f1": 0.8299496923169751,
+      "epoch_time_s": 11.266370400000596,
+      "train_examples_per_s": 1775.1946092593353
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.03311441962000209,
+      "val_loss": 0.8196874860721298,
+      "val_accuracy": 0.8298,
+      "val_macro_f1": 0.8297762980517407,
+      "epoch_time_s": 11.07219599999371,
+      "train_examples_per_s": 1806.3264053500645
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.032258362260858375,
+      "val_loss": 0.839153366375573,
+      "val_accuracy": 0.8296,
+      "val_macro_f1": 0.8295720770891103,
+      "epoch_time_s": 11.105085699993651,
+      "train_examples_per_s": 1800.9766462235798
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.031791570418612504,
+      "val_loss": 0.9060353915902633,
+      "val_accuracy": 0.8284,
+      "val_macro_f1": 0.8283953598105294,
+      "epoch_time_s": 11.11552330001723,
+      "train_examples_per_s": 1799.285509119395
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.0378153417021417,
+      "val_loss": 0.8355113083048712,
+      "val_accuracy": 0.8252,
+      "val_macro_f1": 0.8249976973381228,
+      "epoch_time_s": 11.077648400008911,
+      "train_examples_per_s": 1805.4373345144184
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.049843246558347876,
+      "val_loss": 0.6025084132635141,
+      "val_accuracy": 0.8232,
+      "val_macro_f1": 0.8229806659643565,
+      "epoch_time_s": 11.168729800003348,
+      "train_examples_per_s": 1790.7139270209586
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.07498023516540163,
+      "val_loss": 0.7694596825521204,
+      "val_accuracy": 0.8202,
+      "val_macro_f1": 0.8199535163639022,
+      "epoch_time_s": 11.049816599988844,
+      "train_examples_per_s": 1809.98479196661
+    },
+    {
+      "epoch": 14,
+      "train_loss": 0.07936246045671713,
+      "val_loss": 0.6583644366717036,
+      "val_accuracy": 0.8204,
+      "val_macro_f1": 0.8203667750387111,
+      "epoch_time_s": 11.167426700005308,
+      "train_examples_per_s": 1790.9228810958298
+    },
+    {
+      "epoch": 15,
+      "train_loss": 0.07561760907025693,
+      "val_loss": 0.7506106107295314,
+      "val_accuracy": 0.8208,
+      "val_macro_f1": 0.8206470765233269,
+      "epoch_time_s": 11.142859099985799,
+      "train_examples_per_s": 1794.8714796210147
+    },
+    {
+      "epoch": 16,
+      "train_loss": 0.07224359906489809,
+      "val_loss": 0.7051765198194528,
+      "val_accuracy": 0.8062,
+      "val_macro_f1": 0.8044797266057572,
+      "epoch_time_s": 11.095777999988059,
+      "train_examples_per_s": 1802.4873965594413
+    },
+    {
+      "epoch": 17,
+      "train_loss": 0.05480848800334425,
+      "val_loss": 0.820340298021896,
+      "val_accuracy": 0.8216,
+      "val_macro_f1": 0.8212907328907113,
+      "epoch_time_s": 11.106572099990444,
+      "train_examples_per_s": 1800.7356203105373
+    },
+    {
+      "epoch": 18,
+      "train_loss": 0.03693464507025997,
+      "val_loss": 0.9263600061965894,
+      "val_accuracy": 0.819,
+      "val_macro_f1": 0.8187929818541895,
+      "epoch_time_s": 11.158517500007292,
+      "train_examples_per_s": 1792.3527923836593
+    },
+    {
+      "epoch": 19,
+      "train_loss": 0.027626013427529447,
+      "val_loss": 1.0100324954601783,
+      "val_accuracy": 0.8218,
+      "val_macro_f1": 0.8217435212172625,
+      "epoch_time_s": 11.1762674000056,
+      "train_examples_per_s": 1789.5062174326627
+    },
+    {
+      "epoch": 20,
+      "train_loss": 0.01975267047706706,
+      "val_loss": 1.0972102742665741,
+      "val_accuracy": 0.8234,
+      "val_macro_f1": 0.8233932112350398,
+      "epoch_time_s": 11.118053599988343,
+      "train_examples_per_s": 1798.876019092134
+    },
+    {
+      "epoch": 21,
+      "train_loss": 0.015321410371558949,
+      "val_loss": 1.1082686464231508,
+      "val_accuracy": 0.8206,
+      "val_macro_f1": 0.8205999354159768,
+      "epoch_time_s": 11.212466400000267,
+      "train_examples_per_s": 1783.7288680748711
+    },
+    {
+      "epoch": 22,
+      "train_loss": 0.014449190237922386,
+      "val_loss": 1.1324250523731867,
+      "val_accuracy": 0.8202,
+      "val_macro_f1": 0.8201987845437835,
+      "epoch_time_s": 11.176452499988955,
+      "train_examples_per_s": 1789.4765803388657
+    },
+    {
+      "epoch": 23,
+      "train_loss": 0.014101777607337022,
+      "val_loss": 1.140406918113674,
+      "val_accuracy": 0.8214,
+      "val_macro_f1": 0.8213991355718162,
+      "epoch_time_s": 11.331556299992371,
+      "train_examples_per_s": 1764.9826264388294
+    },
+    {
+      "epoch": 24,
+      "train_loss": 0.01428847445454746,
+      "val_loss": 1.1370039420803608,
+      "val_accuracy": 0.8218,
+      "val_macro_f1": 0.8217880170262648,
+      "epoch_time_s": 11.401631999993697,
+      "train_examples_per_s": 1754.134846661518
+    },
+    {
+      "epoch": 25,
+      "train_loss": 0.013523406732958345,
+      "val_loss": 1.1286536316959117,
+      "val_accuracy": 0.8214,
+      "val_macro_f1": 0.8213751282728607,
+      "epoch_time_s": 11.25832170000649,
+      "train_examples_per_s": 1776.463715723141
+    }
+  ],
+  "test_accuracy": 0.79104,
+  "test_macro_f1": 0.7910263568631447,
+  "test_loss": 1.3286329052789743,
+  "checkpoint_history": [
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\imdb_dk_seed_1005_25epoch\\imdb_dk_seed_1005_25epoch_epoch_2.pt",
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\imdb_dk_seed_1005_25epoch\\imdb_dk_seed_1005_25epoch_epoch_5.pt",
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\imdb_dk_seed_1005_25epoch\\imdb_dk_seed_1005_25epoch_epoch_10.pt",
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\imdb_dk_seed_1005_25epoch\\imdb_dk_seed_1005_25epoch_epoch_15.pt",
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\imdb_dk_seed_1005_25epoch\\imdb_dk_seed_1005_25epoch_epoch_20.pt",
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\imdb_dk_seed_1005_25epoch\\imdb_dk_seed_1005_25epoch_epoch_25.pt"
+  ],
+  "status": "completed",
+  "timestamp": "2026-10-23T00:27:34.128325"
+}

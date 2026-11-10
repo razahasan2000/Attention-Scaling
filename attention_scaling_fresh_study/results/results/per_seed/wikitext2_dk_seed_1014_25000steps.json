@@ -1,0 +1,71 @@
+{
+  "run_id": "wikitext2_dk_seed_1014_25000steps",
+  "dataset": "wikitext2",
+  "task": "language_modeling",
+  "variant": "dk",
+  "seed": 1014,
+  "config": {
+    "d_model": 128,
+    "n_heads": 4,
+    "n_layers": 2,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "scaling": "dk",
+    "tau": 2.0,
+    "max_seq_len": 128,
+    "vocab_size": 18855
+  },
+  "training_history": [
+    {
+      "step": 5000,
+      "train_loss": 5.024524211883545,
+      "val_loss": 5.235326488554975,
+      "val_perplexity": 187.79040775541603,
+      "step_time_s": 0.0424299999140203,
+      "train_examples_per_s": 377.0916811789354
+    },
+    {
+      "step": 10000,
+      "train_loss": 0.04074316844344139,
+      "val_loss": 0.054557528129266966,
+      "val_perplexity": 1.056073228583438,
+      "step_time_s": 0.043138899956829846,
+      "train_examples_per_s": 370.89494669571064
+    },
+    {
+      "step": 15000,
+      "train_loss": 0.012152177281677723,
+      "val_loss": 0.06451556848170473,
+      "val_perplexity": 1.0666421841147133,
+      "step_time_s": 0.04194570006802678,
+      "train_examples_per_s": 381.44553491899023
+    },
+    {
+      "step": 20000,
+      "train_loss": 0.0036958639975637197,
+      "val_loss": 0.07197023239038519,
+      "val_perplexity": 1.0746233546191881,
+      "step_time_s": 0.05000960000324994,
+      "train_examples_per_s": 319.93857177342386
+    },
+    {
+      "step": 25000,
+      "train_loss": 0.00495762936770916,
+      "val_loss": 0.07286988613752439,
+      "val_perplexity": 1.0755905785650208,
+      "step_time_s": 0.04249090002849698,
+      "train_examples_per_s": 376.5512142428009
+    }
+  ],
+  "test_perplexity": 1.0740575653893496,
+  "test_loss": 0.07144359370927937,
+  "checkpoint_history": [
+    "results\\checkpoints\\wikitext2_dk_seed_1014_25000steps\\wikitext2_dk_seed_1014_25000steps_step_5000.pt",
+    "results\\checkpoints\\wikitext2_dk_seed_1014_25000steps\\wikitext2_dk_seed_1014_25000steps_step_10000.pt",
+    "results\\checkpoints\\wikitext2_dk_seed_1014_25000steps\\wikitext2_dk_seed_1014_25000steps_step_15000.pt",
+    "results\\checkpoints\\wikitext2_dk_seed_1014_25000steps\\wikitext2_dk_seed_1014_25000steps_step_20000.pt",
+    "results\\checkpoints\\wikitext2_dk_seed_1014_25000steps\\wikitext2_dk_seed_1014_25000steps_step_25000.pt"
+  ],
+  "status": "completed",
+  "timestamp": "2026-11-09T00:18:08.265025"
+}

@@ -1,0 +1,71 @@
+{
+  "run_id": "wikitext2_temp_seed_1004_25000steps",
+  "dataset": "wikitext2",
+  "task": "language_modeling",
+  "variant": "temp",
+  "seed": 1004,
+  "config": {
+    "d_model": 128,
+    "n_heads": 4,
+    "n_layers": 2,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "scaling": "temp",
+    "tau": 2.0,
+    "max_seq_len": 128,
+    "vocab_size": 18855
+  },
+  "training_history": [
+    {
+      "step": 5000,
+      "train_loss": 0.19409005343914032,
+      "val_loss": 0.133136216816911,
+      "val_perplexity": 1.1424056025875011,
+      "step_time_s": 0.042881399975158274,
+      "train_examples_per_s": 373.12214641473923
+    },
+    {
+      "step": 10000,
+      "train_loss": 0.033559028059244156,
+      "val_loss": 0.06041563485263121,
+      "val_perplexity": 1.0622779745519788,
+      "step_time_s": 0.04025179997552186,
+      "train_examples_per_s": 397.4977518950706
+    },
+    {
+      "step": 15000,
+      "train_loss": 0.011219344101846218,
+      "val_loss": 0.07591113044886373,
+      "val_perplexity": 1.0788666914982132,
+      "step_time_s": 0.04330909997224808,
+      "train_examples_per_s": 369.4373702120939
+    },
+    {
+      "step": 20000,
+      "train_loss": 0.004732717759907246,
+      "val_loss": 0.08273326608320428,
+      "val_perplexity": 1.0862520296445308,
+      "step_time_s": 0.0432448000065051,
+      "train_examples_per_s": 369.9866804238475
+    },
+    {
+      "step": 25000,
+      "train_loss": 0.0016663864953443408,
+      "val_loss": 0.0837602451084608,
+      "val_perplexity": 1.087368160718622,
+      "step_time_s": 0.04177730000810698,
+      "train_examples_per_s": 382.98310318989417
+    }
+  ],
+  "test_perplexity": 1.0853022305722761,
+  "test_loss": 0.0818585017264284,
+  "checkpoint_history": [
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\wikitext2_temp_seed_1004_25000steps\\wikitext2_temp_seed_1004_25000steps_step_5000.pt",
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\wikitext2_temp_seed_1004_25000steps\\wikitext2_temp_seed_1004_25000steps_step_10000.pt",
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\wikitext2_temp_seed_1004_25000steps\\wikitext2_temp_seed_1004_25000steps_step_15000.pt",
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\wikitext2_temp_seed_1004_25000steps\\wikitext2_temp_seed_1004_25000steps_step_20000.pt",
+    "C:\\Users\\Raza-SEAGUARD\\Downloads\\Attention\\attention_scaling_fresh_study\\results\\checkpoints\\wikitext2_temp_seed_1004_25000steps\\wikitext2_temp_seed_1004_25000steps_step_25000.pt"
+  ],
+  "status": "completed",
+  "timestamp": "2026-10-23T15:38:48.925909"
+}

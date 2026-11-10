@@ -1,0 +1,176 @@
+# Statistical Analysis Configuration
+
+# Paired comparisons
+paired_analysis:
+  enabled: true
+  baseline_variant: "standard"
+  comparison_variants: ["temp", "dk", "multiscale_v1", "dk_lrcomp"]
+  
+  # Paired difference calculation
+  paired_differences:
+    metric: "difference"  # variant - baseline
+    effect_size: "cohen_dz"  # Cohen's dz for paired designs
+    
+  # Statistical tests
+  tests:
+    primary: "paired_ttest"
+    alternatives:
+      - "wilcoxon_signed_rank"
+      - "permutation_test"
+      - "sign_test"
+    permutation:
+      n_permutations: 10000
+      random_state: 42
+  
+  # Multiple comparison correction
+  multiple_correction:
+    method: "holm"
+    family: "per_dataset"  # or "global"
+    alpha: 0.05
+
+# Confidence intervals
+confidence_intervals:
+  level: 0.95
+  method: "t"  # "t", "bootstrap", "percentile_bootstrap"
+  bootstrap:
+    n_bootstrap: 10000
+    random_state: 42
+  transform:
+    perplexity: "log"  # use log scale for CI then back-transform
+    accuracy: "identity"  # no transform for accuracy
+
+# Effect sizes
+effect_sizes:
+  metrics:
+    - "cohen_dz"  # paired Cohen's d
+    - "cohen_d"   # independent Cohen's d
+    - "hedges_g"  # Hedges' g
+    - "pearson_r" # correlation
+  interpretation:
+    dz:
+      small: 0.2
+      medium: 0.5
+      large: 0.8
+    d:
+      small: 0.2
+      medium: 0.5
+      large: 0.8
+
+# Normality testing
+normality_tests:
+  enabled: true
+  tests:
+    - "shapiro_wilk"
+    - "anderson_darling"
+    - "jarque_bera"
+  alpha: 0.05
+  action_on_failure: "warn"  # "warn", "use_nonparametric", "continue"
+
+# Non-parametric alternatives
+nonparametric:
+  enabled: true
+  tests:
+    - "wilcoxon_signed_rank"
+    - "sign_test"
+    - "permutation"
+  permutation:
+    n_permutations: 10000
+    random_state: 42
+
+# Confidence interval methods
+ci_methods:
+  default: "t"
+  options:
+    - "t"
+    - "bootstrap_bca"
+    - "bootstrap_percentile"
+    - "log_transform"  # for positive-only metrics like perplexity
+  bootstrap:
+    n_bootstrap: 10000
+    random_state: 42
+
+# Non-parametric tests with small samples
+small_sample_adjustments:
+  enabled: true
+  min_n_for_parametric: 10
+  min_n_for_nonparametric: 5
+  exact_tests:
+    enabled: true
+    max_n: 20
+
+# Effect size interpretation
+effect_size_thresholds:
+  cohen_dz:
+    negligible: 0.0
+    very_small: 0.1
+    small: 0.2
+    medium: 0.5
+    large: 0.8
+    very_large: 1.2
+    huge: 2.0
+
+# Power analysis
+power_analysis:
+  enabled: true
+  alpha: 0.05
+  target_power: 0.8
+  effect_size_prior: "medium"
+  min_n_for_power: 10
+
+# Bootstrap confidence intervals
+bootstrap_ci:
+  n_bootstrap: 10000
+  method: "bca"  # bias-corrected and accelerated
+  random_state: 42
+  confidence_level: 0.95
+
+# Equivalence testing
+equivalence_testing:
+  enabled: false
+  bounds:
+    accuracy: 0.01  # 1 percentage point
+    perplexity: 5.0  # 5 perplexity points
+  alpha: 0.05
+
+# Sequential analysis
+sequential:
+  enabled: false
+  alpha_spending: "obrien_fleming"
+  looks: 3
+
+# Sensitivity analyses
+sensitivity:
+  enabled: true
+  analyses:
+    - "remove_outliers"
+    - "winsorize_5%"
+    - "exclude_seed_0"
+    - "alternative_ci_method"
+    - "nonparametric"
+    - "permutation_test"
+
+# Reporting
+reporting:
+  decimal_places:
+    mean: 4
+    sd: 4
+    ci: 4
+    p_value: 6
+    effect_size: 3
+  include_raw_values: true
+  include_assumption_checks: true
+  include_sensitivity: true
+
+# Multiple comparison correction
+multiple_comparisons:
+  families:
+    - name: "primary_comparisons"
+      tests: ["sst2_1dk_vs_std", "sst2_temp_vs_std", "imdb_1dk_vs_std", "imdb_temp_vs_std", "wt2_1dk_vs_std", "wt2_temp_vs_std"]
+      method: "holm"
+    - name: "ablation_comparisons"
+      tests: ["e1_sst2_multiscale", "e2_sst2_lrcomp", "e3_imdb_multiscale", "e4_imdb_lrcomp"]
+      method: "holm"
+    - name: "secondary_comparisons"
+      tests: ["macro_f1", "loss", "efficiency"]
+      method: "holm"
+  global_alpha: 0.05

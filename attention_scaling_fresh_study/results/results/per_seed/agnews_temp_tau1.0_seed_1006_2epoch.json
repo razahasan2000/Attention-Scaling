@@ -1,0 +1,46 @@
+{
+  "run_id": "agnews_temp_tau1.0_seed_1006_2epoch",
+  "dataset": "agnews",
+  "task": "classification",
+  "variant": "temp",
+  "seed": 1006,
+  "config": {
+    "d_model": 128,
+    "n_heads": 4,
+    "n_layers": 2,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "scaling": "temp",
+    "tau": 1.0,
+    "max_seq_len": 128,
+    "vocab_size": 18855
+  },
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.3665475542495648,
+      "val_loss": 0.2916436268091202,
+      "val_accuracy": 0.9025833333333333,
+      "val_macro_f1": 0.9019980397956081,
+      "epoch_time_s": 57.05218569992576,
+      "train_examples_per_s": 1682.6699770088726
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.2211665107657512,
+      "val_loss": 0.26820673938592277,
+      "val_accuracy": 0.9107916666666667,
+      "val_macro_f1": 0.9109542963679245,
+      "epoch_time_s": 56.97112190001644,
+      "train_examples_per_s": 1685.0642360260822
+    }
+  ],
+  "test_accuracy": 0.9138157894736842,
+  "test_macro_f1": 0.9138462605616908,
+  "test_loss": 0.26382410401055795,
+  "checkpoint_history": [
+    "results\\checkpoints\\agnews_temp_tau1.0_seed_1006_2epoch\\agnews_temp_tau1.0_seed_1006_2epoch_epoch_2.pt"
+  ],
+  "status": "completed",
+  "timestamp": "2026-11-09T20:14:09.371739"
+}

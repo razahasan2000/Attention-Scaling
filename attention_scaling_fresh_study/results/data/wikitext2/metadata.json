@@ -1,0 +1,9 @@
+{
+  "dataset": "wikitext2",
+  "task": "language_modeling",
+  "train_sequences": 10622,
+  "val_sequences": 1079,
+  "test_sequences": 1208,
+  "vocab_size": 18855,
+  "max_len": 128
+}

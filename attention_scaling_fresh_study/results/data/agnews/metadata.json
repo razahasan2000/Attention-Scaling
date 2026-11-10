@@ -1,0 +1,11 @@
+{
+  "dataset": "agnews",
+  "task": "classification",
+  "num_classes": 4,
+  "train_size": 96000,
+  "val_size": 24000,
+  "test_size": 7600,
+  "vocab_size": 18855,
+  "max_len": 128,
+  "train_split_seed": 42
+}
