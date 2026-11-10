@@ -60,13 +60,73 @@
 
 **Setup and data.** A 2-layer Pre-LN Transformer encoder (d_model=128, n_heads=4, d_ff=256, GELU, learned positional embeddings, dropout 0.1; final LayerNorm) with masked mean pooling and a linear classification head, or a weight-tied LM head for language modelling. Data are loaded from Hugging Face `datasets` (Lhoest et al., 2021): AG News (4-class; Zhang et al., 2015), SST-2 (binary; Socher et al., 2013; GLUE split; Wang et al., 2018), IMDB (binary; Maas et al., 2011), WikiText-2 (Merity et al., 2017). Tokenisation uses from-scratch tokenisers (regex word-level for classification, whitespace-level for LM); max sequence length 128; vocabularies are capped at 18,855 (AG News/IMDB/WikiText-2) or 12,940 (SST-2). Attention logit clamping to [−50, 50] and additive padding masks are identical across variants.
 
-**Techniques.** Variants (Table 4): standard = softmax(QK^T/√d_k)V; dk = softmax(QK^T/d_k)V; temp = softmax(QK^T/(τ√d_k))V with τ ∈ {0.5, 1.0, 1.5, 2.0}. Optimisation: AdamW (lr 3×10⁻⁴, weight decay 0.01, betas (0.9, 0.999)), cosine schedule with 5% warm-up, batch 64 (classification; 2 epochs) / 16 (LM; 25,000 steps), gradient clipping 1.0 on classification. Metrics: test accuracy and macro-F1 (classification); validation perplexity (LM). Statistical evaluation: paired t-tests joined strictly by seed; exact sign-flip permutation tests (10,000 permutations, (b+1)/(n+1) estimator per Phipson & Smyth, 2010); Wilcoxon signed-rank (Wilcoxon, 1945) and exact sign tests; Holm step-down correction with the monotonicity step (Holm, 1979) across all comparisons against the baseline within each dataset; Cohen's d_z (Cohen, 1988); 95% CIs on paired mean differences; Shapiro–Wilk checks on paired differences.
+**Techniques.** Variants (Table 4): standard = softmax(QK^T/√d_k)V; dk = softmax(QK^T/d_k)V; temp = softmax(QK^T/(τ√d_k))V with τ ∈ {0.5, 1.0, 1.5, 2.0}. The complete data flow is shown in Figure 2; Algorithms 1–2 give the seed-matched protocol and the scaling-variant forward pass. Optimisation: AdamW (lr 3×10⁻⁴, weight decay 0.01, betas (0.9, 0.999)), cosine schedule with 5% warm-up, batch 64 (classification; 2 epochs) / 16 (LM; 25,000 steps), gradient clipping 1.0 on classification. Metrics: test accuracy and macro-F1 (classification); validation perplexity (LM). Statistical evaluation: paired t-tests joined strictly by seed; exact sign-flip permutation tests (10,000 permutations, (b+1)/(n+1) estimator per Phipson & Smyth, 2010); Wilcoxon signed-rank (Wilcoxon, 1945) and exact sign tests; Holm step-down correction with the monotonicity step (Holm, 1979) across all comparisons against the baseline within each dataset; Cohen's d_z (Cohen, 1988); 95% CIs on paired mean differences; Shapiro–Wilk checks on paired differences.
+
+---
+
+### Algorithm 1 — Seed-matched paired experimental protocol
+
+```text
+Input:  datasets D = {agnews, sst2, imdb, wikitext2}
+        variants V = {standard, dk, temp(τ): τ ∈ {0.5, 1.0, 1.5, 2.0}}
+        matched seeds S = {1001, ..., 1025}
+Output: one run record per (dataset, variant, seed) — 525 records total
+
+ 1: for each dataset d in D do
+ 2:     prepared[d] ← prepare(d)                        ▷ fixed seed 42; cached once, reused by all variants
+ 3: for each dataset d in D do
+ 4:     for each variant v in V do
+ 5:         for each seed s in S do
+ 6:             if record(d, v, s) exists then continue ▷ crash-resumable skip
+ 7:             random.seed(s); np.random.seed(s)        ▷ identical state for every variant
+ 8:             torch.manual_seed(s); torch.cuda.manual_seed_all(s)
+ 9:             model ← create_model(v, τ)               ▷ no parameters, no RNG consumed
+10:             θ_v,s ← init(model)                      ▷ bit-identical across variants (unit-tested)
+11:             train θ_v,s on prepared[d]               ▷ Algorithm 2; same schedule, batches, budget
+12:             metrics ← evaluate(θ_v,s, test[d])       ▷ acc/macro-F1 (cls) or val perplexity (LM)
+13:             write record(d, v, s, config, history, metrics)
+14: statistics: for each d, for each v ≠ standard:
+15:     join per-seed metrics on seed s                  ▷ strict seed-keyed pairing
+16:     paired t, permutation (10k), Wilcoxon, sign tests, d_z, 95% CI
+17:     Holm step-down (running-max) over {v vs standard} within d
+```
+
+*Design invariant (lines 7–10):* because the scale function is a forward-pass constant, lines 7–8
+produce bit-identical initialisations θ_v,s for all v given the same s — verified by
+`tests/test_seed_match.py` — so the paired differences at line 15 isolate the scale function.
+
+### Algorithm 2 — Scaling-variant attention forward pass (per head)
+
+```text
+Input:  hidden states X ∈ R^{B×L×128}; mask M ∈ {0,1}^{B×1×1×L}; variant v; τ
+Output: attention output Y
+
+ 1: Q ← X W_Q;  K ← X W_K;  V ← X W_V                 ▷ projections to 32 dims per head
+ 2: G ← Q Kᵀ / √d_k                                   ▷ d_k = 32
+ 3: if v = dk   then G ← G / √d_k                    ▷ total scale 1/d_k
+ 4: if v = temp then G ← G / τ                       ▷ total scale 1/(τ√d_k)
+ 5: G ← clamp(G, −50, 50) + (1 − M) · (−∞)           ▷ stability clamp + padding mask
+ 6: A ← softmax(G, dim = −1)
+ 7: Y ← A V                                           ▷ no attention-probability dropout
+```
+
+*Note:* lines 3–4 are the entire treatment; no parameters are added or modified, which is what
+makes the matched design in Algorithm 1 possible.
 
 **Evaluation.** Primary endpoint: test accuracy (classification) / validation perplexity (LM), paired against the standard variant. Effect-size and significance thresholds follow the pre-registered statistical configuration; we report raw p, Holm-adjusted p, and permutation p together to avoid single-metric cherry-picking (Dodge et al., 2019).
 
 ---
 
 ## 5. Experimental Setup
+
+**Architecture.** Figure 2 shows the complete architecture: token embedding (from-scratch
+vocabulary) plus learned positional embeddings feed two Pre-LN encoder layers
+(LayerNorm → multi-head self-attention → residual; LayerNorm → FFN(128→256, GELU) → residual),
+followed by masked mean pooling with a linear classification head, or a weight-tied LM head.
+The manipulated factor — the logit scale s ∈ {√d_k, d_k, τ√d_k} — lives inside every attention
+block (Algorithm 2, lines 3–4).
+
+![Figure 2. Study architecture: Pre-LN Transformer encoder with the three attention logit-scale variants and both task heads.](../figures/fig_architecture.png)
 
 ### Table 3. Experimental configuration
 
