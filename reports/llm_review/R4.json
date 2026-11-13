@@ -1,0 +1,22 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "{\"findings\":[{\"severity\":\"critical\",\"location\":\"S1.3 Scaling variants\",\"quote\":\"Temperature: softmax 𝑄𝐾 ⊤ /(𝜏 𝑑 𝑘 ) 𝑉, 𝑠 = 𝜏 32 ≈ 11.3137 (𝜏 = 2)\",\"issue\":\"The calculation of the effective divisor 𝑠 is incorrect. For the Temperature variant, the scaling factor is 𝜏√𝑑𝑘, so with 𝜏 = 2 and 𝑑𝑘 = 32, 𝑠 should be 2√32 ≈ 11.3137, not 𝜏 × 32 ≈ 64.\",\"suggestion\":\"Correct the formula to: Temperature: softmax 𝑄𝐾 ⊤ /(𝜏 𝑑 𝑘 ) 𝑉, 𝑠 = 𝜏 √32 ≈ 11.3137 (𝜏 = 2)\"},{\"severity\":\"major\",\"location\":\"S6.1 Paired comparisons (core classification, 𝑛 = 25)\",\"quote\":\"Table 6: Complete paired statistics. diff = baseline − variant (positive favours standard scaling); 𝑝 Holm corrects across the two comparisons within each dataset.\",\"issue\":\"The Holm correction is incorrectly applied. Holm's method is a step-down procedure that adjusts p-values across multiple comparisons, but the table doesn't show the adjusted p-values or the order of comparisons. Additionally, the p-values reported (e.g., <0.001) don't match the typical precision of statistical software, which usually reports exact p-values.\",\"suggestion\":\"Revise the table to show exact p-values and clearly indicate the order of comparisons used for the Holm correction. Alternatively, use a more appropriate multiple comparison correction method like Benjamini-Hochberg if controlling FDR is preferred.\"},{\"severity\":\"major\",\"location\":\"S5. Per-seed results summary\",\"quote\":\"WikiText-2 (ppl, v1 artefact† ) Standard (𝑛=15) 1.0917 0.0061 — — Temp (𝜏 = 2, 𝑛=7) 1.0882 0.0056 — — 1/𝑑 𝑘 (𝑛=3) 1.0809 0.0021 — —\",\"issue\":\"The sample sizes (𝑛) for the WikiText-2 LM experiment are inconsistent with the reported sample sizes in other parts of the manuscript. The core classification grids use 25 seeds, but here only 15, 7, and 3 seeds are reported for the different variants. This discrepancy is not adequately explained, and the small sample size for 1/𝑑𝑘 (𝑛=3) makes the statistical estimates unreliable.\",\"suggestion\":\"Either increase the sample size for WikiText-2 to match the other experiments (25 seeds) or provide a clear justification for the reduced sample sizes and acknowledge the increased uncertainty in the estimates.\"},{\"severity\":\"minor\",\"location\":\"S9. Attention and optimisation diagnostics\",\"quote\":\"∥𝜕𝐿/𝜕𝑄∥ 0.042 0.021 0.011 ∥𝜕𝐿/𝜕𝐾 ∥ 0.041 0.020 0.010 ∥𝜕𝐿/𝜕𝑉 ∥ 0.038 0.039 0.037\",\"issue\":\"The gradient norms for Q and K are reported with three decimal places, but the values for V are inconsistent with this precision (0.038, 0.039, 0.037). This inconsistency in reporting precision could lead to misinterpretation of the relative gradient magnitudes.\",\"suggestion\":\"Standardize the reporting precision for all gradient norms to three decimal places: ∥𝜕𝐿/𝜕𝑄∥ 0.042 0.021 0.011 ∥𝜕𝐿/𝜕𝐾 ∥ 0.041 0.020 0.010 ∥𝜕𝐿/𝜕𝑉 ∥ 0.038 0.039 0.037\"}]}",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1794571556,
+  "id": "202611132005457bfb7b65643d41e4",
+  "model": "glm-4-plus",
+  "object": "chat.completion",
+  "request_id": "202611132005457bfb7b65643d41e4",
+  "usage": {
+    "completion_tokens": 943,
+    "prompt_tokens": 6326,
+    "total_tokens": 7269
+  }
+}

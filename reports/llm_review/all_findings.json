@@ -1,0 +1,130 @@
+[
+ {
+  "severity": "major",
+  "location": "Table 4",
+  "quote": "WikiText-2 (ppl \u2193, v1 artefact\u2020 )       Temp (\ud835\udf0f = 2)          1.0882        0.0056         [1.083, 1.093]       7\n                                        1/\ud835\udc51 \ud835\udc58                 1.0809        0.0021         [1.077, 1.085]       3",
+  "issue": "The reported perplexity values (1.08\u20131.09) are physically impossible for a causal language model with this vocabulary size, as they fall below the uniform-unigram floor (~8.7 for WikiText-2's vocabulary). This indicates a critical implementation artifact in the initial v1 protocol.",
+  "suggestion": "Remove these values entirely from Table 4 and clarify in the text that they are invalid due to the non-causal mask artifact, as later corrected in Section 4.8.",
+  "review": "R2"
+ },
+ {
+  "severity": "critical",
+  "location": "Section 3.8",
+  "quote": "Because each dataset contributes two comparisons against the common baseline, family-wise error is controlled with the Holm\u2013Bonferroni step-down procedure [22] within each dataset at \ud835\udefc = 0.05.",
+  "issue": "The Holm-Bonferroni correction is applied incorrectly. With 3 variants, there are 2 comparisons per dataset (standard vs. 1/dk, standard vs. tau=2). The Holm procedure requires adjusting the alpha level for each comparison in sequence, but the text does not specify the order of comparisons or the adjusted alpha levels, making the correction implementation unclear and potentially invalid.",
+  "suggestion": "Specify the order of comparisons for the Holm-Bonferroni procedure (e.g., ordered by p-value) and report the adjusted alpha levels for each comparison explicitly.",
+  "review": "R2"
+ },
+ {
+  "severity": "minor",
+  "location": "Section 4.9",
+  "quote": "Query and key gradient norms scaled with 1/\ud835\udc60 as theory predicts for the dot-product pipeline: relative to standard, observed Q-gradient ratios were 0.50 (theory 0.50) for \ud835\udf0f = 2 and 0.26 (theory 0.18) for 1/\ud835\udc51 \ud835\udc58",
+  "issue": "The observed gradient ratio for 1/dk (0.26) deviates from the theoretical prediction (0.18) by 44%, which is a substantial discrepancy. The text presents this as validation but does not address the significant mismatch.",
+  "suggestion": "Discuss the discrepancy between the observed and theoretical gradient ratios for 1/dk and explore potential reasons for the deviation (e.g., approximation limitations in the theory or implementation artifacts).",
+  "review": "R2"
+ },
+ {
+  "severity": "critical",
+  "location": "S1.3 Scaling variants",
+  "quote": "Temperature: softmax \ud835\udc44\ud835\udc3e \u22a4 /(\ud835\udf0f \ud835\udc51 \ud835\udc58 ) \ud835\udc49, \ud835\udc60 = \ud835\udf0f 32 \u2248 11.3137 (\ud835\udf0f = 2)",
+  "issue": "The calculation of the effective divisor \ud835\udc60 is incorrect. For the Temperature variant, the scaling factor is \ud835\udf0f\u221a\ud835\udc51\ud835\udc58, so with \ud835\udf0f = 2 and \ud835\udc51\ud835\udc58 = 32, \ud835\udc60 should be 2\u221a32 \u2248 11.3137, not \ud835\udf0f \u00d7 32 \u2248 64.",
+  "suggestion": "Correct the formula to: Temperature: softmax \ud835\udc44\ud835\udc3e \u22a4 /(\ud835\udf0f \ud835\udc51 \ud835\udc58 ) \ud835\udc49, \ud835\udc60 = \ud835\udf0f \u221a32 \u2248 11.3137 (\ud835\udf0f = 2)",
+  "review": "R4"
+ },
+ {
+  "severity": "major",
+  "location": "S6.1 Paired comparisons (core classification, \ud835\udc5b = 25)",
+  "quote": "Table 6: Complete paired statistics. diff = baseline \u2212 variant (positive favours standard scaling); \ud835\udc5d Holm corrects across the two comparisons within each dataset.",
+  "issue": "The Holm correction is incorrectly applied. Holm's method is a step-down procedure that adjusts p-values across multiple comparisons, but the table doesn't show the adjusted p-values or the order of comparisons. Additionally, the p-values reported (e.g., <0.001) don't match the typical precision of statistical software, which usually reports exact p-values.",
+  "suggestion": "Revise the table to show exact p-values and clearly indicate the order of comparisons used for the Holm correction. Alternatively, use a more appropriate multiple comparison correction method like Benjamini-Hochberg if controlling FDR is preferred.",
+  "review": "R4"
+ },
+ {
+  "severity": "major",
+  "location": "S5. Per-seed results summary",
+  "quote": "WikiText-2 (ppl, v1 artefact\u2020 ) Standard (\ud835\udc5b=15) 1.0917 0.0061 \u2014 \u2014 Temp (\ud835\udf0f = 2, \ud835\udc5b=7) 1.0882 0.0056 \u2014 \u2014 1/\ud835\udc51 \ud835\udc58 (\ud835\udc5b=3) 1.0809 0.0021 \u2014 \u2014",
+  "issue": "The sample sizes (\ud835\udc5b) for the WikiText-2 LM experiment are inconsistent with the reported sample sizes in other parts of the manuscript. The core classification grids use 25 seeds, but here only 15, 7, and 3 seeds are reported for the different variants. This discrepancy is not adequately explained, and the small sample size for 1/\ud835\udc51\ud835\udc58 (\ud835\udc5b=3) makes the statistical estimates unreliable.",
+  "suggestion": "Either increase the sample size for WikiText-2 to match the other experiments (25 seeds) or provide a clear justification for the reduced sample sizes and acknowledge the increased uncertainty in the estimates.",
+  "review": "R4"
+ },
+ {
+  "severity": "minor",
+  "location": "S9. Attention and optimisation diagnostics",
+  "quote": "\u2225\ud835\udf15\ud835\udc3f/\ud835\udf15\ud835\udc44\u2225 0.042 0.021 0.011 \u2225\ud835\udf15\ud835\udc3f/\ud835\udf15\ud835\udc3e \u2225 0.041 0.020 0.010 \u2225\ud835\udf15\ud835\udc3f/\ud835\udf15\ud835\udc49 \u2225 0.038 0.039 0.037",
+  "issue": "The gradient norms for Q and K are reported with three decimal places, but the values for V are inconsistent with this precision (0.038, 0.039, 0.037). This inconsistency in reporting precision could lead to misinterpretation of the relative gradient magnitudes.",
+  "suggestion": "Standardize the reporting precision for all gradient norms to three decimal places: \u2225\ud835\udf15\ud835\udc3f/\ud835\udf15\ud835\udc44\u2225 0.042 0.021 0.011 \u2225\ud835\udf15\ud835\udc3f/\ud835\udf15\ud835\udc3e \u2225 0.041 0.020 0.010 \u2225\ud835\udf15\ud835\udc3f/\ud835\udf15\ud835\udc49 \u2225 0.038 0.039 0.037",
+  "review": "R4"
+ },
+ {
+  "severity": "major",
+  "location": "Table 18",
+  "quote": "Dataset                Arm                               Mean (%)                  \u0394 vs. std (pp)               \ud835\udc5d\n      SST-2                  standard                               71.33                      \u2014                       \u2014\n                             1/\ud835\udc51 \ud835\udc58                                  71.14                     \u22120.19                  0.199\n                             1/\ud835\udc51 \ud835\udc58 + LR comp.                       70.03                     \u22121.30                  0.108\n                             mixed-scale                            71.37                     +0.04                  0.808\n      IMDB                   standard                               70.28                      \u2014                       \u2014\n                             1/\ud835\udc51 \ud835\udc58                                  70.20                     \u22120.08                  0.321\n                             1/\ud835\udc51 \ud835\udc58 + LR comp.                       70.01                     \u22120.27                  0.720\n                             mixed-scale                            70.33                     +0.05                  0.456",
+  "issue": "The p-values reported for paired comparisons are not adjusted for multiple comparisons. With 4 comparisons per dataset (3 variants vs standard), the family-wise error rate is not controlled, making these p-values potentially misleading without correction (e.g., Bonferroni or FDR).",
+  "suggestion": "Apply multiple comparison correction to the p-values (e.g., Bonferroni correction: multiply p-values by 3 for 3 comparisons per dataset) and report corrected p-values.",
+  "review": "R5"
+ },
+ {
+  "severity": "critical",
+  "location": "Table 13",
+  "quote": "                                       Seed    Standard     Temp (\ud835\udf0f = 2)      1/\ud835\udc51 \ud835\udc58\n                                       1001      0.7810         0.7810       0.7805\n                                       1002      0.7810         0.7817       0.7817\n                                       1003      0.7995         0.7987       0.7987\n                                       1004      0.7675         0.7680       0.7685\n                                       1005      0.7920         0.7925       0.7927\n                                       1006      0.7917         0.7920       0.7920\n                                       1007      0.7855         0.7857       0.7857\n                                       1008      0.7887         0.7895       0.7893\n                                       1009      0.8000         0.8005       0.8005\n                                       1010      0.7980         0.7977       0.7965\n                                       1011      0.7860         0.7853       0.7857\n                                       1012      0.7875         0.7870       0.7877\n                                       1013      0.7917         0.7920       0.7923\n                                       1014      0.7985         0.7990       0.7985\n                                       1015      0.7745         0.7752       0.7755\n                                       1006      0.7665         0.7665       0.7665\n                                       1007      0.7885         0.7877       0.7883\n                                       1008      0.7758         0.7760       0.7758\n                                       1009      0.7602         0.7602       0.7600\n                                       1010      0.7578         0.7575       0.7568",
+  "issue": "There are duplicate seed numbers (1006, 1007, 1008, 1009, 1010) in Table 13, which suggests either a data entry error or that the seeds are not uniquely identified. This undermines the paired comparison methodology described earlier.",
+  "suggestion": "Verify and correct the seed numbers in Table 13 to ensure each seed is uniquely identified across all variants.",
+  "review": "R5"
+ },
+ {
+  "severity": "major",
+  "location": "Table 14",
+  "quote": "                                            Seed      Standard          Temp (\ud835\udf0f = 2)         1/\ud835\udc51 \ud835\udc58\n                                            1001        844.6               844.7            844.7\n                                            1002        912.5               912.5            912.6\n                                            1003        841.9               842.0            842.0\n                                            1004        869.0               869.3            869.5\n                                            1005        906.2               906.4            906.6\n                                            1006        878.2               878.3            878.3\n                                            1007        856.0               856.1            856.1\n                                            1008        865.2               865.0            864.8\n                                            1009        885.9               884.7            884.0\n                                            1010        902.2               902.3            902.4\n                                            1011        892.8               891.9            891.6\n                                            1012        829.5               829.7            829.8\n                                            1013        862.9               863.4            863.5\n                                            1014        910.0               909.8            909.7\n                                            1015        840.5               840.6            840.6\n                                            1016        827.5               827.3            827.1\n                                            1017        858.8               858.8            858.8\n                                            1018        917.7               917.8            918.0\n                                            1019        866.5               866.4            866.4\n                                            1020        923.5               923.7            923.8\n                                            1021        819.4               819.5            819.6\n                                            1022        885.1               885.0            885.0\n                                            1023        869.1               869.3            869.4\n                                            1024        894.2               894.4            894.5\n                                            1025        861.0               861.2            861.3",
+  "issue": "The text states that Table 14 contains 25 seeds, but the table shows seeds 1001-1025 (25 seeds), while Table 13 shows seeds 1001-1025 with duplicates. This inconsistency in seed numbering between tables needs clarification.",
+  "suggestion": "Verify and standardize the seed numbering across all tables to ensure consistency.",
+  "review": "R5"
+ },
+ {
+  "severity": "minor",
+  "location": "Table 22",
+  "quote": "                              std vs. 1/\ud835\udc51 \ud835\udc58                         std vs. \ud835\udf0f=2                       1/\ud835\udc51 \ud835\udc58 vs. \ud835\udf0f=2\n       \ud835\udf0e              MC                      law           MC                     law           MC                   law\n      0.5            0.0026               0.0026          0.0010                  0.0039       0.0004             0.0004\n        1            0.0104               0.0104          0.0038                  0.0039       0.0016             0.0016\n        2            0.0416               0.0417          0.0153                  0.0154       0.0064             0.0064\n        3            0.0930               0.0938          0.0342                  0.0346       0.0145             0.0145\n        4            0.1642               0.1668          0.0602                  0.0615       0.0257             0.0257\n        6            0.3571               0.3753          0.1295                  0.1384       0.0575             0.0579\n        8            0.5941               0.6671          0.2107                  0.2461       0.1019             0.1028\n      12             1.0538               1.5010          0.3416                  0.5537       0.2253             0.2314\n      16             1.3632               2.6684          0.3897                  0.9844       0.3882             0.4114",
+  "issue": "For the comparison 'std vs. \ud835\udf0f=2' at \ud835\udf0e=0.5, the measured KL (MC) is 0.0010 but the law prediction is 0.0039. This discrepancy is not explained in the text, and the law appears to overestimate the KL divergence at this point.",
+  "suggestion": "Clarify why the law prediction deviates from the measured KL at \ud835\udf0e=0.5 for the 'std vs. \ud835\udf0f=2' comparison, or verify the calculation of the law prediction.",
+  "review": "R5"
+ },
+ {
+  "severity": "major",
+  "location": "Table 25",
+  "quote": "                          Epoch 1                                 Epoch 4                           Epoch 8 (final)\nVariant         \ud835\udf0e           KL            acc          \ud835\udf0e           KL           acc           \ud835\udf0e          KL              acc\n  \ud835\udc51 \ud835\udc58 = 32 (4 heads)\nstd             0.42      0.0011        84.93        0.90         0.0053       84.66         1.11      0.0060           85.68\n1/\ud835\udc51 \ud835\udc58           0.41      0.0011        84.87        0.85         0.0057       85.53         1.01      0.0068           85.74\n\ud835\udf0f=2             0.41      0.0011        84.88        0.94         0.0058       85.11         1.11      0.0066           85.81\n  \ud835\udc51 \ud835\udc58 = 128 (1 head)\nstd             1.46      0.0040        84.91        3.54         0.0226       85.05         4.59      0.0262           85.98\n1/\ud835\udc51 \ud835\udc58           1.44      0.0042        84.87        4.22         0.0739       85.08         5.31      0.0857           85.56\n\ud835\udf0f=2             1.45      0.0041        84.89        4.07         0.0446       85.26         5.09      0.0487           85.46",
+  "issue": "The text states that the final-epoch paired contrasts were computed with 3 seeds, but Table 25 shows mean values over seeds without indicating the number of seeds or standard errors. This makes it difficult to assess the reliability of the reported accuracy differences and p-values.",
+  "suggestion": "Include the number of seeds and standard errors (or confidence intervals) for the accuracy values in Table 25, and clarify how the p-values for paired contrasts were calculated.",
+  "review": "R5"
+ },
+ {
+  "severity": "critical",
+  "location": "src/attention/scaling.py:ScaledDotProductAttention.__init__",
+  "quote": "if scaling not in (\"standard\", \"dk\", \"temp\", \"multiscale_v1\", \"multiscale_v2\"):",
+  "issue": "The code implements additional scaling variants (multiscale_v1, multiscale_v2) beyond the three claimed variants, violating claim (a)",
+  "suggestion": "Remove or clearly document the additional variants if they're part of the study",
+  "review": "R7"
+ },
+ {
+  "severity": "critical",
+  "location": "scripts/experiments/common.py:build_matched",
+  "quote": "m = Transformer(variant=v, **kw)\n        m.load_state_dict(state, strict=False)",
+  "issue": "Different variants may have different parameters (especially multiscale variants), so loading with strict=False breaks the bit-identical guarantee of claim (b)",
+  "suggestion": "Ensure all variants have identical parameter structure or handle parameter loading more carefully",
+  "review": "R7"
+ },
+ {
+  "severity": "major",
+  "location": "scripts/experiments/frontier_gpt2.py:run_model",
+  "quote": "for block in model.transformer.h:\n            attn = next(m for n, m in block.named_children()\n                        if hasattr(m, \"c_attn\"))\n            attn.scaling = s",
+  "issue": "Only modifies the scaling factor, but doesn't verify that no other parameters differ between variants, potentially invalidating claim (c)",
+  "suggestion": "Add verification that all other parameters remain identical between variants",
+  "review": "R7"
+ },
+ {
+  "severity": "minor",
+  "location": "src/models/transformer_encoder.py:TransformerEncoder.forward",
+  "quote": "if use_causal:\n            # Causal (lower-triangular) mask ANDed with the key padding mask:\n            # position i attends to j <= i over real tokens only.\n            causal_sq = torch.tril(\n                torch.ones(seq_len, seq_len, dtype=torch.bool, device=device)\n            )",
+  "issue": "The causal mask implementation is correct but could be more efficient by using torch.triu instead of torch.tril for the upper triangular part",
+  "suggestion": "Use torch.triu(1) for the upper triangular part (excluding diagonal) for clarity",
+  "review": "R7"
+ }
+]
