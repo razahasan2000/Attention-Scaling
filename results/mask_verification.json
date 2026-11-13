@@ -1,0 +1,9 @@
+{
+ "V1_future_max_weight": 0.0,
+ "V2_padding_max_weight": 0.0,
+ "V3_row_sums_min": 0.9999998807907104,
+ "V3_row_sums_max": 1.0000001192092896,
+ "V4_diagonal_allowed_real_rows": true,
+ "V4_shift_note": "targets are x_{t+1} at query position t (shift-by-one), so the diagonal corresponds to predicting the NEXT token from the current one - standard autoregressive factorisation",
+ "V5_masked_rows_exact_zero": true
+}
