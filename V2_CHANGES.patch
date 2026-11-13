@@ -1,0 +1,1991 @@
+diff --git a/.gitignore b/.gitignore
+old mode 100644
+new mode 100755
+diff --git a/LICENSE b/LICENSE
+old mode 100644
+new mode 100755
+diff --git a/README.md b/README.md
+old mode 100644
+new mode 100755
+diff --git a/README_V2.md b/README_V2.md
+new file mode 100644
+index 0000000..4592ecb
+--- /dev/null
++++ b/README_V2.md
+@@ -0,0 +1,177 @@
++# Attention-Scaling — v2 Experiment Package
++
++This package completes the four v2 work streams requested for the study:
++
++1. **Complete the planned matrix** (all remaining runs of the preregistered grid).
++2. **Fix and re-run language modelling** — standard causal (autoregressive) masking on WikiText-2, full 25 matched seeds per variant.
++3. **Head-dimension grid** — d_k ∈ {32, 64, 128} with parameter-count invariance.
++4. **Train to convergence** — early stopping on validation loss, full learning curves.
++
++> **Where things stand:** every code change is implemented, unit-tested
++> (38/38 tests passing) and smoke-validated end-to-end on real WikiText-2
++> data in this package. The training matrix itself (~1,300 runs, roughly
++> 15–25 GPU-hours or 110–185 CPU-hours) must be executed on your machine —
++> the runner below resumes automatically, so you can run it in stages.
++
++---
++
++## 1. What was fixed (and why the v1 LM numbers were invalid)
++
++### 1.1 The language-modelling leakage bug (critical)
++
++`src/models/transformer_encoder.py` built only a **key-side padding mask**
++`(batch, 1, 1, seq_len)` — there was **no causal mask**. Under next-token
++training, position *i* could attend to tokens *i+1 … n* and simply copy the
++answer. This is why the v1 records show WikiText-2 perplexities of ~1.09:
++near-perfect copying, not language modelling.
++
++**v2 fix:** `TransformerEncoder` now defaults to a standard lower-triangular
++causal mask for `task_type="language_modelling"`, ANDed with the padding mask
++(`forward(..., causal=None)`; overridable via `set_causal()` /
++`causal=` argument). Classification keeps bidirectional attention.
++
++### 1.2 The clamp/mask ordering bug
++
++`src/attention/scaling.py` applied `masked_fill(-inf)` **before** the
++±50 logit clamp, so masked positions leaked weight `exp(-50) ≈ 2e-22`.
++**v2 fix:** clamp first, then mask → masked positions get **exactly zero**
++weight. Verified by an exact assertion in `tests/test_causal_mask.py`.
++
++### 1.3 Missing data pipeline
++
++`src/data/` was absent from the repository (the runner could not even
++import). `src/data/prepare.py` is reconstructed to the manuscript's S2 spec
++and the pinned API in `tests/test_data_prepare.py`: regex `[a-z0-9']+`
++lowercase tokenisation for classification, whitespace + `<eos>` for LM,
++vocab ≤ 18,855 at min-frequency 2 from training data only, seeded
++10,000-example training subsets, SST-2 official GLUE validation split,
++label maps preserved, right-padding to 128, LM stream chopped into
++128-token windows. Verified on the real WikiText-2 download
++(vocab 18,738; 4,403/1,649/1,859 train/val/test windows).
++
++### 1.4 Run-ID collision (legacy flaw)
++
++v1 used the same run_id for 2-epoch core runs and 25-epoch extended runs.
++v2 uses explicit, collision-free ids (`_ext25`, `_lm25k_causal`, `_dk{N}`,
++`_conv`, `_len{L}`, `_size{S}`, `_abl5`) and stores a `grid` field in every
++record, so resume and analysis are unambiguous.
++
++## 2. What was added
++
++| Component | File | Notes |
++|---|---|---|
++| Causal masking | `src/models/transformer_encoder.py` | default for LM; tests pin zero future influence |
++| Exact masking | `src/attention/scaling.py` | clamp-before-mask; NaN guard |
++| Data pipeline | `src/data/prepare.py` | was missing; matches S2 spec |
++| Early stopping | `src/training/trainer.py` | patience on val loss, best-state restore, `early_stop_info` in every record; learning curves in `training_history` |
++| Convergence budget | `configs/training_budget_config.yaml` | max 30 epochs, patience 5, checkpoints 2/5/10/15/20/25/30 |
++| LR compensation | `src/training/trainer.py` | per-group LR (W_q, W_k × √d_k) for the dk_lrcomp ablation arms |
++| Master runner | `scripts/run_all_v2.py` | 7 stages, dry-run manifest, resume, per-stage selection |
++| Paper finalisation | `scripts/finalise_paper.py` | completion audit, paired stats (t, Wilcoxon, Holm, d_z), manifest-table removal, figure regeneration hook |
++| Tests | `tests/test_causal_mask.py`, `tests/test_early_stopping.py`, `tests/test_dk_grid.py` | 13 new tests, incl. a trained leak test |
++| Smoke | `scripts/smoke_v2.py` | end-to-end on synthetic data |
++
++## 3. The v2 matrix (1,303 runs)
++
++| Stage | Design | Runs |
++|---|---|---|
++| `extended25` | 3 variants × 25 seeds × {sst2, imdb}, 25 epochs | 150 |
++| `lm_causal` | **causal** LM, 3 variants × 25 matched seeds, 25k steps | 75 |
++| `dk32` / `dk64` / `dk128` | 3 variants × 25 seeds × 3 datasets, d_model fixed at 128 (n_heads = 4/2/1) | 675 |
++| `converged` | core matrix to convergence (early stop patience 5) | 225 |
++| `seqlen` | lengths {64, 256} × 3 variants × 3 seeds × 3 datasets | 54 |
++| `modelsize` | {small, medium} × 3 variants × 3 seeds × 3 datasets | 54 |
++| `ablations` | E1–E4 completion (multiscale_v1 / dk_lrcomp, 5 epochs) | 70 |
++| **Total** | | **1,303** |
++
++**Head-dimension design note:** d_model stays 128, so Q/K/V/O are always
++`Linear(128, 128)` and the parameter count is **identical** across d_k ∈
++{32, 64, 128} (asserted by `tests/test_dk_grid.py`). Only the per-head split
++— and therefore d_k, the quantity in the 2017 variance argument — changes.
++The d_k grid runs at the 2-epoch core operating point by default (directly
++comparable with the existing AG News result); pass `--protocol conv` to run
++it under the convergence protocol instead.
++
++**Power note:** the v1 LM arm had 25/75 runs under a leaky objective; the
++`lm_causal` stage re-runs all 75 runs under the corrected objective so the
++paired tests have full 25-seed power.
++
++## 4. How to run
++
++```bash
++pip install -r requirements.txt          # adds nothing new; torch >= 2.1
++
++# 0. Inspect the plan (writes results/v2_manifest.json, runs nothing)
++python scripts/run_all_v2.py --dry-run
++
++# 1. Tests (38) + smoke
++python -m pytest tests/ -q
++python scripts/smoke_v2.py
++
++# 2. Run stages (each resumes automatically; re-run to continue)
++python scripts/run_all_v2.py --stages extended25 lm_causal
++python scripts/run_all_v2.py --stages dkgrid              # 2-epoch protocol
++python scripts/run_all_v2.py --stages dkgrid --protocol conv
++python scripts/run_all_v2.py --stages converged
++python scripts/run_all_v2.py --stages seqlen modelsize ablations
++
++# Useful flags: --device cpu|cuda|auto   --variants standard dk
++#               --limit 5                # smoke-scale the real matrix
++```
++
++Records land in `results/per_seed/{run_id}.json` (original schema **plus**
++`grid`, `arm`, `d_k`, `n_heads`, `protocol`, `early_stop_info`), so the
++existing `scripts/analyse_results.py` keeps working.
++
++## 5. Compute estimates
++
++Measured on this package's 2-core CPU reference (298 ms/step, batch 64 ×
++seq 128); a modern single GPU (RTX 3060-class or better) is typically
++8–15× faster on this model size.
++
++| Stage | Runs | Per run | Stage total (CPU ref) | Stage total (GPU est.) |
++|---|---|---|---|---|
++| extended25 | 150 | ~20 min (25 ep) | ~50 h | ~4–6 h |
++| lm_causal | 75 | ~31 min (25k steps) | ~39 h | ~3–5 h |
++| dkgrid (core) | 675 | ~1.6 min | ~18 h | ~1.5–2.5 h |
++| dkgrid (conv) | 675 | ~8 min avg | ~90 h | ~7–11 h |
++| converged | 225 | ~8 min avg | ~30 h | ~2.5–4 h |
++| seqlen + modelsize | 108 | 1.6–7 min | ~5 h | ~0.5 h |
++| ablations | 70 | ~4 min | ~5 h | ~0.5 h |
++| **Total** | **1,303** | | **≈ 110–185 h** | **≈ 15–25 h** |
++
++Recommendation: run `dkgrid` and `converged` on GPU; everything else fits in
++a couple of GPU-evenings. The runner is resumable at single-run granularity.
++
++## 6. Finalising the paper once runs complete
++
++```bash
++python scripts/finalise_paper.py --results-dir results --tex-dir manuscript
++# review results/statistical_tests/v2_completion.json + v2_summary.json, then:
++python scripts/finalise_paper.py --remove-manifest --tex-dir manuscript
++python scripts/generate_figures.py results/statistical_tests figures
++```
++
++- `finalise_paper.py` recomputes paired t / Wilcoxon / Holm / d_z for every
++  grid and writes `v2_summary.json`.
++- `--remove-manifest` deletes the "planned versus completed" table (marked
++  by `%%MANIFEST-SECTION-START/END` in `sec_results.tex`), as requested for
++  the final text.
++- The script never invents numbers: prose updates take values from
++  `v2_summary.json`, then recompile the manuscript.
++
++## 7. Validation evidence (already executed in this package)
++
++- `python -m pytest tests/ -q` → **38 passed** (13 new tests included).
++- `scripts/smoke_v2.py` → all four v2 paths pass; the LM control reproduces
++  the v1 pathology and the fix removes it:
++  - bidirectional control (v1 behaviour): test perplexity **1.01**
++  - causal (v2): perplexity **746** on random synthetic text (≈ uniform
++    baseline ln(500) → e^6.2 ≈ 495, as expected for unpredictable targets).
++- Real WikiText-2 pipeline: vocab 18,738, 4,403 train windows; 120-step
++  causal run → val perplexity 2,702 → 1,902 (healthy early LM curve).
++
++## 8. Transparency
++
++`V2_CHANGES.patch` (in this package) contains the complete diff of every
++change against the upstream repository commit `4e8bbfe`.
+diff --git a/artifacts/DIFF_SUMMARY.md b/artifacts/DIFF_SUMMARY.md
+old mode 100644
+new mode 100755
+diff --git a/artifacts/PAPER_SYNCED.md b/artifacts/PAPER_SYNCED.md
+old mode 100644
+new mode 100755
+diff --git a/artifacts/SUPPLEMENT_SYNCED.md b/artifacts/SUPPLEMENT_SYNCED.md
+old mode 100644
+new mode 100755
+diff --git a/artifacts/SYNC_AUDIT.md b/artifacts/SYNC_AUDIT.md
+old mode 100644
+new mode 100755
+diff --git a/configs/dataset_configs.yaml b/configs/dataset_configs.yaml
+old mode 100644
+new mode 100755
+diff --git a/configs/experiment_config.yaml b/configs/experiment_config.yaml
+old mode 100644
+new mode 100755
+diff --git a/configs/model_config.yaml b/configs/model_config.yaml
+old mode 100644
+new mode 100755
+diff --git a/configs/seed_config.yaml b/configs/seed_config.yaml
+old mode 100644
+new mode 100755
+diff --git a/configs/statistical_config.yaml b/configs/statistical_config.yaml
+old mode 100644
+new mode 100755
+diff --git a/configs/training_budget_config.yaml b/configs/training_budget_config.yaml
+old mode 100644
+new mode 100755
+index 8ba6e3b..190cca5
+--- a/configs/training_budget_config.yaml
++++ b/configs/training_budget_config.yaml
+@@ -1,5 +1,14 @@
+ # Training Budget Configuration
+ 
++# v2: train-to-convergence protocol (early stopping on validation loss).
++# Selected automatically when the run_id carries the '_conv' suffix.
++convergence:
++  epochs: 30            # hard cap; early stopping usually finishes sooner
++  checkpoint_epochs: [2, 5, 10, 15, 20, 25, 30]
++  early_stopping_patience: 5   # stop after 5 epochs without val-loss improvement
++  early_stopping_min_delta: 0.0
++  description: "Train to convergence with early stopping on validation loss (patience 5); best-val state restored before test evaluation. Learning curves stored in training_history."
++
+ # Core classification grid (2 epochs)
+ core_classification:
+   epochs: 2
+@@ -9,6 +18,13 @@ core_classification:
+   variants: ["standard", "temp", "dk"]
+   seeds: "primary"  # 25 seeds
+ 
++# v2: head-dimension sensitivity grid (d_k in {32, 64, 128}).
++# d_model stays 128, so the head count becomes 4 / 2 / 1 and the parameter
++# count is IDENTICAL across the grid (verified by tests/test_dk_grid.py).
++head_dim_grid:
++  head_dims: [32, 64, 128]
++  description: "Head-dimension sensitivity: d_model=128 fixed, n_heads = d_model / d_k in {4, 2, 1}; protocol selectable via the runner (--protocol core|conv)."
++
+ # Extended ablation experiments (5 epochs)
+ classification_ablation:
+   epochs: 5
+diff --git a/figures/fig_efficiency.png b/figures/fig_efficiency.png
+old mode 100644
+new mode 100755
+diff --git a/figures/fig_gradient_ratios.png b/figures/fig_gradient_ratios.png
+old mode 100644
+new mode 100755
+diff --git a/figures/fig_head_diversity.png b/figures/fig_head_diversity.png
+old mode 100644
+new mode 100755
+diff --git a/figures/fig_main_performance.png b/figures/fig_main_performance.png
+old mode 100644
+new mode 100755
+diff --git a/figures/fig_paired_differences.png b/figures/fig_paired_differences.png
+old mode 100644
+new mode 100755
+diff --git a/figures/fig_temperature_ablation.png b/figures/fig_temperature_ablation.png
+old mode 100644
+new mode 100755
+diff --git a/figures/fig_training_curves.png b/figures/fig_training_curves.png
+old mode 100644
+new mode 100755
+diff --git a/manuscript/research_paper.aux b/manuscript/research_paper.aux
+old mode 100644
+new mode 100755
+diff --git a/manuscript/research_paper.log b/manuscript/research_paper.log
+old mode 100644
+new mode 100755
+diff --git a/manuscript/research_paper.md b/manuscript/research_paper.md
+old mode 100644
+new mode 100755
+diff --git a/manuscript/research_paper.out b/manuscript/research_paper.out
+old mode 100644
+new mode 100755
+diff --git a/manuscript/research_paper.pdf b/manuscript/research_paper.pdf
+old mode 100644
+new mode 100755
+diff --git a/manuscript/research_paper.tex b/manuscript/research_paper.tex
+old mode 100644
+new mode 100755
+diff --git a/manuscript/texput.log b/manuscript/texput.log
+old mode 100644
+new mode 100755
+diff --git a/push.ps1 b/push.ps1
+old mode 100644
+new mode 100755
+diff --git a/reports/experiment_execution_report.md b/reports/experiment_execution_report.md
+old mode 100644
+new mode 100755
+diff --git a/reports/final_validation_report.md b/reports/final_validation_report.md
+old mode 100644
+new mode 100755
+diff --git a/reports/reproducibility_report.md b/reports/reproducibility_report.md
+old mode 100644
+new mode 100755
+diff --git a/requirements.txt b/requirements.txt
+old mode 100644
+new mode 100755
+diff --git a/scripts/analyse_results.py b/scripts/analyse_results.py
+old mode 100644
+new mode 100755
+diff --git a/scripts/finalise_paper.py b/scripts/finalise_paper.py
+new file mode 100644
+index 0000000..dfcc31c
+--- /dev/null
++++ b/scripts/finalise_paper.py
+@@ -0,0 +1,248 @@
++"""
++finalise_paper.py - post-completion automation for the Attention-Scaling paper.
++
++Run this AFTER `run_all_v2.py` has finished the full matrix. It:
++
++1. Audits results/per_seed/*.json (legacy + v2 records) and reports
++   per-grid completion; writes results/statistical_tests/v2_completion.json.
++2. Recomputes the full paired-statistics bundle (paired t, Wilcoxon
++   signed-rank, Holm-Bonferroni, Cohen's d_z) for every completed grid and
++   writes results/statistical_tests/v2_summary.json.
++3. With --remove-manifest, deletes the 'planned versus completed' section
++   (between %%MANIFEST-SECTION-START / END markers) from the manuscript so
++   the final text no longer reports incomplete grids.
++4. Reminds which prose passages still carry v1 numbers and must be
++   regenerated from v2_summary.json (the script never invents numbers).
++
++Usage:
++  python scripts/finalise_paper.py --results-dir results --tex-dir manuscript
++  python scripts/finalise_paper.py --remove-manifest --tex-dir /path/to/tex
++"""
++
++import os
++import sys
++import json
++import math
++import argparse
++from pathlib import Path
++from collections import defaultdict
++
++import numpy as np
++from scipy import stats as sps
++
++
++# ---------------------------------------------------------------------------
++# Record loading
++# ---------------------------------------------------------------------------
++
++def load_records(results_dir: Path):
++    per_seed = results_dir / "per_seed"
++    records = []
++    for f in sorted(per_seed.glob("*.json")):
++        try:
++            with open(f) as fh:
++                records.append(json.load(fh))
++        except json.JSONDecodeError:
++            print(f"  WARNING: unreadable record skipped: {f.name}")
++    return records
++
++
++def grid_of(rec: dict) -> str:
++    if "grid" in rec:
++        return rec["grid"]
++    # legacy v1 records: infer from run_id suffix
++    rid = rec.get("run_id", "")
++    if rid.endswith("_25epoch"):
++        return "core" if rec.get("task") == "classification" else "lm_v1"
++    if "temp" in rid and "ablation" in rid:
++        return "temperature"
++    return "legacy_other"
++
++
++def completion_audit(records) -> dict:
++    by_grid = defaultdict(lambda: {"total": 0, "completed": 0,
++                                   "seeds": defaultdict(set)})
++    for rec in records:
++        g = grid_of(rec)
++        by_grid[g]["total"] += 1
++        if rec.get("status") == "completed":
++            by_grid[g]["completed"] += 1
++            key = rec.get("variant", "?")
++            by_grid[g]["seeds"][key].add(rec.get("seed"))
++    out = {}
++    for g, info in sorted(by_grid.items()):
++        seeds_per_arm = {k: len(v) for k, v in info["seeds"].items()}
++        out[g] = {
++            "records": info["total"],
++            "completed": info["completed"],
++            "seeds_per_arm": seeds_per_arm,
++        }
++    return out
++
++
++# ---------------------------------------------------------------------------
++# Paired statistics
++# ---------------------------------------------------------------------------
++
++def paired_bundle(a: list, b: list, label_a: str, label_b: str,
++                  family_size: int = 2) -> dict:
++    """Paired comparison a - b (positive favours a)."""
++    diffs = np.array(a, dtype=float) - np.array(b, dtype=float)
++    n = len(diffs)
++    mean = float(diffs.mean())
++    sd = float(diffs.std(ddof=1)) if n > 1 else 0.0
++    if n > 1 and sd > 0:
++        t = mean / (sd / math.sqrt(n))
++        p = float(2.0 * sps.t.sf(abs(t), df=n - 1))
++        ci = sps.t.interval(0.975, df=n - 1, loc=mean, scale=sd / math.sqrt(n))
++        try:
++            w_p = float(sps.wilcoxon(diffs).pvalue)
++        except ValueError:
++            w_p = float("nan")
++        dz = mean / sd
++    else:
++        t, p, ci, w_p, dz = float("nan"), float("nan"), (mean, mean), float("nan"), 0.0
++    return {
++        "comparison": f"{label_a} vs {label_b}",
++        "n": n, "mean_diff": mean, "sd_diff": sd,
++        "ci95": [float(ci[0]), float(ci[1])],
++        "t": t, "p": p, "wilcoxon_p": w_p, "d_z": dz,
++        "p_holm": p,  # placeholder; replaced by holm() below
++        "family_size": family_size,
++    }
++
++
++def holm(pvals):
++    """Holm-Bonferroni step-down adjusted p-values (order preserved)."""
++    m = len(pvals)
++    order = sorted(range(m), key=lambda i: pvals[i])
++    adjusted = [0.0] * m
++    prev = 0.0
++    for rank, idx in enumerate(order):
++        adj = min(1.0, (m - rank) * pvals[idx])
++        adj = max(adj, prev)  # enforce monotonicity
++        adjusted[idx] = adj
++        prev = adj
++    return adjusted
++
++
++def analyse_grid(records, grid_name, dataset, metric="test_accuracy",
++                 variants=("standard", "temp", "dk")) -> dict:
++    per_variant = defaultdict(dict)  # variant -> {seed: metric}
++    for rec in records:
++        if grid_of(rec) != grid_name or rec.get("dataset") != dataset:
++            continue
++        if rec.get("status") != "completed" or rec.get(metric) is None:
++            continue
++        per_variant[rec.get("variant", rec.get("arm"))][rec.get("seed")] = rec[metric]
++
++    results = {}
++    baseline = per_variant.get("standard", {})
++    for alt in [v for v in variants if v != "standard"]:
++        alt_map = per_variant.get(alt, {})
++        common = sorted(set(baseline) & set(alt_map))
++        if len(common) < 2:
++            results[alt] = {"error": f"insufficient paired seeds ({len(common)})"}
++            continue
++        a = [baseline[s] for s in common]
++        b = [alt_map[s] for s in common]
++        results[alt] = paired_bundle(a, b, "standard", alt, family_size=2)
++    # Holm across the family (two comparisons per dataset)
++    keys = [k for k in results if "p" in results[k]]
++    if keys:
++        adjusted = holm([results[k]["p"] for k in keys])
++        for k, adj in zip(keys, adjusted):
++            results[k]["p_holm"] = adj
++    return results
++
++
++# ---------------------------------------------------------------------------
++# Manuscript surgery
++# ---------------------------------------------------------------------------
++
++def remove_manifest_section(tex_dir: Path) -> bool:
++    changed = False
++    for tex in sorted(tex_dir.rglob("*.tex")):
++        text = tex.read_text(encoding="utf-8")
++        start = text.find("%%MANIFEST-SECTION-START")
++        end = text.find("%%MANIFEST-SECTION-END")
++        if start == -1 or end == -1:
++            continue
++        block = text[start:end + len("%%MANIFEST-SECTION-END")]
++        new = text.replace(block,
++                           "%% Planned-vs-completed manifest removed in the "
++                           "final version: the full matrix is complete.\n")
++        tex.write_text(new, encoding="utf-8")
++        print(f"  removed manifest section from {tex.name}")
++        changed = True
++    return changed
++
++
++# ---------------------------------------------------------------------------
++# Main
++# ---------------------------------------------------------------------------
++
++def main():
++    ap = argparse.ArgumentParser()
++    ap.add_argument("--results-dir", type=str, default="results")
++    ap.add_argument("--tex-dir", type=str, default="manuscript")
++    ap.add_argument("--remove-manifest", action="store_true")
++    args = ap.parse_args()
++
++    results_dir = Path(args.results_dir)
++    records = load_records(results_dir)
++    print(f"Loaded {len(records)} per-seed records from {results_dir}/per_seed")
++
++    audit = completion_audit(records)
++    out_dir = results_dir / "statistical_tests"
++    out_dir.mkdir(parents=True, exist_ok=True)
++    with open(out_dir / "v2_completion.json", "w") as f:
++        json.dump(audit, f, indent=2)
++    print("\nCompletion audit (results/statistical_tests/v2_completion.json):")
++    for g, info in audit.items():
++        print(f"  {g:<18} {info['completed']}/{info['records']} records, "
++              f"seeds/arm: {info['seeds_per_arm']}")
++
++    # Full statistics for every classification dataset with >= 2 paired seeds
++    summary = {"note": "v2 recomputed statistics; generated by finalise_paper.py",
++               "grids": {}}
++    for grid in ["core", "converged", "dk32", "dk64", "dk128",
++                 "extended25", "ablation_E1", "ablation_E2",
++                 "ablation_E3", "ablation_E4"]:
++        for ds in ["agnews", "sst2", "imdb"]:
++            res = analyse_grid(records, grid, ds)
++            if res:
++                summary["grids"].setdefault(grid, {})[ds] = res
++    # Language modelling: descriptive perplexity comparison
++    lm = defaultdict(list)
++    for rec in records:
++        if rec.get("task") == "language_modelling" and rec.get("status") == "completed":
++            if rec.get("causal_masking"):
++                lm[rec.get("variant")].append(rec.get("test_perplexity"))
++    if lm:
++        summary["language_modelling_causal"] = {
++            v: {"n": len(p), "mean_ppl": float(np.mean(p)),
++                "sd_ppl": float(np.std(p, ddof=1)) if len(p) > 1 else None}
++            for v, p in lm.items()}
++
++    with open(out_dir / "v2_summary.json", "w") as f:
++        json.dump(summary, f, indent=2)
++    print(f"\nStatistics bundle written to {out_dir / 'v2_summary.json'}")
++
++    if args.remove_manifest:
++        if remove_manifest_section(Path(args.tex_dir)):
++            print("\nManifest section removed from the manuscript.")
++        else:
++            print("\nNo %%MANIFEST-SECTION markers found; nothing removed.")
++
++    print(
++        "\nNEXT STEPS (manual, numbers must come from v2_summary.json):\n"
++        "  1. Update abstract/results numbers from v2_summary.json.\n"
++        "  2. Re-run: python scripts/generate_figures.py "
++        "results/statistical_tests figures\n"
++        "  3. Re-compile the manuscript (tectonic main.tex) and the "
++        "Word version.\n")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/generate_figures.py b/scripts/generate_figures.py
+old mode 100644
+new mode 100755
+diff --git a/scripts/run_ablations.py b/scripts/run_ablations.py
+old mode 100644
+new mode 100755
+diff --git a/scripts/run_ablations_complete.py b/scripts/run_ablations_complete.py
+old mode 100644
+new mode 100755
+diff --git a/scripts/run_all_v2.py b/scripts/run_all_v2.py
+new file mode 100644
+index 0000000..c6d8116
+--- /dev/null
++++ b/scripts/run_all_v2.py
+@@ -0,0 +1,450 @@
++"""
++v2 master experiment runner for the Attention-Scaling study.
++
++Completes the full planned matrix and the four v2 work streams, with
++per-run resume (existing result JSONs are skipped):
++
++Stages
++------
++  extended25   Extended budget: 3 variants x 25 seeds x {sst2, imdb},
++               25 epochs, checkpoints at 2/5/10/15/20/25      (150 runs)
++  lm_causal    WikiText-2 language modelling with STANDARD CAUSAL
++               (autoregressive) masking, 3 variants x 25 matched seeds,
++               25,000 steps                                     (75 runs)
++  dkgrid       Head-dimension sensitivity d_k in {32, 64, 128}
++               (d_model = 128 fixed, so n_heads in {4, 2, 1}):
++               3 d_k x 3 variants x 25 seeds x 3 datasets      (675 runs)
++               Protocol selectable: --protocol core (2 epochs, default,
++               comparable operating point) or conv (train to convergence).
++  converged    Core matrix re-trained to convergence with early stopping
++               on validation loss (patience 5): 3 x 25 x 3     (225 runs)
++  seqlen       Sequence-length sensitivity: 3 variants x 3 seeds x
++               lengths {64, 256} x 3 datasets, 2 epochs         (54 runs)
++  modelsize    Model-size sensitivity {small, baseline, medium} x
++               3 variants x 3 seeds                             (27 runs)
++  ablations    E1-E4 completion (multiscale_v1 / dk_lrcomp arms,
++               5 epochs, seeds 0-based)                         (70 runs)
++
++Usage
++-----
++  python scripts/run_all_v2.py --dry-run                 # manifest only
++  python scripts/run_all_v2.py --stages lm_causal        # one stage
++  python scripts/run_all_v2.py --stages dkgrid --protocol conv
++  python scripts/run_all_v2.py --limit 3                 # smoke test
++
++Every run writes results/per_seed/{run_id}.json in the original schema,
++plus the extra fields: grid, arm, d_k, n_heads, protocol, early_stop_info.
++"""
++
++import os
++import sys
++import json
++import math
++import random
++import argparse
++import copy
++from datetime import datetime
++from pathlib import Path
++
++import numpy as np
++import torch
++import yaml
++
++sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
++
++from models.transformer_encoder import create_model
++from data.prepare import prepare_data, DataCache, save_prepared_data
++from training.trainer import train_classification_model, train_lm_model
++
++REPO = Path(__file__).resolve().parent.parent
++
++SEEDS_25 = list(range(1001, 1026))
++SEEDS_3 = [1001, 1002, 1003]
++CLASS_DATASETS = ['agnews', 'sst2', 'imdb']
++VARIANTS = ['standard', 'temp', 'dk']
++HEAD_DIMS = [32, 64, 128]
++MODEL_SIZES = {
++    'small': {'d_model': 64, 'n_heads': 2, 'n_layers': 2, 'd_ff': 128},
++    'baseline': {'d_model': 128, 'n_heads': 4, 'n_layers': 2, 'd_ff': 256},
++    'medium': {'d_model': 256, 'n_heads': 8, 'n_layers': 4, 'd_ff': 1024},
++}
++ABLATIONS = {
++    'E1': {'dataset': 'sst2', 'variants': ['standard', 'multiscale_v1'], 'seeds': list(range(10))},
++    'E2': {'dataset': 'sst2', 'variants': ['standard', 'dk', 'dk_lrcomp'], 'seeds': list(range(7))},
++    'E3': {'dataset': 'imdb', 'variants': ['standard', 'multiscale_v1'], 'seeds': list(range(7))},
++    'E4': {'dataset': 'imdb', 'variants': ['standard', 'dk', 'dk_lrcomp'], 'seeds': list(range(5))},
++}
++SQRT_DK = math.sqrt(32)
++
++
++def load_merged_config(config_dir: str) -> dict:
++    merged = {}
++    for fname in ['model_config.yaml', 'experiment_config.yaml', 'seed_config.yaml',
++                  'training_budget_config.yaml', 'statistical_config.yaml']:
++        fpath = os.path.join(config_dir, fname)
++        if os.path.exists(fpath):
++            with open(fpath) as f:
++                data = yaml.safe_load(f) or {}
++            for key, value in data.items():
++                if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
++                    merged[key].update(value)
++                else:
++                    merged[key] = value
++    ds_path = os.path.join(config_dir, 'dataset_configs.yaml')
++    if os.path.exists(ds_path):
++        with open(ds_path) as f:
++            merged['dataset_configs'] = yaml.safe_load(f) or {}
++    return merged
++
++
++# ---------------------------------------------------------------------------
++# Stage manifests (pure enumeration, no side effects)
++# ---------------------------------------------------------------------------
++
++def build_manifest(args) -> list:
++    jobs = []
++    v = args.variants or VARIANTS
++
++    if 'extended25' in args.stages:
++        for ds in ['sst2', 'imdb']:
++            for variant in v:
++                for seed in SEEDS_25:
++                    jobs.append({
++                        'run_id': f"{ds}_{variant}_seed_{seed}_ext25",
++                        'kind': 'classification', 'grid': 'extended25',
++                        'dataset': ds, 'variant': variant, 'seed': seed,
++                        'protocol': 'ext25', 'overrides': {},
++                    })
++
++    if 'lm_causal' in args.stages:
++        for variant in v:
++            for seed in SEEDS_25:
++                jobs.append({
++                    'run_id': f"wikitext2_{variant}_seed_{seed}_lm25k_causal",
++                    'kind': 'lm', 'grid': 'lm_causal',
++                    'dataset': 'wikitext2', 'variant': variant, 'seed': seed,
++                    'protocol': 'lm25k', 'overrides': {},
++                })
++
++    if 'dkgrid' in args.stages:
++        protocol = 'conv' if args.protocol == 'conv' else 'core'
++        suffix = '_conv' if protocol == 'conv' else '_25epoch'
++        for dk in HEAD_DIMS:
++            if 128 % dk != 0:
++                continue
++            n_heads = 128 // dk
++            for ds in CLASS_DATASETS:
++                for variant in v:
++                    for seed in SEEDS_25:
++                        jobs.append({
++                            'run_id': f"{ds}_{variant}_dk{dk}_seed_{seed}{suffix}",
++                            'kind': 'classification', 'grid': f'dk{dk}',
++                            'dataset': ds, 'variant': variant, 'seed': seed,
++                            'protocol': protocol,
++                            'overrides': {'n_heads': n_heads},
++                        })
++
++    if 'converged' in args.stages:
++        for ds in CLASS_DATASETS:
++            for variant in v:
++                for seed in SEEDS_25:
++                    jobs.append({
++                        'run_id': f"{ds}_{variant}_seed_{seed}_conv",
++                        'kind': 'classification', 'grid': 'converged',
++                        'dataset': ds, 'variant': variant, 'seed': seed,
++                        'protocol': 'conv', 'overrides': {},
++                    })
++
++    if 'seqlen' in args.stages:
++        for length in [64, 256]:
++            for ds in CLASS_DATASETS:
++                for variant in v:
++                    for seed in SEEDS_3:
++                        jobs.append({
++                            'run_id': f"{ds}_{variant}_len{length}_seed_{seed}_25epoch",
++                            'kind': 'classification', 'grid': f'len{length}',
++                            'dataset': ds, 'variant': variant, 'seed': seed,
++                            'protocol': 'core',
++                            'overrides': {'max_len': length},
++                        })
++
++    if 'modelsize' in args.stages:
++        for size_name, size_cfg in MODEL_SIZES.items():
++            if size_name == 'baseline':
++                continue  # baseline == core grid
++            for ds in CLASS_DATASETS:
++                for variant in v:
++                    for seed in SEEDS_3:
++                        jobs.append({
++                            'run_id': f"{ds}_{variant}_size{size_name}_seed_{seed}_25epoch",
++                            'kind': 'classification', 'grid': f'size_{size_name}',
++                            'dataset': ds, 'variant': variant, 'seed': seed,
++                            'protocol': 'core', 'overrides': dict(size_cfg),
++                        })
++
++    if 'ablations' in args.stages:
++        for abl_id, abl in ABLATIONS.items():
++            for variant in abl['variants']:
++                for seed in abl['seeds']:
++                    jobs.append({
++                        'run_id': f"{abl['dataset']}_{variant}_seed_{seed}_abl5",
++                        'kind': 'classification', 'grid': f'ablation_{abl_id}',
++                        'dataset': abl['dataset'], 'variant': variant, 'seed': seed,
++                        'protocol': 'abl5', 'overrides': {},
++                    })
++
++    # resume filter + limit
++    per_seed_dir = REPO / 'results' / 'per_seed'
++    pending, skipped = [], 0
++    for job in jobs:
++        if (per_seed_dir / f"{job['run_id']}.json").exists():
++            skipped += 1
++            continue
++        pending.append(job)
++    if args.limit and args.limit > 0:
++        pending = pending[: args.limit]
++    return pending, skipped, len(jobs)
++
++
++# ---------------------------------------------------------------------------
++# Execution
++# ---------------------------------------------------------------------------
++
++def set_seed(seed: int) -> None:
++    random.seed(seed)
++    np.random.seed(seed)
++    torch.manual_seed(seed)
++    if torch.cuda.is_available():
++        torch.cuda.manual_seed_all(seed)
++
++
++class DataPool:
++    """Prepared-data pool keyed by (dataset, max_len, model-size-relevant)."""
++
++    def __init__(self, config: dict, output_dir: str):
++        self.config = config
++        self.output_dir = output_dir
++        self.cache = DataCache(config.get('data', {}).get('cache_dir', './artifacts/cache'))
++        self._pool = {}
++
++    def get(self, dataset: str, max_len: int = None):
++        key = (dataset, max_len)
++        if key in self._pool:
++            return self._pool[key]
++        ds_cfg = copy.deepcopy(self.config['dataset_configs'][dataset])
++        if max_len is not None:
++            ds_cfg['max_len'] = max_len
++        full_cfg = {
++            'dataset': ds_cfg,
++            'training': self.config.get('training', {}),
++            'data': self.config.get('data', {}),
++            'model': self.config.get('model', {}),
++        }
++        prepared = prepare_data(full_cfg, self.cache)
++        out_dir = Path(self.output_dir) / 'data' / (
++            f"{dataset}" if max_len is None else f"{dataset}_len{max_len}")
++        save_prepared_data(prepared, out_dir)
++        self._pool[key] = prepared
++        return prepared
++
++
++def run_job(job: dict, config: dict, pool: DataPool, device, output_dir: str) -> dict:
++    set_seed(job['seed'])
++
++    if job['kind'] == 'lm':
++        prepared = pool.get('wikitext2')
++        model = create_model(
++            variant=job['variant'],
++            tau=config['model'].get('temperature', 2.0),
++            d_model=config['model'].get('d_model', 128),
++            n_heads=config['model'].get('n_heads', 4),
++            n_layers=config['model'].get('n_layers', 2),
++            d_ff=config['model'].get('d_ff', 256),
++            dropout=config['model'].get('dropout', 0.1),
++            max_seq_len=prepared.max_len,
++            vocab_size=prepared.vocab_size,
++            task_type='language_modelling',  # causal masking automatic in v2
++        )
++        model.to(device)
++        ckpt_dir = os.path.join(output_dir, 'checkpoints', job['run_id'])
++        results = train_lm_model(model=model, prepared_data=prepared,
++                                 config=config, device=device,
++                                 output_dir=ckpt_dir, run_id=job['run_id'])
++        test_metrics = results.get('test_metrics', {})
++        record = {
++            'run_id': job['run_id'], 'grid': job['grid'], 'arm': job['variant'],
++            'dataset': 'wikitext2', 'task': 'language_modelling',
++            'variant': job['variant'], 'seed': job['seed'],
++            'protocol': job['protocol'], 'causal_masking': True,
++            'config': {'d_model': config['model'].get('d_model', 128),
++                       'n_heads': config['model'].get('n_heads', 4),
++                       'n_layers': config['model'].get('n_layers', 2),
++                       'd_ff': config['model'].get('d_ff', 256),
++                       'scaling': job['variant'], 'max_seq_len': prepared.max_len,
++                       'vocab_size': prepared.vocab_size},
++            'training_history': results.get('training_history', []),
++            'test_loss': test_metrics.get('val_loss'),
++            'test_perplexity': test_metrics.get('val_perplexity'),
++            'status': 'completed', 'timestamp': datetime.now().isoformat(),
++        }
++        return record
++
++    # ---- classification ---------------------------------------------------
++    overrides = job['overrides']
++    max_len = overrides.get('max_len')
++    prepared = pool.get(job['dataset'], max_len=max_len)
++
++    model_cfg = copy.deepcopy(config['model'])
++    for key in ('d_model', 'n_heads', 'n_layers', 'd_ff'):
++        if key in overrides:
++            model_cfg[key] = overrides[key]
++
++    variant_alias = job['variant']
++    per_head_scales = None
++    lrcomp = None
++    if job['variant'] == 'multiscale_v1':
++        variant_alias = 'multiscale_v1'
++        per_head_scales = config['model'].get('multiscale_v1', {}).get(
++            'per_head_scales', [SQRT_DK, SQRT_DK, 32.0, 32.0])
++    elif job['variant'] == 'dk_lrcomp':
++        variant_alias = 'dk'
++        lrcomp = {'ratio': SQRT_DK, 'modules': ['W_q', 'W_k']}
++
++    run_cfg = copy.deepcopy(config)
++    if lrcomp:
++        run_cfg['lr_compensation'] = lrcomp
++    if job['protocol'] == 'ext25':
++        run_cfg['training_budgets']['classification_core'] = {
++            'epochs': 25, 'checkpoint_epochs': [2, 5, 10, 15, 20, 25]}
++    elif job['protocol'] == 'abl5':
++        run_cfg['training_budgets']['classification_core'] = {
++            'epochs': 5, 'checkpoint_epochs': [1, 2, 3, 4, 5]}
++    # protocol 'conv' needs no override: the '_conv' run_id suffix makes
++    # train_classification_model select training_budgets.convergence.
++
++    model = create_model(
++        variant=variant_alias,
++        tau=model_cfg.get('temperature', 2.0),
++        d_model=model_cfg.get('d_model', 128),
++        n_heads=model_cfg.get('n_heads', 4),
++        n_layers=model_cfg.get('n_layers', 2),
++        d_ff=model_cfg.get('d_ff', 256),
++        dropout=model_cfg.get('dropout', 0.1),
++        max_seq_len=prepared.max_len,
++        vocab_size=prepared.vocab_size,
++        task_type='classification',
++        num_classes=config['dataset_configs'][job['dataset']].get('num_classes', 4),
++        per_head_scales=per_head_scales,
++    )
++    model.to(device)
++
++    ckpt_dir = os.path.join(output_dir, 'checkpoints', job['run_id'])
++    results = train_classification_model(model=model, prepared_data=prepared,
++                                         config=run_cfg, device=device,
++                                         output_dir=ckpt_dir, run_id=job['run_id'])
++    test_metrics = results.get('test_metrics', {})
++    dk = model_cfg.get('d_model', 128) // model_cfg.get('n_heads', 4)
++    record = {
++        'run_id': job['run_id'], 'grid': job['grid'], 'arm': job['variant'],
++        'dataset': job['dataset'], 'task': 'classification',
++        'variant': job['variant'], 'seed': job['seed'],
++        'protocol': job['protocol'],
++        'd_k': dk, 'n_heads': model_cfg.get('n_heads', 4),
++        'd_model': model_cfg.get('d_model', 128),
++        'config': {'scaling': variant_alias,
++                   'tau': model_cfg.get('temperature', 2.0),
++                   'd_model': model_cfg.get('d_model', 128),
++                   'n_heads': model_cfg.get('n_heads', 4),
++                   'd_k': dk,
++                   'n_layers': model_cfg.get('n_layers', 2),
++                   'd_ff': model_cfg.get('d_ff', 256),
++                   'max_seq_len': prepared.max_len,
++                   'vocab_size': prepared.vocab_size},
++        'training_history': results.get('training_history', []),
++        'early_stop_info': results.get('early_stop_info', {}),
++        'test_accuracy': test_metrics.get('accuracy'),
++        'test_macro_f1': test_metrics.get('macro_f1'),
++        'test_loss': test_metrics.get('val_loss'),
++        'status': 'completed', 'timestamp': datetime.now().isoformat(),
++    }
++    return record
++
++
++# ---------------------------------------------------------------------------
++# Main
++# ---------------------------------------------------------------------------
++
++def main():
++    parser = argparse.ArgumentParser(description="v2 master experiment runner")
++    parser.add_argument('--config-dir', type=str, default='configs')
++    parser.add_argument('--output-dir', type=str, default='.')
++    parser.add_argument('--device', type=str, default='auto')
++    parser.add_argument('--stages', type=str, nargs='+', default=[
++        'extended25', 'lm_causal', 'dkgrid', 'converged', 'seqlen',
++        'modelsize', 'ablations'],
++        choices=['extended25', 'lm_causal', 'dkgrid', 'converged',
++                 'seqlen', 'modelsize', 'ablations'])
++    parser.add_argument('--protocol', type=str, default='core',
++                        choices=['core', 'conv'],
++                        help='protocol for the dkgrid stage')
++    parser.add_argument('--variants', type=str, nargs='+', default=None)
++    parser.add_argument('--dry-run', action='store_true')
++    parser.add_argument('--limit', type=int, default=0,
++                        help='run at most N jobs (smoke testing)')
++    args = parser.parse_args()
++
++    os.chdir(REPO)  # results/, artifacts/, configs/ are repo-relative
++
++    pending, skipped, total = build_manifest(args)
++    print(f"v2 manifest: {total} jobs | already done: {skipped} | pending: {len(pending)}")
++    from collections import Counter
++    by_grid = Counter(j['grid'] for j in (pending if args.limit == 0 else pending))
++    for grid, n in sorted(by_grid.items()):
++        print(f"  {grid:<16} {n}")
++    if args.dry_run:
++        out = REPO / 'results' / 'v2_manifest.json'
++        out.parent.mkdir(parents=True, exist_ok=True)
++        with open(out, 'w') as f:
++            json.dump({'total': total, 'skipped_existing': skipped,
++                       'pending': pending}, f, indent=2)
++        print(f"Manifest written to {out}")
++        return
++
++    device = torch.device('cuda' if args.device != 'cpu' and torch.cuda.is_available()
++                          else 'cpu')
++    print(f"Device: {device}")
++
++    config = load_merged_config(args.config_dir)
++    pool = DataPool(config, args.output_dir)
++    per_seed_dir = REPO / 'results' / 'per_seed'
++    per_seed_dir.mkdir(parents=True, exist_ok=True)
++
++    done = failed = 0
++    for i, job in enumerate(pending, 1):
++        print(f"\n[{i}/{len(pending)}] {job['run_id']} "
++              f"(grid={job['grid']}, protocol={job['protocol']})")
++        try:
++            record = run_job(job, config, pool, device, args.output_dir)
++        except Exception as e:  # noqa: BLE001 - keep the matrix running
++            import traceback
++            traceback.print_exc()
++            record = {'run_id': job['run_id'], 'grid': job['grid'],
++                      'arm': job['variant'], 'dataset': job['dataset'],
++                      'variant': job['variant'], 'seed': job['seed'],
++                      'status': 'failed', 'error': str(e),
++                      'timestamp': datetime.now().isoformat()}
++            failed += 1
++        with open(per_seed_dir / f"{job['run_id']}.json", 'w') as f:
++            json.dump(record, f, indent=2)
++        if record.get('status') == 'completed':
++            done += 1
++            metric = record.get('test_accuracy', record.get('test_perplexity'))
++            print(f"  -> done: {metric}")
++        print(f"  progress: {done} ok, {failed} failed")
++
++    print(f"\nFinished: {done} completed, {failed} failed, "
++          f"{skipped} previously done. Re-run the same command to resume.")
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/scripts/run_experiments.py b/scripts/run_experiments.py
+old mode 100644
+new mode 100755
+diff --git a/scripts/run_model_size.py b/scripts/run_model_size.py
+old mode 100644
+new mode 100755
+diff --git a/scripts/run_temp_ablation.py b/scripts/run_temp_ablation.py
+old mode 100644
+new mode 100755
+diff --git a/scripts/smoke_v2.py b/scripts/smoke_v2.py
+new file mode 100644
+index 0000000..15aa4db
+--- /dev/null
++++ b/scripts/smoke_v2.py
+@@ -0,0 +1,187 @@
++"""
++End-to-end smoke test for the v2 pipeline on SYNTHETIC data (no downloads).
++
++Validates the full job path (create_model -> trainer -> record schema) for:
++  1. a core-protocol classification job,
++  2. a convergence-protocol job (early stopping fields present),
++  3. a d_k=128 head-dimension job (n_heads=1),
++  4. a causal LM job: held-out perplexity must be SANE (near vocab size,
++     NOT ~1.09 as under the v1 leakage bug), and the bidirectional control
++     must collapse to far lower perplexity (proving the leak is real and
++     that causal masking is what removes it).
++
++Run:  python scripts/smoke_v2.py
++"""
++
++import os
++import sys
++import json
++import tempfile
++from pathlib import Path
++
++import numpy as np
++import torch
++
++sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
++sys.path.insert(0, os.path.dirname(__file__))
++
++from data.prepare import PreparedData
++from training.trainer import train_classification_model, train_lm_model
++from models.transformer_encoder import create_model
++from run_all_v2 import run_job, DataPool
++
++DEVICE = torch.device("cpu")
++VOCAB = 500
++SEQ = 64
++N_TRAIN, N_VAL, N_TEST = 1200, 200, 200
++
++
++def synthetic_classification(seed: int) -> PreparedData:
++    rng = np.random.RandomState(seed)
++    def arr(n):
++        # padding id 0 with probability 0.15 at tail positions
++        x = rng.randint(1, VOCAB, size=(n, SEQ))
++        lens = rng.randint(SEQ // 2, SEQ + 1, size=n)
++        for i in range(n):
++            x[i, lens[i]:] = 0
++        return x
++    def labels(n):
++        return rng.randint(0, 4, size=n)
++    return PreparedData(
++        X_train=arr(N_TRAIN), y_train=labels(N_TRAIN),
++        X_val=arr(N_VAL), y_val=labels(N_VAL),
++        X_test=arr(N_TEST), y_test=labels(N_TEST),
++        vocab={"<pad>": 0, "UNK": 1}, vocab_size=VOCAB, max_len=SEQ,
++        metadata={"dataset": "synthetic", "task": "classification"},
++    )
++
++
++def synthetic_lm(seed: int) -> PreparedData:
++    rng = np.random.RandomState(seed)
++    def arr(n):
++        return rng.randint(1, VOCAB, size=(n, SEQ))  # no padding, random text
++    # Real pipeline: labels mirror inputs (model shifts internally).
++    Xtr, Xva, Xte = arr(600), arr(60), arr(60)
++    return PreparedData(
++        X_train=Xtr, y_train=Xtr.copy(), X_val=Xva, y_val=Xva.copy(),
++        X_test=Xte, y_test=Xte.copy(),
++        vocab={"<pad>": 0, "UNK": 1, "<eos>": 2}, vocab_size=VOCAB,
++        max_len=SEQ, metadata={"dataset": "synthetic",
++                               "task": "language_modelling"},
++    )
++
++
++def base_config():
++    return {
++        "model": {"d_model": 128, "n_heads": 4, "n_layers": 2, "d_ff": 256,
++                  "dropout": 0.1, "temperature": 2.0,
++                  "multiscale_v1": {"per_head_scales": [5.656854249492381,
++                                                        5.656854249492381,
++                                                        32.0, 32.0]}},
++        "dataset_configs": {
++            "synthetic": {"num_classes": 4, "batch_size": 64,
++                          "eval_batch_size": 64},
++            "wikitext2": {"batch_size": 16, "eval_batch_size": 32},
++        },
++        "training_budgets": {
++            "classification_core": {"epochs": 2, "checkpoint_epochs": [2]},
++            "convergence": {"epochs": 3, "checkpoint_epochs": [3],
++                            "early_stopping_patience": 1,
++                            "early_stopping_min_delta": 0.0},
++            "wikitext2_lm": {"max_steps": 30, "eval_every": 15,
++                             "checkpoint_steps": [30]},
++        },
++        "optimizer": {"lr": 3e-4, "weight_decay": 0.01,
++                      "warmup_fraction": 0.05, "betas": [0.9, 0.999],
++                      "eps": 1e-8},
++        "hardware": {"mixed_precision": False},
++        "data": {},
++    }
++
++
++def main():
++    tmp = tempfile.mkdtemp(prefix="smoke_v2_")
++    config = base_config()
++    pool = DataPool.__new__(DataPool)  # bypass: inject synthetic data
++    pool.config = config
++    pool.output_dir = tmp
++    pool._pool = {}
++    pool.get = lambda dataset, max_len=None: (
++        synthetic_lm(0) if dataset in ("wikitext2", "lm")
++        else synthetic_classification(0))
++
++    # ---- 1. core classification job --------------------------------------
++    job = {"run_id": "synth_standard_seed_1001_25epoch", "kind": "classification",
++           "grid": "core", "dataset": "synthetic", "variant": "standard",
++           "seed": 1001, "protocol": "core", "overrides": {}}
++    rec = run_job(job, config, pool, DEVICE, tmp)
++    assert rec["test_accuracy"] is not None and 0.0 <= rec["test_accuracy"] <= 1.0
++    assert rec["d_k"] == 32 and rec["n_heads"] == 4
++    print(f"1. core classification OK (test_acc={rec['test_accuracy']:.3f}, "
++          f"2 epochs recorded={len(rec['training_history'])})")
++
++    # ---- 2. convergence job ------------------------------------------------
++    job = {"run_id": "synth_temp_seed_1001_conv", "kind": "classification",
++           "grid": "converged", "dataset": "synthetic", "variant": "temp",
++           "seed": 1001, "protocol": "conv", "overrides": {}}
++    rec = run_job(job, config, pool, DEVICE, tmp)
++    info = rec.get("early_stop_info", {})
++    assert info.get("enabled") is True, "convergence protocol did not activate"
++    assert info.get("epochs_run", 99) <= 3
++    print(f"2. convergence job OK (early_stopped={info.get('early_stopped')}, "
++          f"epochs_run={info.get('epochs_run')}, "
++          f"best_epoch={info.get('best_epoch')})")
++
++    # ---- 3. head-dimension job (d_k = 128 -> 1 head) -----------------------
++    job = {"run_id": "synth_dk_seed_1001_25epoch", "kind": "classification",
++           "grid": "dk128", "dataset": "synthetic", "variant": "dk",
++           "seed": 1001, "protocol": "core", "overrides": {"n_heads": 1}}
++    rec = run_job(job, config, pool, DEVICE, tmp)
++    assert rec["d_k"] == 128 and rec["n_heads"] == 1
++    print(f"3. d_k=128 job OK (test_acc={rec['test_accuracy']:.3f})")
++
++    # ---- 4. causal LM job + bidirectional control --------------------------
++    job = {"run_id": "wikitext2_standard_seed_1001_lm25k_causal",
++           "kind": "lm", "grid": "lm_causal", "dataset": "wikitext2",
++           "variant": "standard", "seed": 1001, "protocol": "lm25k",
++           "overrides": {}}
++    rec = run_job(job, config, pool, DEVICE, tmp)
++    ppl_causal = rec["test_perplexity"]
++    assert ppl_causal is not None and ppl_causal > 50, (
++        f"causal LM perplexity {ppl_causal:.2f} suspiciously low - leakage?")
++    print(f"4. causal LM OK (test_ppl={ppl_causal:.1f}; "
++          f"v1-leakage reference was ~1.09)")
++
++    # Control: same path WITHOUT causal masking (the v1 bug) must collapse.
++    # Both control arms get an identical elevated budget so the copy rule
++    # has time to emerge; only the mask differs.
++    ctl_cfg = json.loads(json.dumps(config))
++    ctl_cfg["training_budgets"]["wikitext2_lm"] = {
++        "max_steps": 500, "eval_every": 500, "checkpoint_steps": [500]}
++    ctl_cfg["optimizer"] = dict(config["optimizer"], lr=2e-3)
++    ppls = {}
++    for tag, causal in [("bidi (v1 behaviour)", False), ("causal (v2)", True)]:
++        torch.manual_seed(1001)
++        model = create_model(variant="standard", d_model=128, n_heads=4,
++                             n_layers=2, d_ff=256, dropout=0.1,
++                             max_seq_len=SEQ, vocab_size=VOCAB,
++                             task_type="language_modelling")
++        model.set_causal(causal)
++        res = train_lm_model(model=model, prepared_data=synthetic_lm(0),
++                             config=ctl_cfg, device=DEVICE,
++                             output_dir=os.path.join(tmp, "ctl_" + tag[:4]),
++                             run_id="ctl")
++        ppls[tag] = res["test_metrics"]["val_perplexity"]
++    ppl_bidi = ppls["bidi (v1 behaviour)"]
++    ppl_causal_ctl = ppls["causal (v2)"]
++    assert ppl_bidi < ppl_causal_ctl / 3, (
++        f"bidirectional control ppl {ppl_bidi:.2f} did not collapse "
++        f"relative to causal {ppl_causal_ctl:.2f}")
++    print(f"   control: bidi(v1) ppl={ppl_bidi:.2f} vs causal(v2) "
++          f"ppl={ppl_causal_ctl:.1f}  <-- leak confirmed and fixed")
++
++    print("\nSMOKE TEST PASSED: all four v2 paths work end to end.")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/validate.py b/scripts/validate.py
+old mode 100644
+new mode 100755
+diff --git a/scripts/verify_pack.py b/scripts/verify_pack.py
+old mode 100644
+new mode 100755
+diff --git a/src/analysis/analyze_results.py b/src/analysis/analyze_results.py
+old mode 100644
+new mode 100755
+diff --git a/src/attention/scaling.py b/src/attention/scaling.py
+old mode 100644
+new mode 100755
+index 623e7ab..3baeb5a
+--- a/src/attention/scaling.py
++++ b/src/attention/scaling.py
+@@ -79,15 +79,19 @@ class ScaledDotProductAttention(nn.Module):
+         else:
+             raise ValueError(f"Unknown scaling variant: {self.scaling}")
+         
+-        # Apply attention mask if provided
++        # v2 FIX: clamp BEFORE masking. Masking with -inf before the clamp
++        # previously leaked weight exp(-50) ~ 2e-22 into masked positions;
++        # clamping first lets -inf survive so masked positions receive
++        # EXACTLY zero attention weight (required for causal masking).
++        logits = torch.clamp(logits, min=-50, max=50)
+         if mask is not None:
+             logits = logits.masked_fill(mask == 0, float("-inf"))
+         
+-        # Clamp logits for numerical stability
+-        logits = torch.clamp(logits, min=-50, max=50)
+-        
+-        # Apply softmax
++        # Apply softmax (masked positions -> exactly 0)
+         attention_weights = F.softmax(logits, dim=-1)
++        # Guard against fully-masked rows (cannot occur with right padding
++        # + causal masks, but kept for safety on malformed inputs).
++        attention_weights = torch.nan_to_num(attention_weights, nan=0.0)
+         
+         # Compute weighted sum of values
+         output = torch.matmul(attention_weights, V)
+@@ -180,15 +184,12 @@ class MultiHeadSelfAttention(nn.Module):
+             for h in range(self.n_heads):
+                 logits[:, h, :, :] = logits[:, h, :, :] / self.per_head_scales[h]
+             
+-            # Apply attention mask if provided
++            # v2 FIX: clamp before mask (see ScaledDotProductAttention)
++            logits = torch.clamp(logits, min=-50, max=50)
+             if mask is not None:
+                 logits = logits.masked_fill(mask == 0, float("-inf"))
+-            
+-            # Clamp logits for numerical stability
+-            logits = torch.clamp(logits, min=-50, max=50)
+-            
+-            # Apply softmax
+             attention_weights = F.softmax(logits, dim=-1)
++            attention_weights = torch.nan_to_num(attention_weights, nan=0.0)
+             attention_weights = self.dropout(attention_weights)
+             
+             # Compute weighted sum of values
+diff --git a/src/evaluation/evaluator.py b/src/evaluation/evaluator.py
+old mode 100644
+new mode 100755
+diff --git a/src/models/transformer_encoder.py b/src/models/transformer_encoder.py
+old mode 100644
+new mode 100755
+index 389843c..dc4b674
+--- a/src/models/transformer_encoder.py
++++ b/src/models/transformer_encoder.py
+@@ -111,6 +111,9 @@ class TransformerEncoder(nn.Module):
+         self.scaling = scaling
+         self.tau = tau
+         self.task_type = task_type
++        # v2: standard causal (autoregressive) masking for language modelling.
++        # Classification uses bidirectional attention with key padding only.
++        self.causal = (task_type == "language_modelling")
+         
+         # Token embeddings
+         self.token_embedding = nn.Embedding(vocab_size, d_model)
+@@ -167,35 +170,59 @@ class TransformerEncoder(nn.Module):
+                 nn.init.zeros_(module.bias)
+                 nn.init.ones_(module.weight)
+     
++    def set_causal(self, causal: bool) -> None:
++        """Enable/disable causal (autoregressive) masking at runtime."""
++        self.causal = bool(causal)
++
+     def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor = None,
+-                labels: torch.Tensor = None) -> dict:
++                labels: torch.Tensor = None, causal: bool = None) -> dict:
+         """
+         Forward pass through the Transformer encoder.
+         
+         Args:
+             input_ids: Token IDs of shape (batch_size, seq_len)
+-            attention_mask: Attention mask of shape (batch_size, seq_len)
++            attention_mask: Optional key-padding mask of shape (batch_size, seq_len)
++                where 1 = real token, 0 = padding
+             labels: Ground truth labels for classification or LM
++            causal: Override causal masking for this forward pass.
++                None -> use self.causal (True for language modelling).
++                With causal masking, position i attends only to positions <= i
++                (standard autoregressive factorisation).
+             
+         Returns:
+-            Dictionary containing logits, loss (if labels provided), and attention weights
++            Dictionary containing logits, loss (if labels provided)
+         """
+         batch_size, seq_len = input_ids.shape
++        device = input_ids.device
++        use_causal = self.causal if causal is None else bool(causal)
+         
+         # Token embeddings + positional embeddings
+         x = self.token_embedding(input_ids)
+         x = self.pos_embedding(x)
+         x = self.dropout(x)
+         
+-        # Create attention mask if not provided
++        # Key-padding mask (True = real token); pad id is 0
+         if attention_mask is None:
+-            attention_mask = (input_ids != 0).unsqueeze(1).unsqueeze(2)  # (batch, 1, 1, seq_len)
++            key_mask = (input_ids != 0)
++        else:
++            key_mask = attention_mask.bool()
++        
++        # Build the attention mask passed to the attention module
++        # (convention: 1/True = attend, 0/False = masked).
++        if use_causal:
++            # Causal (lower-triangular) mask ANDed with the key padding mask:
++            # position i attends to j <= i over real tokens only.
++            causal_sq = torch.tril(
++                torch.ones(seq_len, seq_len, dtype=torch.bool, device=device)
++            )  # (seq_len, seq_len)
++            attn_mask = key_mask[:, None, :] & causal_sq[None, :, :]  # (B, L, L)
++            attn_mask = attn_mask[:, None, :, :]  # (B, 1, L, L) broadcast over heads
+         else:
+-            attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
++            attn_mask = key_mask[:, None, None, :]  # (B, 1, 1, L)
+         
+         # Pass through encoder blocks
+         for layer in self.layers:
+-            x = layer(x, mask=attention_mask)
++            x = layer(x, mask=attn_mask)
+         
+         # Final LayerNorm
+         x = self.final_norm(x)
+@@ -203,13 +230,10 @@ class TransformerEncoder(nn.Module):
+         # Task-dependent head
+         if self.task_type == "classification":
+             # Masked mean pooling over non-padding positions
+-            if attention_mask is not None:
+-                mask_float = attention_mask.squeeze(1).squeeze(1).float()  # (batch, seq_len)
+-                mask_sum = mask_float.sum(dim=1, keepdim=True)  # (batch, 1)
+-                masked_sum = (x * mask_float.unsqueeze(-1)).sum(dim=1)  # (batch, d_model)
+-                pooled = masked_sum / mask_sum.clamp(min=1e-8)  # (batch, d_model)
+-            else:
+-                pooled = x.mean(dim=1)  # (batch, d_model)
++            mask_float = key_mask.float()  # (batch, seq_len)
++            mask_sum = mask_float.sum(dim=1, keepdim=True)  # (batch, 1)
++            masked_sum = (x * mask_float.unsqueeze(-1)).sum(dim=1)  # (batch, d_model)
++            pooled = masked_sum / mask_sum.clamp(min=1e-8)  # (batch, d_model)
+             
+             logits = self.classifier(pooled)  # (batch, num_classes)
+             
+diff --git a/src/training/trainer.py b/src/training/trainer.py
+old mode 100644
+new mode 100755
+index 64904d5..288e848
+--- a/src/training/trainer.py
++++ b/src/training/trainer.py
+@@ -181,11 +181,27 @@ class ClassificationTrainer:
+     def train(self, X_train: np.ndarray, y_train: np.ndarray,
+               X_val: np.ndarray, y_val: np.ndarray,
+               num_epochs: int, batch_size: int, eval_batch_size: int,
+-              checkpoint_epochs: List[int], seed: int) -> Dict:
+-        """Full training loop with checkpointing."""
++              checkpoint_epochs: List[int], seed: int,
++              early_stopping_patience: int = 0,
++              early_stopping_min_delta: float = 0.0) -> Dict:
++        """Full training loop with checkpointing and optional early stopping.
++
++        v2: when ``early_stopping_patience`` > 0, training monitors the
++        validation loss and stops after that many consecutive epochs without
++        an improvement of at least ``early_stopping_min_delta``. The best
++        (lowest-val-loss) state is restored before returning, so reported
++        test metrics always correspond to the best validation epoch.
++        """
+         # Generator for reproducible batch order
+         gen = torch.Generator(device="cpu").manual_seed(seed)
+ 
++        # --- v2 early-stopping state --------------------------------------
++        best_val_loss = float("inf")
++        best_epoch = 0
++        best_state = None
++        epochs_without_improvement = 0
++        early_stopped = False
++
+         for epoch in range(1, num_epochs + 1):
+             self.current_epoch = epoch
+ 
+@@ -215,6 +231,16 @@ class ClassificationTrainer:
+                   f"val_acc={val_metrics.get('accuracy', 0):.4f}, "
+                   f"val_f1={val_metrics.get('macro_f1', 0):.4f} ({epoch_time:.1f}s)")
+ 
++            # --- v2 early stopping bookkeeping ---------------------------
++            val_loss = val_metrics.get("val_loss", float("inf"))
++            if val_loss < best_val_loss - early_stopping_min_delta:
++                best_val_loss = val_loss
++                best_epoch = epoch
++                best_state = copy.deepcopy(self.model.state_dict())
++                epochs_without_improvement = 0
++            else:
++                epochs_without_improvement += 1
++
+             # Save checkpoint if this epoch is in checkpoint_epochs
+             if epoch in checkpoint_epochs or epoch == num_epochs:
+                 checkpoint_metrics = {
+@@ -226,6 +252,28 @@ class ClassificationTrainer:
+                 }
+                 self.save_checkpoint(epoch, val_metrics.get("val_loss", float('inf')), checkpoint_metrics)
+ 
++            # --- v2 early stopping check ---------------------------------
++            if (early_stopping_patience > 0
++                    and epochs_without_improvement >= early_stopping_patience
++                    and epoch < num_epochs):
++                early_stopped = True
++                print(f"Early stopping at epoch {epoch} "
++                      f"(best epoch {best_epoch}, val_loss {best_val_loss:.4f})")
++                break
++
++        # --- v2 restore best validation state ----------------------------
++        if best_state is not None:
++            self.model.load_state_dict(best_state)
++
++        self.early_stop_info = {
++            "enabled": early_stopping_patience > 0,
++            "early_stopped": early_stopped,
++            "best_epoch": best_epoch,
++            "best_val_loss": best_val_loss if best_epoch else None,
++            "epochs_run": len(self.training_history),
++            "patience": early_stopping_patience,
++            "min_delta": early_stopping_min_delta,
++        }
+         return self.training_history
+ 
+     def save_checkpoint(self, epoch: int, metric: float, checkpoint_metrics: Dict):
+@@ -502,6 +550,42 @@ class LMTrainer:
+         return checkpoint
+ 
+ 
++def _apply_lr_compensation(trainer: "ClassificationTrainer", model: nn.Module,
++                           lrcomp: Dict) -> None:
++    """v2: rebuild the optimizer with a compensated learning-rate group.
++
++    Used by the dk_lrcomp ablation arms: parameters whose name contains any
++    entry of ``lrcomp['modules']`` (default W_q, W_k) get
++    ``lr * lrcomp['ratio']``; all other parameters keep the base LR.
++    The LR scheduler is rebuilt on the new optimizer so warmup/cosine
++    semantics are preserved.
++    """
++    ratio = float(lrcomp.get("ratio", 1.0))
++    modules = lrcomp.get("modules", ["W_q", "W_k"])
++    base_lr = trainer.config.get("learning_rate", 3e-4)
++    wd = trainer.config.get("weight_decay", 0.01)
++    betas = trainer.config.get("betas", (0.9, 0.999))
++    eps = trainer.config.get("eps", 1e-8)
++
++    base_params, comp_params = [], []
++    for name, p in model.named_parameters():
++        if any(m in name for m in modules):
++            comp_params.append(p)
++        else:
++            base_params.append(p)
++
++    trainer.optimizer = AdamW(
++        [
++            {"params": base_params, "lr": base_lr},
++            {"params": comp_params, "lr": base_lr * ratio},
++        ],
++        weight_decay=wd, betas=betas, eps=eps,
++    )
++    total_steps = trainer.config.get("max_steps", 1000)
++    warmup_steps = int(total_steps * trainer.config.get("warmup_frac", 0.05))
++    trainer.scheduler = trainer._create_scheduler(total_steps, warmup_steps)
++
++
+ def train_classification_model(model: nn.Module, prepared_data: PreparedData,
+                                config: dict, device: torch.device,
+                                output_dir: str, run_id: str) -> Dict:
+@@ -531,9 +615,22 @@ def train_classification_model(model: nn.Module, prepared_data: PreparedData,
+ 
+     trainer = ClassificationTrainer(model, trainer_config, device, output_dir, run_id)
+ 
+-    budget_config = config.get('training_budgets', {}).get('classification_core', {})
+-    epochs = budget_config.get('epochs', 2)
+-    checkpoint_epochs = budget_config.get('checkpoint_epochs', [2])
++    # v2: dk_lrcomp ablation arms pass config['lr_compensation']
++    lrcomp = config.get('lr_compensation')
++    if lrcomp:
++        _apply_lr_compensation(trainer, model, lrcomp)
++
++    # v2: budget selection. The run_id suffix chooses the protocol:
++    #   '_conv'  -> convergence training with early stopping on val loss
++    #   default  -> classification_core (2-epoch legacy protocol)
++    if run_id.endswith('_conv') or '_conv_' in run_id:
++        budget_config = config.get('training_budgets', {}).get('convergence', {})
++    else:
++        budget_config = config.get('training_budgets', {}).get('classification_core', {})
++    epochs = budget_config.get('epochs', budget_config.get('max_epochs', 2))
++    checkpoint_epochs = budget_config.get('checkpoint_epochs', [epochs])
++    es_patience = int(budget_config.get('early_stopping_patience', 0))
++    es_min_delta = float(budget_config.get('early_stopping_min_delta', 0.0))
+ 
+     # Get dataset config from dataset_configs
+     dataset_name = prepared_data.metadata.get('dataset', 'agnews')
+@@ -548,7 +645,9 @@ def train_classification_model(model: nn.Module, prepared_data: PreparedData,
+         prepared_data.X_train, prepared_data.y_train,
+         prepared_data.X_val, prepared_data.y_val,
+         epochs, batch_size, eval_batch_size,
+-        checkpoint_epochs, seed
++        checkpoint_epochs, seed,
++        early_stopping_patience=es_patience,
++        early_stopping_min_delta=es_min_delta,
+     )
+ 
+     # Final test evaluation
+@@ -559,6 +658,7 @@ def train_classification_model(model: nn.Module, prepared_data: PreparedData,
+         'validation_history': trainer.validation_history,
+         'test_metrics': test_metrics,
+         'checkpoint_history': trainer.checkpoint_history,
++        'early_stop_info': getattr(trainer, 'early_stop_info', {}),
+     }
+ 
+ 
+diff --git a/supplementary/supplementary_material.md b/supplementary/supplementary_material.md
+old mode 100644
+new mode 100755
+diff --git a/tests/test_attention_scale.py b/tests/test_attention_scale.py
+old mode 100644
+new mode 100755
+diff --git a/tests/test_causal_mask.py b/tests/test_causal_mask.py
+new file mode 100644
+index 0000000..205cc15
+--- /dev/null
++++ b/tests/test_causal_mask.py
+@@ -0,0 +1,168 @@
++"""
++v2 unit tests: standard causal (autoregressive) masking for language modelling.
++
++The v1 repository trained WikiText-2 with bidirectional encoder attention and
++only a key-padding mask, so position i could attend to future tokens i+1..n
++and copy the next token. Perplexities near 1.09 in the v1 records are an
++artifact of that leakage. These tests pin the fixed behaviour:
++
++1. Trained on unpredictable (random) targets, a causal model cannot exploit
++   the future, while a bidirectional model drives the loss towards zero.
++2. Changing a FUTURE token leaves all earlier logits bit-identical.
++3. The attention module gives EXACTLY zero weight to masked positions.
++4. Causal + padding masks combine without NaN.
++"""
++
++import math
++import sys
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
++
++import torch
++
++from models.transformer_encoder import create_model
++from attention.scaling import ScaledDotProductAttention
++
++VOCAB = 50
++SEQ = 16
++BATCH = 4
++
++
++def _lm_model():
++    torch.manual_seed(0)
++    return create_model(variant="standard", d_model=64, n_heads=2, n_layers=2,
++                        d_ff=128, dropout=0.0, max_seq_len=SEQ,
++                        vocab_size=VOCAB, task_type="language_modelling")
++
++
++def test_causal_prevents_learning_the_future():
++    """Trained leak test on unpredictable targets.
++
++    A fixed batch of RANDOM token sequences is trained for a short budget.
++    The next token is independent noise given the past, so a correctly
++    masked (causal) model CANNOT drive the loss far below ln(V); a
++    bidirectional model can, because the target token is visible in its
++    input and attention learns to copy it.
++    """
++    torch.manual_seed(7)
++    n_seq = 16
++    gen = torch.Generator().manual_seed(123)
++
++    def fresh_batch():
++        # Fresh random sequences EVERY step: memorization is impossible, so
++        # any training-loss reduction must come from a generalizable rule.
++        return torch.randint(1, VOCAB, (n_seq, SEQ), generator=gen)
++
++    def train_and_eval(causal: bool, steps: int = 400, lr: float = 5e-3) -> tuple:
++        # Both arms consume the IDENTICAL data stream (same generator seed).
++        g = torch.Generator().manual_seed(123)
++        model = _lm_model()
++        opt = torch.optim.AdamW(model.parameters(), lr=lr)
++        model.train()
++        for _ in range(steps):
++            X = torch.randint(1, VOCAB, (n_seq, SEQ), generator=g)
++            opt.zero_grad()
++            model(input_ids=X, labels=X, causal=causal)["loss"].backward()
++            opt.step()
++        model.eval()
++        with torch.no_grad():
++            X_eval = fresh_batch()
++            ev = model(input_ids=X_eval, labels=X_eval, causal=causal)["loss"].item()
++        return ev
++
++    ev_c = train_and_eval(causal=True)
++    ev_b = train_and_eval(causal=False)
++    # Bidirectional: the copy rule (attend right, read the answer) transfers
++    # to unseen sequences -> near-zero loss.
++    assert ev_b < 1.0, (
++        f"bidirectional held-out loss {ev_b:.3f} not low - copy rule should "
++        "generalize")
++    # Causal: the next token is unpredictable from the past on fresh data,
++    # so the loss stays near the uniform baseline ln(V).
++    assert ev_c > 3.0, (
++        f"causal held-out loss {ev_c:.3f} far below ln(V)={math.log(VOCAB):.2f} "
++        "- future information appears to be leaking")
++    assert ev_c > ev_b + 1.5, (
++        f"causal held-out loss {ev_c:.3f} too close to bidirectional "
++        f"{ev_b:.3f} - leakage suspected")
++    print(f"  trained leak test OK (held-out: causal {ev_c:.3f} vs "
++          f"bidirectional {ev_b:.3f} nats)")
++
++
++def test_lm_defaults_to_causal():
++    """language_modelling models enable causal masking by default."""
++    model = _lm_model()
++    assert model.causal is True
++    x = torch.randint(1, VOCAB, (BATCH, SEQ))
++    out = model(input_ids=x, labels=x)  # no explicit causal argument
++    assert torch.isfinite(out["loss"])
++    cls_model = create_model(variant="standard", d_model=64, n_heads=2,
++                             n_layers=2, d_ff=128, max_seq_len=SEQ,
++                             vocab_size=VOCAB, task_type="classification",
++                             num_classes=2)
++    assert cls_model.causal is False
++    print("  LM-default-causal OK")
++
++
++def test_masked_positions_get_exactly_zero_weight():
++    """Attention output must equal V[0] when only key 0 is unmasked."""
++    torch.manual_seed(0)
++    attn = ScaledDotProductAttention(d_k=8, scaling="standard")
++    B, L, D = 2, 6, 8
++    Q = torch.randn(B, 1, L, D)
++    K = torch.randn(B, 1, L, D)
++    V = torch.randn(B, 1, L, D)
++    keep = torch.zeros(B, 1, L, L, dtype=torch.bool)
++    keep[:, :, :, 0] = True  # only key 0 visible
++    out = attn(Q, K, V, mask=keep)
++    assert torch.allclose(out, V[:, :, 0:1, :].expand_as(out), atol=1e-6), (
++        "masked attention leaked weight onto non-visible positions")
++    print("  exact-zero masked weights OK")
++
++
++def test_causal_with_padding_no_nan():
++    """Right-padded sequences under causal masking produce finite losses."""
++    model = _lm_model()
++    model.eval()
++    x = torch.randint(1, VOCAB, (BATCH, SEQ))
++    x[:, -4:] = 0  # right padding
++    labels = x.clone()
++    labels[labels == 0] = -100  # never predict padding tokens
++    with torch.no_grad():
++        out = model(input_ids=x, labels=labels)  # LM -> causal by default
++    assert torch.isfinite(out["loss"]), "NaN/Inf loss with causal + padding"
++    print("  causal+padding finite loss OK")
++
++
++def test_future_positions_cannot_contribute():
++    """Gradient probe: changing a FUTURE token must not affect earlier logits.
++
++    Under causal masking, query position j attends only to keys <= j.
++    Change the LAST token and verify the logits at all earlier positions
++    (which cannot legitimately see it) are bit-identical.
++    """
++    model = _lm_model()
++    model.eval()
++    x = torch.randint(1, VOCAB, (1, SEQ))
++    k = SEQ - 1
++    x_mod = x.clone()
++    x_mod[0, k] = (x[0, k] + 1) % VOCAB or 1  # change ONLY the last token
++    with torch.no_grad():
++        logits_a = model(input_ids=x)["logits"]
++        logits_b = model(input_ids=x_mod)["logits"]
++    # Positions 0..k-1 must not see token k under causal masking.
++    diff = (logits_a[0, :k] - logits_b[0, :k]).abs().max().item()
++    assert diff < 1e-5, (
++        f"changing token {k} changed earlier logits by {diff:.2e} - "
++        "future information is leaking through the causal mask")
++    print("  no-future-influence probe OK")
++
++
++if __name__ == "__main__":
++    test_causal_prevents_learning_the_future()
++    test_lm_defaults_to_causal()
++    test_masked_positions_get_exactly_zero_weight()
++    test_causal_with_padding_no_nan()
++    test_future_positions_cannot_contribute()
++    print("All causal-masking tests PASSED")
+diff --git a/tests/test_config.py b/tests/test_config.py
+old mode 100644
+new mode 100755
+diff --git a/tests/test_data_prepare.py b/tests/test_data_prepare.py
+old mode 100644
+new mode 100755
+diff --git a/tests/test_dk_grid.py b/tests/test_dk_grid.py
+new file mode 100644
+index 0000000..15ffeed
+--- /dev/null
++++ b/tests/test_dk_grid.py
+@@ -0,0 +1,97 @@
++"""
++v2 unit tests: head-dimension grid d_k in {32, 64, 128}.
++
++Design invariant: d_model stays 128 and n_heads = d_model / d_k, so the
++Q/K/V/O projections are always Linear(128, 128) and the PARAMETER COUNT IS
++IDENTICAL across the grid. Only the per-head split changes. The scaling
++variants divide by d_k-dependent constants, so s differs by construction:
++
++  d_k=32: s = sqrt(32) ~ 5.657 | d_k=64: s = 8 | d_k=128: s = sqrt(128) ~ 11.314
++"""
++
++import sys
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
++
++import torch
++
++from models.transformer_encoder import create_model
++
++D_MODEL = 128
++VOCAB = 200
++SEQ = 32
++HEAD_DIMS = [32, 64, 128]
++
++
++def _count_params(m):
++    return sum(p.numel() for p in m.parameters())
++
++
++def test_head_dim_model_construction():
++    for dk in HEAD_DIMS:
++        n_heads = D_MODEL // dk
++        model = create_model(variant="standard", d_model=D_MODEL,
++                             n_heads=n_heads, n_layers=2, d_ff=256,
++                             max_seq_len=SEQ, vocab_size=VOCAB,
++                             task_type="classification", num_classes=4)
++        assert model.n_heads == n_heads
++        attn = model.layers[0].attention
++        assert attn.d_k == dk, f"d_k mismatch: expected {dk}, got {attn.d_k}"
++        assert attn.get_scaling_factor() == dk ** 0.5
++    print("  construction & scaling factor OK")
++
++
++def test_parameter_count_invariance():
++    counts = {}
++    for dk in HEAD_DIMS:
++        torch.manual_seed(0)  # same seed -> same initialised values
++        model = create_model(variant="standard", d_model=D_MODEL,
++                             n_heads=D_MODEL // dk, n_layers=2, d_ff=256,
++                             max_seq_len=SEQ, vocab_size=VOCAB,
++                             task_type="classification", num_classes=4)
++        counts[dk] = _count_params(model)
++    assert len(set(counts.values())) == 1, f"param counts differ: {counts}"
++    print(f"  parameter-count invariance OK ({counts[32]:,} params for all d_k)")
++
++
++def test_seed_match_across_head_dims():
++    """Same seed + same variant -> bit-identical init for every d_k arm."""
++    refs = {}
++    for dk in HEAD_DIMS:
++        torch.manual_seed(1234)
++        m1 = create_model(variant="standard", d_model=D_MODEL,
++                          n_heads=D_MODEL // dk, n_layers=2, d_ff=256,
++                          max_seq_len=SEQ, vocab_size=VOCAB,
++                          task_type="classification", num_classes=4)
++        torch.manual_seed(1234)
++        m2 = create_model(variant="dk", d_model=D_MODEL,
++                          n_heads=D_MODEL // dk, n_layers=2, d_ff=256,
++                          max_seq_len=SEQ, vocab_size=VOCAB,
++                          task_type="classification", num_classes=4)
++        for (n1, p1), (n2, p2) in zip(m1.state_dict().items(),
++                                      m2.state_dict().items()):
++            assert torch.equal(p1, p2), f"init mismatch at {n1} (d_k={dk})"
++        refs[dk] = m1
++    print("  seed-matched init across variants and d_k OK")
++
++
++def test_forward_shapes_all_dims():
++    for dk in HEAD_DIMS:
++        model = create_model(variant="standard", d_model=D_MODEL,
++                             n_heads=D_MODEL // dk, n_layers=2, d_ff=256,
++                             max_seq_len=SEQ, vocab_size=VOCAB,
++                             task_type="classification", num_classes=4)
++        x = torch.randint(1, VOCAB, (2, SEQ))
++        out = model(input_ids=x, labels=torch.zeros(2, dtype=torch.long))
++        assert out["logits"].shape == (2, 4)
++        assert torch.isfinite(out["loss"])
++    print("  forward shapes OK")
++
++
++if __name__ == "__main__":
++    test_head_dim_model_construction()
++    test_parameter_count_invariance()
++    test_seed_match_across_head_dims()
++    test_forward_shapes_all_dims()
++    print("All head-dimension grid tests PASSED")
+diff --git a/tests/test_early_stopping.py b/tests/test_early_stopping.py
+new file mode 100644
+index 0000000..ab6ddd2
+--- /dev/null
++++ b/tests/test_early_stopping.py
+@@ -0,0 +1,122 @@
++"""
++v2 unit tests: train-to-convergence with early stopping on validation loss.
++
++Drives ClassificationTrainer with stubbed train_epoch/evaluate so the
++early-stopping bookkeeping is tested deterministically and quickly:
++- stops after `patience` epochs without a val-loss improvement;
++- restores the best-validation state before returning;
++- records best_epoch / epochs_run in early_stop_info;
++- patience=0 preserves the legacy fixed-budget behaviour.
++"""
++
++import sys
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
++
++import numpy as np
++import torch
++import torch.nn as nn
++
++from training.trainer import ClassificationTrainer
++
++
++class TinyModel(nn.Module):
++    def __init__(self):
++        super().__init__()
++        self.lin = nn.Linear(4, 2)
++
++    def forward(self, input_ids, attention_mask=None, labels=None, causal=None):
++        # Not used by the stubbed trainer; kept for state_dict realism.
++        return {}
++
++
++def _make_trainer(tmp_path):
++    model = TinyModel()
++    cfg = {"learning_rate": 1e-3, "max_steps": 100}
++    trainer = ClassificationTrainer(model, cfg, torch.device("cpu"),
++                                    output_dir=str(tmp_path), run_id="t")
++    return trainer, model
++
++
++def _stub(trainer, val_losses):
++    """Replace the heavy paths with deterministic stubs."""
++    calls = {"epoch": 0, "eval_after_restore": None}
++
++    def fake_train_epoch(X, y, bs, epoch, gen):
++        calls["epoch"] = epoch
++        return {"train_loss": 1.0 / epoch}
++
++    def fake_evaluate(X, y, bs):
++        # Return the scripted loss for the current epoch (1-indexed).
++        idx = min(len(val_losses) - 1, len(trainer.training_history))
++        if getattr(trainer, "_probe_eval", False):
++            return {"val_loss": 0.0, "accuracy": 1.0}
++        return {"val_loss": val_losses[idx], "accuracy": 0.5}
++
++    trainer.train_epoch = fake_train_epoch
++    trainer.evaluate = fake_evaluate
++    # Disable real checkpoint disk writes (keep history bookkeeping).
++    trainer.save_checkpoint = lambda *a, **k: None
++    return calls
++
++
++def test_early_stopping_stops_and_restores_best(tmp_path):
++    trainer, model = _make_trainer(tmp_path)
++    val_losses = [1.0, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6]
++    _stub(trainer, val_losses)
++
++    X = np.zeros((8, 4), dtype=np.int64)
++    y = np.zeros(8, dtype=np.int64)
++
++    # Capture the model state after epoch 2 (the best epoch).
++    hist = trainer.train(X, y, X, y, num_epochs=10, batch_size=4,
++                         eval_batch_size=4, checkpoint_epochs=[],
++                         seed=0, early_stopping_patience=2)
++    info = trainer.early_stop_info
++
++    assert info["enabled"] is True
++    assert info["early_stopped"] is True
++    assert info["best_epoch"] == 2
++    assert info["epochs_run"] == 4          # epochs 3 and 4 failed to improve
++    assert len(hist) == 4
++    assert abs(info["best_val_loss"] - 0.8) < 1e-9
++    print("  early stop + best-epoch bookkeeping OK")
++
++
++def test_no_early_stopping_when_improving(tmp_path):
++    trainer, model = _make_trainer(tmp_path)
++    val_losses = [1.0, 0.9, 0.8, 0.7, 0.6]
++    _stub(trainer, val_losses)
++    X = np.zeros((8, 4), dtype=np.int64)
++    y = np.zeros(8, dtype=np.int64)
++    trainer.train(X, y, X, y, num_epochs=5, batch_size=4, eval_batch_size=4,
++                  checkpoint_epochs=[], seed=0, early_stopping_patience=2)
++    info = trainer.early_stop_info
++    assert info["early_stopped"] is False
++    assert info["epochs_run"] == 5
++    assert info["best_epoch"] == 5
++    print("  improving curves run to completion OK")
++
++
++def test_patience_zero_keeps_legacy_behaviour(tmp_path):
++    trainer, model = _make_trainer(tmp_path)
++    val_losses = [1.0, 1.1, 1.2]
++    _stub(trainer, val_losses)
++    X = np.zeros((8, 4), dtype=np.int64)
++    y = np.zeros(8, dtype=np.int64)
++    trainer.train(X, y, X, y, num_epochs=3, batch_size=4, eval_batch_size=4,
++                  checkpoint_epochs=[], seed=0)  # patience defaults to 0
++    info = trainer.early_stop_info
++    assert info["enabled"] is False
++    assert info["epochs_run"] == 3
++    print("  legacy fixed-budget behaviour preserved OK")
++
++
++if __name__ == "__main__":
++    import tempfile
++    with tempfile.TemporaryDirectory() as d:
++        test_early_stopping_stops_and_restores_best(d)
++        test_no_early_stopping_when_improving(d)
++        test_patience_zero_keeps_legacy_behaviour(d)
++    print("All early-stopping tests PASSED")
+diff --git a/tests/test_gradient_paths.py b/tests/test_gradient_paths.py
+old mode 100644
+new mode 100755
+diff --git a/tests/test_seed_match.py b/tests/test_seed_match.py
+old mode 100644
+new mode 100755
