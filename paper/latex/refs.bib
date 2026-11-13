@@ -1,0 +1,311 @@
+% ============================================================================
+% References for: A Seed-Matched Empirical Comparison of Scaling Functions
+% in Transformer Self-Attention (Raza Hasan, 2026)
+% All entries verified against publisher/arXiv records, Nov 2026.
+% ============================================================================
+
+% ---------- Transformer foundations ----------------------------------------
+@inproceedings{vaswani2017,
+  author    = {Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and
+               Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N. and
+               Kaiser, {\L}ukasz and Polosukhin, Illia},
+  title     = {Attention Is All You Need},
+  booktitle = {Advances in Neural Information Processing Systems 30 (NeurIPS)},
+  year      = {2017},
+  pages     = {5998--6008}
+}
+
+@article{ba2016,
+  author  = {Ba, Jimmy Lei and Kiros, Jamie Ryan and Hinton, Geoffrey E.},
+  title   = {Layer Normalization},
+  journal = {arXiv preprint arXiv:1607.06450},
+  year    = {2016}
+}
+
+@inproceedings{xiong2020,
+  author    = {Xiong, Ruibin and Yang, Yunchang and He, Di and Zheng, Kai and
+               Zheng, Shuxin and Xing, Chen and Zhang, Huishuai and Lan, Yanyan
+               and Wang, Liwei and Liu, Tie-Yan},
+  title     = {On Layer Normalization in the Transformer Architecture},
+  booktitle = {Proceedings of the 37th International Conference on Machine
+               Learning (ICML), PMLR 119},
+  year      = {2020},
+  pages     = {10524--10533}
+}
+
+@inproceedings{loshchilov2019,
+  author    = {Loshchilov, Ilya and Hutter, Frank},
+  title     = {Decoupled Weight Decay Regularization},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2019}
+}
+
+@inproceedings{kingma2015,
+  author    = {Kingma, Diederik P. and Ba, Jimmy},
+  title     = {Adam: A Method for Stochastic Optimization},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2015}
+}
+
+@article{hendrycks2016,
+  author  = {Hendrycks, Dan and Gimpel, Kevin},
+  title   = {Gaussian Error Linear Units ({GELU})},
+  journal = {arXiv preprint arXiv:1606.08415},
+  year    = {2016}
+}
+
+@article{srivastava2014,
+  author  = {Srivastava, Nitish and Hinton, Geoffrey and Krizhevsky, Alex and
+             Sutskever, Ilya and Salakhutdinov, Ruslan},
+  title   = {Dropout: A Simple Way to Prevent Neural Networks from Overfitting},
+  journal = {Journal of Machine Learning Research},
+  volume  = {15},
+  number  = {56},
+  pages   = {1929--1958},
+  year    = {2014}
+}
+
+@article{hinton2015,
+  author  = {Hinton, Geoffrey and Vinyals, Oriol and Dean, Jeff},
+  title   = {Distilling the Knowledge in a Neural Network},
+  journal = {arXiv preprint arXiv:1503.02531},
+  year    = {2015}
+}
+
+@inproceedings{wolf2020,
+  author    = {Wolf, Thomas and Debut, Lysandre and Sanh, Victor and
+               Chaumond, Julien and Delangue, Clement and Moi, Anthony and
+               others},
+  title     = {Transformers: State-of-the-Art Natural Language Processing},
+  booktitle = {Proceedings of the 2020 Conference on Empirical Methods in
+               Natural Language Processing: System Demonstrations},
+  year      = {2020},
+  pages     = {38--45}
+}
+
+% ---------- Attention scaling, temperature, and dynamics --------------------
+@inproceedings{zhai2023,
+  author    = {Zhai, Shuangfei and Likhomanenko, Tatiana and Littwin, Etai and
+               Busbridge, Dan and Ramapuram, Jason and Zhang, Yirong and
+               Gu, Jiatao and Susskind, Joshua},
+  title     = {Stabilizing Transformer Training by Preventing Attention
+               Entropy Collapse},
+  booktitle = {Proceedings of the 40th International Conference on Machine
+               Learning (ICML), PMLR 202},
+  year      = {2023},
+  pages     = {40770--40803}
+}
+
+@article{nakanishi2025,
+  author  = {Nakanishi, Ken M.},
+  title   = {Scalable-Softmax Is Superior for Attention},
+  journal = {arXiv preprint arXiv:2501.19399},
+  year    = {2025}
+}
+
+@inproceedings{zhang2022temp,
+  author    = {Zhang, Shengqiang and Zhang, Xingxing and Bao, Hangbo and
+               Wei, Furu},
+  title     = {Attention Temperature Matters in Abstractive Summarization
+               Distillation},
+  booktitle = {Proceedings of the 60th Annual Meeting of the Association for
+               Computational Linguistics (ACL)},
+  year      = {2022},
+  pages     = {4691--4701}
+}
+
+@inproceedings{dong2021,
+  author    = {Dong, Yihe and Cordonnier, Jean-Baptiste and Loukas, Andreas},
+  title     = {Attention Is Not All You Need: Pure Attention Loses Rank
+               Doubly Exponentially with Depth},
+  booktitle = {Proceedings of the 38th International Conference on Machine
+               Learning (ICML), PMLR 139},
+  year      = {2021},
+  pages     = {2793--2803}
+}
+
+@inproceedings{chiang2022,
+  author    = {Chiang, David and Cholak, Peter},
+  title     = {Overcoming a Theoretical Limitation of Self-Attention},
+  booktitle = {Proceedings of the 60th Annual Meeting of the Association for
+               Computational Linguistics (ACL)},
+  year      = {2022},
+  pages     = {7654--7664}
+}
+
+@article{gao2025,
+  author  = {Gao, Bowen and others},
+  title   = {Softplus Attention with Re-weighting Boosts Length Extrapolation
+             in Large Language Models},
+  journal = {arXiv preprint arXiv:2501.13428},
+  year    = {2025}
+}
+
+% ---------- Multi-head attention analyses -----------------------------------
+@inproceedings{voita2019,
+  author    = {Voita, Elena and Talbot, David and Moiseev, Fedor and Sennrich,
+               Rico and Titov, Ivan},
+  title     = {Analyzing Multi-Head Self-Attention: Specialized Heads Do the
+               Heavy Lifting, the Rest Can Be Pruned},
+  booktitle = {Proceedings of the 57th Annual Meeting of the Association for
+               Computational Linguistics (ACL)},
+  year      = {2019},
+  pages     = {5797--5808}
+}
+
+@inproceedings{michel2019,
+  author    = {Michel, Paul and Levy, Omer and Neubig, Graham},
+  title     = {Are Sixteen Heads Really Better than One?},
+  booktitle = {Advances in Neural Information Processing Systems 32 (NeurIPS)},
+  year      = {2019},
+  pages     = {14014--14024}
+}
+
+% ---------- Positional encoding and length context --------------------------
+@inproceedings{press2022,
+  author    = {Press, Ofir and Smith, Noah A. and Lewis, Mike},
+  title     = {Train Short, Test Long: Attention with Linear Biases Enables
+               Input Length Extrapolation},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2022}
+}
+
+@inproceedings{peng2024,
+  author    = {Peng, Bowen and Quesnelle, Jeffrey and Fan, Honglu and
+               Shippole, Enrico},
+  title     = {{YaRN}: Efficient Context Window Extension of Large Language
+               Models},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2024}
+}
+
+@inproceedings{kazemnejad2023,
+  author    = {Kazemnejad, Amirhossein and Padhi, Inkit and Ramamurthy, Karthikeyan
+               Natesan and Das, Payel and Reddy, Siva},
+  title     = {The Impact of Positional Encoding on Length Generalization in
+               Transformers},
+  booktitle = {Advances in Neural Information Processing Systems 36 (NeurIPS)},
+  year      = {2023}
+}
+
+@inproceedings{chi2023,
+  author    = {Chi, Ta-Chung and Fan, Ting-Han and Rudnicky, Alexander I. and
+               Ramadge, Peter J.},
+  title     = {Dissecting Transformer Length Extrapolation via the Lens of
+               Receptive Field Analysis},
+  booktitle = {Proceedings of the 61st Annual Meeting of the Association for
+               Computational Linguistics (ACL)},
+  year      = {2023},
+  pages     = {13522--13537}
+}
+
+% ---------- Statistical methodology and ML experimental practice ------------
+@article{holm1979,
+  author  = {Holm, Sture},
+  title   = {A Simple Sequentially Rejective Multiple Test Procedure},
+  journal = {Scandinavian Journal of Statistics},
+  volume  = {6},
+  number  = {2},
+  pages   = {65--70},
+  year    = {1979}
+}
+
+@book{cohen1988,
+  author    = {Cohen, Jacob},
+  title     = {Statistical Power Analysis for the Behavioral Sciences},
+  edition   = {2nd},
+  publisher = {Lawrence Erlbaum Associates},
+  address   = {Hillsdale, NJ},
+  year      = {1988}
+}
+
+@article{wilcoxon1945,
+  author  = {Wilcoxon, Frank},
+  title   = {Individual Comparisons by Ranking Methods},
+  journal = {Biometrics Bulletin},
+  volume  = {1},
+  number  = {6},
+  pages   = {80--83},
+  year    = {1945}
+}
+
+@inproceedings{bouthillier2021,
+  author    = {Bouthillier, Xavier and Delaunay, Pierre and Bronzi, Mirko and
+               Trofimov, Assya and Nichyporuk, Brennan and Szeto, Justin and
+               Sepah, Naz and Raff, Edward and Madan, Kanika and Voleti, Vikram
+               and Kahou, Samira Ebrahimi and Michalski, Vincent and
+               Serdyuk, Dmitriy and Arbel, Tal and Pal, Chris and
+               Varoquaux, Ga{\"e}l and Vincent, Pascal},
+  title     = {Accounting for Variance in Machine Learning Benchmarks},
+  booktitle = {Proceedings of Machine Learning and Systems 3 (MLSys)},
+  year      = {2021},
+  pages     = {747--769}
+}
+
+@inproceedings{dodge2019,
+  author    = {Dodge, Jesse and Gururangan, Suchin and Card, Dallas and
+               Schwartz, Roy and Smith, Noah A.},
+  title     = {Show Your Work: Improved Reporting of Experimental Results},
+  booktitle = {Proceedings of the 2019 Conference on Empirical Methods in
+               Natural Language Processing (EMNLP-IJCNLP)},
+  year      = {2019},
+  pages     = {2185--2194}
+}
+
+@inproceedings{dror2018,
+  author    = {Dror, Rotem and Baumer, Gili and Shlomov, Segev and
+               Reichart, Roi},
+  title     = {The Hitchhiker's Guide to Testing Statistical Significance in
+               Natural Language Processing},
+  booktitle = {Proceedings of the 56th Annual Meeting of the Association for
+               Computational Linguistics (ACL)},
+  year      = {2018},
+  pages     = {1383--1392}
+}
+
+@article{picard2021,
+  author  = {Picard, David},
+  title   = {torch.manual\_seed(3407) Is All You Need: On the Influence of
+             Random Seeds in Deep Learning Architectures for Computer Vision},
+  journal = {arXiv preprint arXiv:2109.08203},
+  year    = {2021}
+}
+
+% ---------- Datasets ---------------------------------------------------------
+@inproceedings{zhang2015,
+  author    = {Zhang, Xiang and Zhao, Junbo and LeCun, Yann},
+  title     = {Character-level Convolutional Networks for Text Classification},
+  booktitle = {Advances in Neural Information Processing Systems 28 (NeurIPS)},
+  year      = {2015},
+  pages     = {649--657}
+}
+
+@inproceedings{socher2013,
+  author    = {Socher, Richard and Perelygin, Alex and Wu, Jean and
+               Chuang, Jason and Manning, Christopher D. and Ng, Andrew Y. and
+               Potts, Christopher},
+  title     = {Recursive Deep Models for Semantic Compositionality Over a
+               Sentiment Treebank},
+  booktitle = {Proceedings of the 2013 Conference on Empirical Methods in
+               Natural Language Processing (EMNLP)},
+  year      = {2013},
+  pages     = {1631--1642}
+}
+
+@inproceedings{maas2011,
+  author    = {Maas, Andrew L. and Daly, Raymond E. and Pham, Peter T. and
+               Huang, Dan and Ng, Andrew Y. and Potts, Christopher},
+  title     = {Learning Word Vectors for Sentiment Analysis},
+  booktitle = {Proceedings of the 49th Annual Meeting of the Association for
+               Computational Linguistics (ACL)},
+  year      = {2011},
+  pages     = {142--150}
+}
+
+@inproceedings{merity2017,
+  author    = {Merity, Stephen and Xiong, Caiming and Bradbury, James and
+               Socher, Richard},
+  title     = {Pointer Sentinel Mixture Models},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2017}
+}

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --text: #111827; --text-sub: #6B7280; --border: #E5E7EB;
+    --blue-bg: #EFF6FF; --blue-bd: #3B82F6;
+    --gray-bg: #F8FAFC; --gray-bd: #94A3B8;
+    --amber-bg: #FFF7ED; --amber-bd: #F59E0B;
+    --green-bg: #F0FDF4; --green-bd: #10B981;
+    --connector: #94A3B8;
+  }
+  body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, 'DejaVu Sans', sans-serif;
+    background: #FFFFFF; color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  #root { width: 1080px; margin: 0 auto; padding: 40px 36px; background: #fff; }
+  .fig-title { font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 6px; }
+  .fig-sub { font-size: 15px; color: var(--text-sub); text-align: center; margin-bottom: 30px; }
+
+  .columns { display: flex; gap: 34px; align-items: stretch; position: relative; }
+  .flow-col { width: 660px; flex: 0 0 660px; }
+  .side-col { flex: 1; min-width: 0; }
+
+  .phase-group { background: var(--gray-bg); border-radius: 12px;
+    padding: 16px 18px 18px; margin-bottom: 0; }
+  .phase-title { font-size: 17px; font-weight: 700; padding: 8px 14px;
+    border-radius: 8px; margin-bottom: 14px; }
+  .pg-1 .phase-title { background: #F0F4F8; color: #334155; border-left: 4px solid #64748B; }
+  .pg-2 .phase-title { background: #E8EDF2; color: #1E3A5F; border-left: 4px solid #5B7A99; }
+  .pg-3 .phase-title { background: #E0E7EF; color: #1E3050; border-left: 4px solid #4A6B8A; }
+
+  .node-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .node { background: #FFFFFF; border: 1.5px solid var(--gray-bd); border-radius: 8px;
+    padding: 10px 12px; text-align: center; flex: 1 1 0; min-width: 0; }
+  .node .t { font-size: 15.5px; font-weight: 600; line-height: 1.3; }
+  .node .d { font-size: 12.5px; color: var(--text-sub); margin-top: 3px; line-height: 1.35; }
+  .node.blue { background: var(--blue-bg); border-color: var(--blue-bd); }
+  .node.blue .t { color: #1E40AF; }
+  .node.hl { background: var(--amber-bg); border: 2px solid var(--amber-bd); }
+  .node.hl .t { color: #92400E; }
+  .op { flex: 0 0 auto; font-size: 20px; font-weight: 700; color: #475569; }
+  .arrow-down { text-align: center; color: var(--connector); font-size: 26px;
+    line-height: 1; margin: 6px 0; }
+  .stack-gap { height: 12px; }
+
+  .variant-card { background: var(--amber-bg); border: 2px solid var(--amber-bd);
+    border-radius: 12px; padding: 16px 16px 14px; height: 100%; }
+  .variant-card h3 { font-size: 16.5px; font-weight: 700; color: #92400E;
+    margin-bottom: 4px; line-height: 1.3; }
+  .variant-card .note { font-size: 12.5px; color: #78350F; margin-bottom: 12px;
+    line-height: 1.4; }
+  .variant { background: #FFFFFF; border: 1.5px solid #F1D9B8; border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 10px; }
+  .variant:last-child { margin-bottom: 0; }
+  .variant .vn { font-size: 14.5px; font-weight: 700; color: #92400E; }
+  .variant .vf { font-family: 'Times New Roman', Georgia, serif; font-style: italic;
+    font-size: 15.5px; color: #1F2937; margin-top: 3px; }
+  .variant .vs { font-size: 12.5px; color: var(--text-sub); margin-top: 3px; }
+  .fixed-note { margin-top: 12px; font-size: 12.5px; color: var(--text-sub);
+    line-height: 1.45; border-top: 1px dashed #F1D9B8; padding-top: 10px; }
+  sup { font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="fig-title">Model architecture and the manipulated scaling factor</div>
+  <div class="fig-sub">Compact pre-LN Transformer encoder shared by all three variants; only the attention logit divisor differs</div>
+
+  <div class="columns">
+    <div class="flow-col">
+      <div class="phase-group pg-1">
+        <div class="phase-title">Input representation</div>
+        <div class="node-row">
+          <div class="node"><div class="t">Token IDs</div><div class="d">n &#8804; 128 positions</div></div>
+          <div class="op">&#8594;</div>
+          <div class="node blue"><div class="t">Token embedding</div><div class="d">V = 18,855 &#215; 128</div></div>
+          <div class="op">&#8853;</div>
+          <div class="node blue"><div class="t">Learned positions</div><div class="d">128 &#215; 128, std 0.02</div></div>
+        </div>
+        <div class="arrow-down">&#8595;</div>
+        <div class="node-row">
+          <div class="node"><div class="t">Dropout p = 0.1</div><div class="d">also on attn / FFN outputs</div></div>
+        </div>
+      </div>
+
+      <div class="arrow-down">&#8595;</div>
+
+      <div class="phase-group pg-2">
+        <div class="phase-title">Pre-LN encoder block &#215; 2</div>
+        <div class="node-row">
+          <div class="node"><div class="t">LayerNorm</div><div class="d">d = 128</div></div>
+          <div class="op">&#8594;</div>
+          <div class="node hl" id="mha-box"><div class="t">Multi-head self-attention</div>
+            <div class="d">4 heads, d<sub>k</sub> = 32 &#183; scaling factor s &#8594; variants panel</div></div>
+          <div class="op">&#8594;</div>
+          <div class="node"><div class="t">&#8899; residual add</div><div class="d">x + Attn(LN(x))</div></div>
+        </div>
+        <div class="arrow-down">&#8595;</div>
+        <div class="node-row">
+          <div class="node"><div class="t">LayerNorm</div><div class="d">d = 128</div></div>
+          <div class="op">&#8594;</div>
+          <div class="node"><div class="t">Feed-forward</div><div class="d">128 &#8594; 256 &#8594; 128, GELU</div></div>
+          <div class="op">&#8594;</div>
+          <div class="node"><div class="t">&#8899; residual add</div><div class="d">x + FFN(LN(x))</div></div>
+        </div>
+      </div>
+
+      <div class="arrow-down">&#8595;</div>
+
+      <div class="phase-group pg-3">
+        <div class="phase-title">Pooling and task head</div>
+        <div class="node-row">
+          <div class="node"><div class="t">Final LayerNorm</div><div class="d">d = 128</div></div>
+          <div class="op">&#8594;</div>
+          <div class="node"><div class="t">Masked mean pooling</div><div class="d">non-padding positions</div></div>
+          <div class="op">&#8594;</div>
+          <div class="node green" style="background:var(--green-bg); border-color:var(--green-bd);">
+            <div class="t" style="color:#065F46;">Task head</div>
+            <div class="d">Linear (2 / 4 classes) or tied LM head (V = 18,855)</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col">
+      <div class="variant-card" id="variants-card">
+        <h3>Manipulated factor:<br>attention logit scaling</h3>
+        <div class="note">All variants rescale the same logits; s is the effective divisor.</div>
+        <div class="variant">
+          <div class="vn">Standard (baseline)</div>
+          <div class="vf">softmax(QK&#7481; / &#8730;d<sub>k</sub>) V</div>
+          <div class="vs">s = &#8730;32 &#8776; 5.66</div>
+        </div>
+        <div class="variant">
+          <div class="vn">Temperature, &#964; = 2</div>
+          <div class="vf">softmax(QK&#7481; / (&#964;&#8730;d<sub>k</sub>)) V</div>
+          <div class="vs">s = 2&#8730;32 &#8776; 11.31 (flatter attention)</div>
+        </div>
+        <div class="variant">
+          <div class="vn">Alternative, 1/d<sub>k</sub></div>
+          <div class="vf">softmax(QK&#7481; / d<sub>k</sub>) V</div>
+          <div class="vs">s = 32 (softest attention)</div>
+        </div>
+        <div class="fixed-note">Fixed across variants: 2,695,556 parameters (classification) / 4,120,576 (LM), FLOPs, memory, and the entire computational graph outside the single divisor s.</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

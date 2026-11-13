@@ -1,0 +1,1841 @@
+{
+ "ARCHITECTURE": {
+  "d_model": 128,
+  "n_heads": 4,
+  "d_k": 32,
+  "n_layers": 2,
+  "d_ff": 256,
+  "dropout": 0.1,
+  "max_seq_len": 128,
+  "vocab_size": 18855,
+  "params_classification": 2695556,
+  "params_lm": 4120576,
+  "residual": "pre-LN",
+  "pooling": "masked mean pooling"
+ },
+ "TRAINING": {
+  "optimizer": "AdamW",
+  "lr": 0.0003,
+  "weight_decay": 0.01,
+  "betas": [
+   0.9,
+   0.999
+  ],
+  "eps": 1e-08,
+  "warmup_frac": 0.05,
+  "schedule": "linear warmup (5% of steps) then cosine decay",
+  "batch_size_cls": 64,
+  "batch_size_lm": 16,
+  "eval_batch_size_cls": 64,
+  "eval_batch_size_lm": 32,
+  "grad_clip": 1.0,
+  "logit_clamp": [
+   -50.0,
+   50.0
+  ],
+  "mixed_precision": false,
+  "core_epochs": 2,
+  "core_lm_steps": 25000,
+  "extended_epochs": 25,
+  "ablation_epochs": 5,
+  "seeds_cls": [
+   1001,
+   1002,
+   1003,
+   1004,
+   1005,
+   1006,
+   1007,
+   1008,
+   1009,
+   1010,
+   1011,
+   1012,
+   1013,
+   1014,
+   1015,
+   1016,
+   1017,
+   1018,
+   1019,
+   1020,
+   1021,
+   1022,
+   1023,
+   1024,
+   1025
+  ],
+  "seeds_temp_ablation": [
+   1001,
+   1002,
+   1003
+  ],
+  "extended_seeds": 5,
+  "tau_grid": [
+   0.5,
+   1.0,
+   1.5,
+   2.0
+  ]
+ },
+ "D_K": 32,
+ "SCALING": {
+  "standard": 5.656854249492381,
+  "dk": 32.0,
+  "temp2": 11.313708498984761
+ },
+ "DATASETS": {
+  "agnews": {
+   "name": "AG News",
+   "task": "4-class topic classification",
+   "classes": 4,
+   "train": 10000,
+   "val": 2000,
+   "test": 7600,
+   "hf_id": "fancyzhx/ag_news",
+   "orig_ref": "zhang2015"
+  },
+  "sst2": {
+   "name": "SST-2",
+   "task": "binary sentiment classification",
+   "classes": 2,
+   "train": 10000,
+   "val": 1115,
+   "test": 1821,
+   "hf_id": "nyu-mll/glue (sst2)",
+   "orig_ref": "socher2013"
+  },
+  "imdb": {
+   "name": "IMDB",
+   "task": "binary sentiment classification",
+   "classes": 2,
+   "train": 10000,
+   "val": 2000,
+   "test": 25000,
+   "hf_id": "stanfordnlp/imdb",
+   "orig_ref": "maas2011"
+  },
+  "wikitext2": {
+   "name": "WikiText-2",
+   "task": "language modelling",
+   "classes": null,
+   "train": 36718,
+   "val": 3760,
+   "test": 4358,
+   "hf_id": "Salesforce/wikitext (wikitext-2-v1)",
+   "orig_ref": "merity2017"
+  }
+ },
+ "MANIFEST": {
+  "planned_total": 951,
+  "grids": [
+   {
+    "name": "Core classification",
+    "detail": "3 variants x 25 seeds x 3 datasets",
+    "runs": 225,
+    "target": 225
+   },
+   {
+    "name": "Temperature ablation",
+    "detail": "4 temperatures x 3 seeds x 2 datasets",
+    "runs": 24,
+    "target": 24
+   },
+   {
+    "name": "Extended budget",
+    "detail": "3 variants x 5 seeds x 2 datasets, 25 epochs",
+    "runs": 30,
+    "target": 450
+   },
+   {
+    "name": "Core language modelling",
+    "detail": "3 variants, 25,000 steps",
+    "runs": 25,
+    "target": 75
+   },
+   {
+    "name": "Focused ablations E1-E4",
+    "detail": "single-seed arms, 5 epochs",
+    "runs": 10,
+    "target": 70
+   },
+   {
+    "name": "Scale/length sensitivity",
+    "detail": "model size and sequence-length grids",
+    "runs": 0,
+    "target": 107
+   }
+  ],
+  "completed_total": 314
+ },
+ "CORE": {
+  "agnews": {
+   "standard": {
+    "mean": 0.9123,
+    "sd": 0.0025,
+    "min": 0.9068,
+    "max": 0.9156
+   },
+   "temp": {
+    "mean": 0.9113,
+    "sd": 0.0026,
+    "min": 0.9058,
+    "max": 0.9149
+   },
+   "dk": {
+    "mean": 0.9092,
+    "sd": 0.0032,
+    "min": 0.9021,
+    "max": 0.9141
+   }
+  },
+  "sst2": {
+   "standard": {
+    "mean": 0.8066,
+    "sd": 0.0115,
+    "min": 0.7826,
+    "max": 0.831
+   },
+   "temp": {
+    "mean": 0.807,
+    "sd": 0.0104,
+    "min": 0.7854,
+    "max": 0.8295
+   },
+   "dk": {
+    "mean": 0.8062,
+    "sd": 0.0106,
+    "min": 0.7831,
+    "max": 0.8267
+   }
+  },
+  "imdb": {
+   "standard": {
+    "mean": 0.8193,
+    "sd": 0.0099,
+    "min": 0.798,
+    "max": 0.8378
+   },
+   "temp": {
+    "mean": 0.8193,
+    "sd": 0.0093,
+    "min": 0.8002,
+    "max": 0.8364
+   },
+   "dk": {
+    "mean": 0.8196,
+    "sd": 0.0091,
+    "min": 0.7995,
+    "max": 0.8352
+   }
+  }
+ },
+ "CORE_N": 25,
+ "PAIRED": {
+  "agnews": [
+   {
+    "comparison": "1/dk vs Std",
+    "diff": 0.0031,
+    "ci": [
+     0.0022,
+     0.0039
+    ],
+    "dz": 1.52,
+    "p_raw": "<0.001",
+    "p_holm": "<0.001",
+    "sig": "***"
+   },
+   {
+    "comparison": "Temp(t=2) vs Std",
+    "diff": 0.001,
+    "ci": [
+     0.0002,
+     0.0017
+    ],
+    "dz": 0.53,
+    "p_raw": 0.013,
+    "p_holm": 0.013,
+    "sig": "*"
+   }
+  ],
+  "sst2": [
+   {
+    "comparison": "1/dk vs Std",
+    "diff": 0.0004,
+    "ci": [
+     -0.0023,
+     0.0031
+    ],
+    "dz": 0.06,
+    "p_raw": 0.78,
+    "p_holm": 0.781,
+    "sig": ""
+   },
+   {
+    "comparison": "Temp(t=2) vs Std",
+    "diff": -0.0005,
+    "ci": [
+     -0.0031,
+     0.0021
+    ],
+    "dz": -0.07,
+    "p_raw": 0.718,
+    "p_holm": 0.718,
+    "sig": ""
+   }
+  ],
+  "imdb": [
+   {
+    "comparison": "1/dk vs Std",
+    "diff": -0.0004,
+    "ci": [
+     -0.0011,
+     0.0004
+    ],
+    "dz": -0.19,
+    "p_raw": 0.352,
+    "p_holm": 0.703,
+    "sig": ""
+   },
+   {
+    "comparison": "Temp(t=2) vs Std",
+    "diff": -0.0001,
+    "ci": [
+     -0.0006,
+     0.0005
+    ],
+    "dz": -0.04,
+    "p_raw": 0.831,
+    "p_holm": 0.831,
+    "sig": ""
+   }
+  ]
+ },
+ "LM": {
+  "steps": 25000,
+  "standard": {
+   "ppl": 1.0917,
+   "sd": 0.0061,
+   "n": 15,
+   "ci": [
+    1.089,
+    1.095
+   ]
+  },
+  "temp2": {
+   "ppl": 1.0882,
+   "sd": 0.0056,
+   "n": 7,
+   "ci": [
+    1.083,
+    1.093
+   ]
+  },
+  "dk": {
+   "ppl": 1.0809,
+   "sd": 0.0021,
+   "n": 3,
+   "ci": [
+    1.077,
+    1.085
+   ]
+  }
+ },
+ "TEMP_ABL": {
+  "sst2": [
+   {
+    "tau": 0.5,
+    "mean": 0.8231,
+    "sd": 0.0021
+   },
+   {
+    "tau": 1.0,
+    "mean": 0.82,
+    "sd": 0.001
+   },
+   {
+    "tau": 1.5,
+    "mean": 0.8196,
+    "sd": 0.0104
+   },
+   {
+    "tau": 2.0,
+    "mean": 0.8077,
+    "sd": 0.0039
+   }
+  ],
+  "imdb": [
+   {
+    "tau": 0.5,
+    "mean": 0.8229,
+    "sd": 0.0035
+   },
+   {
+    "tau": 1.0,
+    "mean": 0.8188,
+    "sd": 0.0027
+   },
+   {
+    "tau": 1.5,
+    "mean": 0.8197,
+    "sd": 0.0012
+   },
+   {
+    "tau": 2.0,
+    "mean": 0.8203,
+    "sd": 0.0036
+   }
+  ]
+ },
+ "TEMP_ABL_N": 3,
+ "EXTENDED": {
+  "sst2": {
+   "epochs": [
+    2,
+    5,
+    10,
+    25
+   ],
+   "standard": [
+    0.813,
+    0.828,
+    0.835,
+    0.842
+   ],
+   "temp": [
+    0.815,
+    0.829,
+    0.836,
+    0.843
+   ],
+   "dk": [
+    0.815,
+    0.827,
+    0.834,
+    0.841
+   ]
+  },
+  "imdb": {
+   "epochs": [
+    2,
+    5,
+    10,
+    25
+   ],
+   "standard": [
+    0.822,
+    0.831,
+    0.838,
+    0.845
+   ],
+   "temp": [
+    0.822,
+    0.832,
+    0.839,
+    0.846
+   ],
+   "dk": [
+    0.822,
+    0.83,
+    0.837,
+    0.844
+   ]
+  }
+ },
+ "DIAGNOSTICS": {
+  "entropy": {
+   "standard": 2.14,
+   "temp2": 2.31,
+   "dk": 2.48
+  },
+  "max_weight": {
+   "standard": 0.32,
+   "temp2": 0.28,
+   "dk": 0.24
+  },
+  "head_cosine": {
+   "standard": 0.23,
+   "temp2": 0.31,
+   "dk": 0.42
+  },
+  "grad_norms": {
+   "standard": {
+    "Q": 0.042,
+    "K": 0.041,
+    "V": 0.038
+   },
+   "temp2": {
+    "Q": 0.021,
+    "K": 0.02,
+    "V": 0.039
+   },
+   "dk": {
+    "Q": 0.011,
+    "K": 0.01,
+    "V": 0.037
+   }
+  }
+ },
+ "ABLATIONS_E": {
+  "E1": {
+   "dataset": "SST-2",
+   "title": "Mixed-scale heads",
+   "rows": [
+    [
+     "standard",
+     0.8062
+    ],
+    [
+     "multiscale_v1",
+     0.8222
+    ]
+   ],
+   "finding": "Mixed-scale heads outperform standard by 1.6 pp on SST-2."
+  },
+  "E2": {
+   "dataset": "SST-2",
+   "title": "Learning-rate compensation",
+   "rows": [
+    [
+     "standard",
+     0.8268
+    ],
+    [
+     "dk",
+     0.8142
+    ],
+    [
+     "dk_lrcomp",
+     0.8108
+    ]
+   ],
+   "finding": "LR compensation does not close the gap and slightly hurts."
+  },
+  "E3": {
+   "dataset": "IMDB",
+   "title": "Mixed-scale heads",
+   "rows": [
+    [
+     "standard",
+     0.8152
+    ],
+    [
+     "multiscale_v1",
+     0.8166
+    ]
+   ],
+   "finding": "No meaningful difference on IMDB."
+  },
+  "E4": {
+   "dataset": "IMDB",
+   "title": "Learning-rate compensation",
+   "rows": [
+    [
+     "standard",
+     0.8183
+    ],
+    [
+     "dk",
+     0.8145
+    ],
+    [
+     "dk_lrcomp",
+     0.8157
+    ]
+   ],
+   "finding": "LR compensation does not close the gap."
+  }
+ },
+ "EFFICIENCY": {
+  "epoch_time_sst2": {
+   "standard": 32.1,
+   "temp2": 32.3,
+   "dk": 32.0
+  },
+  "epoch_time_agnews": {
+   "standard": 59.8,
+   "temp2": 60.1,
+   "dk": 59.5
+  },
+  "peak_gpu_mem_gb": {
+   "standard": 5.2,
+   "temp2": 5.2,
+   "dk": 5.2
+  },
+  "infer_latency_s_1k": {
+   "standard": 0.84,
+   "temp2": 0.85,
+   "dk": 0.84
+  }
+ },
+ "STAGE2": {
+  "protocol": {
+   "hardware": "CPU-only sandbox, 2 cores, 3 GB RAM, torch 2.15.0+cpu",
+   "cls": {
+    "train": 2000,
+    "val": 500,
+    "test": {
+     "agnews": 4000,
+     "sst2": 872,
+     "imdb": 2500
+    },
+    "seq_len": 64,
+    "d_model": 128,
+    "heads": 4,
+    "d_k": 32,
+    "layers": 2,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "batch": 32,
+    "epochs_core": 2,
+    "lr": 0.0003
+   },
+   "lm": {
+    "train_tokens": 96000,
+    "val_tokens": 40000,
+    "seq_len": 64,
+    "d_model": 96,
+    "heads": 3,
+    "d_k": 32,
+    "layers": 2,
+    "d_ff": 192,
+    "vocab": 5655,
+    "batch": 32,
+    "epochs": 3,
+    "lr": 0.0003
+   },
+   "seeds": {
+    "core_lm": "1001-1025 (25)",
+    "grid": "1001-1012 (12)",
+    "conv": "1001-1005 (5)",
+    "ablations": "1001-1003 (3)"
+   }
+  },
+  "core_agnews": {
+   "standard": {
+    "mean": 0.7851,
+    "sd": 0.0126,
+    "min": 0.7578,
+    "max": 0.8008
+   },
+   "temp": {
+    "mean": 0.7851,
+    "sd": 0.0125,
+    "min": 0.7575,
+    "max": 0.8005
+   },
+   "dk": {
+    "mean": 0.785,
+    "sd": 0.0124,
+    "min": 0.7567,
+    "max": 0.8005
+   }
+  },
+  "core_agnews_paired": [
+   {
+    "comparison": "1/dk vs Std",
+    "diff": -0.0001,
+    "ci": [
+     -0.00042,
+     0.00022
+    ],
+    "dz": -0.13,
+    "t": -0.65,
+    "p_raw": 0.519,
+    "p_holm": 1.0,
+    "sig": ""
+   },
+   {
+    "comparison": "Temp(t=2) vs Std",
+    "diff": 2e-05,
+    "ci": [
+     -0.00019,
+     0.00023
+    ],
+    "dz": 0.04,
+    "t": 0.2,
+    "p_raw": 0.843,
+    "p_holm": 1.0,
+    "sig": ""
+   }
+  ],
+  "grid": {
+   "32": {
+    "standard": [
+     0.7882,
+     0.0092
+    ],
+    "dk": [
+     0.7883,
+     0.0089
+    ],
+    "temp": [
+     0.7883,
+     0.0091
+    ],
+    "dk_minus_std": {
+     "diff": 0.0001,
+     "ci": [
+      -0.00036,
+      0.00057
+     ],
+     "p": 0.629
+    },
+    "temp_minus_std": {
+     "diff": 0.0001,
+     "ci": [
+      -0.00024,
+      0.00045
+     ],
+     "p": 0.524
+    }
+   },
+   "64": {
+    "standard": [
+     0.7883,
+     0.009
+    ],
+    "dk": [
+     0.7884,
+     0.0089
+    ],
+    "temp": [
+     0.7882,
+     0.0089
+    ],
+    "dk_minus_std": {
+     "diff": 8e-05,
+     "ci": [
+      -0.00048,
+      0.00064
+     ],
+     "p": 0.749
+    },
+    "temp_minus_std": {
+     "diff": -0.0001,
+     "ci": [
+      -0.00056,
+      0.00035
+     ],
+     "p": 0.626
+    }
+   },
+   "128": {
+    "standard": [
+     0.7881,
+     0.0084
+    ],
+    "dk": [
+     0.7883,
+     0.0089
+    ],
+    "temp": [
+     0.7885,
+     0.0087
+    ],
+    "dk_minus_std": {
+     "diff": 0.00017,
+     "ci": [
+      -0.00044,
+      0.00077
+     ],
+     "p": 0.558
+    },
+    "temp_minus_std": {
+     "diff": 0.00035,
+     "ci": [
+      -0.00011,
+      0.00082
+     ],
+     "p": 0.119
+    }
+   },
+   "gap_trend_128_vs_32": {
+    "diff": -6e-05,
+    "ci": [
+     -0.00077,
+     0.00064
+    ],
+    "p": 0.849,
+    "dz": -0.06
+   }
+  },
+  "conv": {
+   "sst2": {
+    "standard": {
+     "acc": 0.6771,
+     "sd": 0.0207,
+     "epochs": 2.2
+    },
+    "dk": {
+     "acc": 0.6778,
+     "sd": 0.0207,
+     "epochs": 2.2
+    },
+    "temp": {
+     "acc": 0.6778,
+     "sd": 0.0214,
+     "epochs": 2.2
+    },
+    "paired": {
+     "dk": {
+      "diff": 0.00069,
+      "p": 0.426
+     },
+     "temp": {
+      "diff": 0.00069,
+      "p": 0.305
+     }
+    }
+   },
+   "imdb": {
+    "standard": {
+     "acc": 0.6716,
+     "sd": 0.0284,
+     "epochs": 1.6
+    },
+    "dk": {
+     "acc": 0.6722,
+     "sd": 0.03,
+     "epochs": 1.6
+    },
+    "temp": {
+     "acc": 0.6718,
+     "sd": 0.0293,
+     "epochs": 1.6
+    },
+    "paired": {
+     "dk": {
+      "diff": 0.00056,
+      "p": 0.578
+     },
+     "temp": {
+      "diff": 0.00016,
+      "p": 0.794
+     }
+    }
+   },
+   "stop_epochs": {
+    "sst2": 6,
+    "imdb": 5
+   },
+   "curves": {
+    "sst2": {
+     "standard": [
+      0.5766,
+      0.6635,
+      0.6869,
+      0.6741,
+      0.6869,
+      0.6766
+     ],
+     "dk": [
+      0.5778,
+      0.6635,
+      0.6878,
+      0.6789,
+      0.6924,
+      0.6778
+     ],
+     "temp": [
+      0.5773,
+      0.6638,
+      0.6874,
+      0.681,
+      0.6862,
+      0.6812
+     ]
+    },
+    "imdb": {
+     "standard": [
+      0.6129,
+      0.6918,
+      0.6801,
+      0.6831,
+      0.6685
+     ],
+     "dk": [
+      0.6125,
+      0.6914,
+      0.6853,
+      0.6726,
+      0.6708
+     ],
+     "temp": [
+      0.6127,
+      0.6914,
+      0.6814,
+      0.6964,
+      0.678
+     ]
+    }
+   }
+  },
+  "lm_corrected": {
+   "standard": {
+    "ppl": 872.8,
+    "sd": 29.7,
+    "min": 819,
+    "max": 923,
+    "n": 25
+   },
+   "dk": {
+    "ppl": 872.8,
+    "sd": 29.6,
+    "min": 820,
+    "max": 924,
+    "n": 25
+   },
+   "temp": {
+    "ppl": 872.8,
+    "sd": 29.7,
+    "min": 819,
+    "max": 924,
+    "n": 25
+   },
+   "paired": {
+    "dk": {
+     "diff": 0.01,
+     "ci": [
+      -0.22,
+      0.23
+     ],
+     "dz": 0.01,
+     "t": 0.05,
+     "p_raw": 0.96,
+     "p_holm": 1.0
+    },
+    "temp": {
+     "diff": 0.0,
+     "ci": [
+      -0.14,
+      0.15
+     ],
+     "dz": 0.01,
+     "t": 0.03,
+     "p_raw": 0.98,
+     "p_holm": 1.0
+    }
+   }
+  },
+  "lm_artifact": {
+   "causal_3ep": {
+    "standard": 872.8,
+    "dk": 872.8,
+    "temp": 872.8
+   },
+   "leaky_3ep": {
+    "standard": 852.3,
+    "dk": 852.6,
+    "temp": 852.5
+   },
+   "causal_10ep": {
+    "standard": 267.5,
+    "dk": 269.1,
+    "temp": 268.7
+   },
+   "leaky_10ep": {
+    "standard": 251.2,
+    "dk": 253.9,
+    "temp": 252.0
+   },
+   "v1_reported": {
+    "standard": 1.0917,
+    "temp2": 1.0882,
+    "dk": 1.0809
+   },
+   "note": "leaky masks lower perplexity in every cell (leak direction confirmed); the v1 values near 1.08 correspond to a fully exploited leak at 25,000 steps and are physically impossible under the corrected causal mask"
+  },
+  "abl_replica": {
+   "sst2": {
+    "standard": [
+     0.7133,
+     0.0091
+    ],
+    "dk": [
+     0.7114,
+     0.0076
+    ],
+    "dk_lrcomp": [
+     0.7003,
+     0.0067
+    ],
+    "multiscale_v1": [
+     0.7137,
+     0.0067
+    ],
+    "paired": {
+     "dk": {
+      "diff": -0.0019,
+      "p": 0.199
+     },
+     "dk_lrcomp": {
+      "diff": -0.013,
+      "p": 0.108
+     },
+     "multiscale_v1": {
+      "diff": 0.0004,
+      "p": 0.808
+     }
+    }
+   },
+   "imdb": {
+    "standard": [
+     0.7028,
+     0.0024
+    ],
+    "dk": [
+     0.702,
+     0.0033
+    ],
+    "dk_lrcomp": [
+     0.7001,
+     0.0092
+    ],
+    "multiscale_v1": [
+     0.7033,
+     0.002
+    ],
+    "paired": {
+     "dk": {
+      "diff": -0.0008,
+      "p": 0.321
+     },
+     "dk_lrcomp": {
+      "diff": -0.0027,
+      "p": 0.72
+     },
+     "multiscale_v1": {
+      "diff": 0.0005,
+      "p": 0.456
+     }
+    }
+   }
+  },
+  "diagnostics_replica": {
+   "cls": {
+    "entropy": {
+     "standard": 4.048,
+     "temp2": 4.049,
+     "dk": 4.049
+    },
+    "max_weight": {
+     "standard": 0.03,
+     "temp2": 0.027,
+     "dk": 0.025
+    },
+    "clamp_frac": 0.0,
+    "grad_QK": {
+     "standard": 0.0476,
+     "temp2": 0.0285,
+     "dk": 0.0093
+    },
+    "grad_V": {
+     "standard": 1.6234,
+     "temp2": 1.9141,
+     "dk": 1.8691
+    },
+    "W_norm_ratio": 1.01
+   },
+   "lm": {
+    "entropy": {
+     "standard": 4.152,
+     "temp2": 4.157,
+     "dk": 4.159
+    },
+    "raw_logit_std": {
+     "standard": 1.017,
+     "temp2": 1.168,
+     "dk": 1.191
+    }
+   }
+  },
+  "mask_verification": {
+   "V1_future_max_weight": 0.0,
+   "V2_padding_max_weight": 0.0,
+   "V3_row_sums": [
+    0.99999988,
+    1.00000012
+   ],
+   "V4_diagonal_allowed_real_rows": true,
+   "V5_masked_rows_exact_zero": true
+  }
+ },
+ "MANIFEST2": {
+  "stage1_runs": 314,
+  "stage2_runs": 339,
+  "stage3_runs": 134,
+  "total_runs": 787,
+  "grids": [
+   {
+    "name": "Replica core classification",
+    "detail": "3 variants x 25 seeds, AG News, 2 epochs",
+    "runs": 75
+   },
+   {
+    "name": "Replica language modelling (corrected mask)",
+    "detail": "3 variants x 25 seeds, WikiText-2 causal",
+    "runs": 75
+   },
+   {
+    "name": "Head-dimension grid",
+    "detail": "d_k in {32,64,128} x 3 variants x 12 seeds, AG News",
+    "runs": 108
+   },
+   {
+    "name": "Train-to-convergence",
+    "detail": "3 variants x 5 seeds x {SST-2, IMDB}, early stopping",
+    "runs": 30
+   },
+   {
+    "name": "Replica ablations E1-E4",
+    "detail": "4 arms x 3 seeds x 2 datasets, 5 epochs",
+    "runs": 24
+   },
+   {
+    "name": "Mask-artifact probes",
+    "detail": "leaky vs causal, 3 epochs and 10 epochs",
+    "runs": 27
+   },
+   {
+    "name": "Logit-gain sweep (Stage 3)",
+    "detail": "g in {1,2,4,8,16,32} x 3 variants x 4 seeds",
+    "runs": 72
+   },
+   {
+    "name": "Regime-restored AG News (Stage 3)",
+    "detail": "6,000 train, 8 epochs, per-epoch probes, d_k=32 and 128",
+    "runs": 18
+   },
+   {
+    "name": "Frontier-stabiliser bridge (Stage 3)",
+    "detail": "QK-Norm / soft-cap arms x 4 seeds",
+    "runs": 20
+   },
+   {
+    "name": "LM logit gain (Stage 3)",
+    "detail": "g in {1,4} x 3 variants x 3 seeds, seq 128",
+    "runs": 18
+   },
+   {
+    "name": "Frontier divisor swap (Stage 3)",
+    "detail": "GPT-2 + GPT-2-medium, inference-time, 3 divisors",
+    "runs": 6
+   }
+  ]
+ },
+ "STAGE3": {
+  "law": {
+   "equation": "KL(P_b1||P_b2) ~= 0.5*(b1-b2)^2*sigma^2*(1-1/n)",
+   "mc_reps": 200000,
+   "validation_std_dk": [
+    [
+     0.5,
+     0.0026,
+     0.00261
+    ],
+    [
+     1,
+     0.01041,
+     0.01042
+    ],
+    [
+     2,
+     0.04155,
+     0.04169
+    ],
+    [
+     3,
+     0.09302,
+     0.09381
+    ],
+    [
+     4,
+     0.16417,
+     0.16678
+    ],
+    [
+     6,
+     0.35714,
+     0.37525
+    ],
+    [
+     8,
+     0.5941,
+     0.66711
+    ],
+    [
+     12,
+     1.05384,
+     1.50099
+    ],
+    [
+     16,
+     1.3632,
+     2.66843
+    ]
+   ],
+   "validation_std_temp": [
+    [
+     0.5,
+     0.00096,
+     0.00096
+    ],
+    [
+     1,
+     0.00384,
+     0.00385
+    ],
+    [
+     2,
+     0.01532,
+     0.01538
+    ],
+    [
+     3,
+     0.03422,
+     0.03461
+    ],
+    [
+     4,
+     0.06023,
+     0.06152
+    ],
+    [
+     6,
+     0.12952,
+     0.13843
+    ],
+    [
+     8,
+     0.21065,
+     0.24609
+    ],
+    [
+     12,
+     0.34163,
+     0.55371
+    ],
+    [
+     16,
+     0.3897,
+     0.98437
+    ]
+   ],
+   "validation_dk_temp": [
+    [
+     0.5,
+     0.0004,
+     0.0004
+    ],
+    [
+     1,
+     0.00161,
+     0.00161
+    ],
+    [
+     2,
+     0.00642,
+     0.00643
+    ],
+    [
+     3,
+     0.01445,
+     0.01446
+    ],
+    [
+     4,
+     0.02567,
+     0.02571
+    ],
+    [
+     6,
+     0.05754,
+     0.05785
+    ],
+    [
+     8,
+     0.10189,
+     0.10284
+    ],
+    [
+     12,
+     0.22531,
+     0.23139
+    ],
+    [
+     16,
+     0.38818,
+     0.41136
+    ]
+   ],
+   "entropy": [
+    {
+     "sigma": 0.5,
+     "H": {
+      "standard": 4.155,
+      "temp": 4.158,
+      "dk": 4.159
+     },
+     "maxw": {
+      "standard": 0.0192,
+      "temp": 0.0173,
+      "dk": 0.0162
+     }
+    },
+    {
+     "sigma": 1,
+     "H": {
+      "standard": 4.144,
+      "temp": 4.155,
+      "dk": 4.158
+     },
+     "maxw": {
+      "standard": 0.0233,
+      "temp": 0.0192,
+      "dk": 0.0168
+     }
+    },
+    {
+     "sigma": 2,
+     "H": {
+      "standard": 4.098,
+      "temp": 4.144,
+      "dk": 4.157
+     },
+     "maxw": {
+      "standard": 0.034,
+      "temp": 0.0233,
+      "dk": 0.0181
+     }
+    },
+    {
+     "sigma": 4,
+     "H": {
+      "standard": 3.916,
+      "temp": 4.098,
+      "dk": 4.151
+     },
+     "maxw": {
+      "standard": 0.0668,
+      "temp": 0.034,
+      "dk": 0.0208
+     }
+    },
+    {
+     "sigma": 8,
+     "H": {
+      "standard": 3.27,
+      "temp": 3.917,
+      "dk": 4.128
+     },
+     "maxw": {
+      "standard": 0.1824,
+      "temp": 0.0667,
+      "dk": 0.0274
+     }
+    },
+    {
+     "sigma": 16,
+     "H": {
+      "standard": 1.924,
+      "temp": 3.268,
+      "dk": 4.037
+     },
+     "maxw": {
+      "standard": 0.4521,
+      "temp": 0.1829,
+      "dk": 0.0456
+     }
+    }
+   ],
+   "H_uniform_n64": 4.159,
+   "maxw_uniform_n64": 0.0156,
+   "thresholds_dk32_n64": {
+    "sigma_for_KL_0.01_std_dk": 0.979,
+    "sigma_for_KL_0.1_std_dk": 3.097,
+    "sigma_for_KL_0.01_std_temp": 1.613,
+    "sigma_for_KL_0.1_std_temp": 5.1
+   }
+  },
+  "gain": {
+   "protocol": {
+    "dataset": "AG News replica (2,000 train, seq 64)",
+    "gain_applies": "q,k each scaled by sqrt(g) before QK-Norm",
+    "seeds": 4,
+    "epochs": 2,
+    "runs": 72
+   },
+   "grid": {
+    "1": [
+     78.22,
+     78.24,
+     78.24,
+     0.33,
+     3.784,
+     0.0009,
+     -0.14,
+     0.794
+    ],
+    "2": [
+     78.24,
+     78.24,
+     78.22,
+     0.65,
+     3.78,
+     0.0037,
+     -0.06,
+     0.911
+    ],
+    "4": [
+     78.19,
+     78.2,
+     78.24,
+     1.29,
+     3.764,
+     0.0145,
+     -0.04,
+     0.939
+    ],
+    "8": [
+     78.36,
+     78.23,
+     78.19,
+     2.53,
+     3.703,
+     0.0558,
+     0.61,
+     0.312
+    ],
+    "16": [
+     78.34,
+     78.21,
+     78.36,
+     4.87,
+     3.482,
+     0.2046,
+     0.3,
+     0.595
+    ],
+    "32": [
+     76.81,
+     78.21,
+     78.34,
+     9.21,
+     2.808,
+     0.6418,
+     -1.76,
+     0.039
+    ]
+   },
+   "note": "at g=32 the standard divisor's accuracy drops 1.4 pp below 1/d_k and tau=2 (dz=-1.76, p=0.039 uncorrected, n.s. after Holm across 12 gain-level comparisons); the mechanistic signature (sigma, entropy, KL) is monotone in g as the law predicts"
+  },
+  "bridge": {
+   "qk_std": {
+    "acc": 78.21,
+    "sigma_post": 1.051,
+    "H": 3.349,
+    "kl_std_dk": 0.2925
+   },
+   "qk_dk": {
+    "acc": 78.16,
+    "sigma_post": 0.192,
+    "H": 3.771,
+    "kl_std_dk": 0.2924
+   },
+   "qk_temp": {
+    "acc": 78.28,
+    "sigma_post": 0.538,
+    "H": 3.668,
+    "kl_std_dk": 0.2923
+   },
+   "cap3_std_g32": {
+    "acc": 76.81,
+    "sigma_post": 1.629,
+    "H": 2.808,
+    "kl_std_dk": 0.6418
+   },
+   "cap3_dk_g32": {
+    "acc": 78.21,
+    "sigma_post": 0.32,
+    "H": 3.744,
+    "kl_std_dk": 0.6779
+   },
+   "note": "QK-Norm pins sigma_post ~= 1.05 regardless of the divisor and re-equalises the variants (acc spread 0.12 pp); the soft-cap arm reproduces the g=32 accuracy ordering under cap, i.e. the stabiliser context does not remove the divisor contrast"
+  },
+  "lmgain": {
+   "protocol": {
+    "seq_len": 128,
+    "vocab": 8000,
+    "d_model": 96,
+    "epochs": 3
+   },
+   "g1": {
+    "ppl": {
+     "standard": 2160.7,
+     "dk": 2160.9,
+     "temp": 2160.8
+    },
+    "sigma_raw": 0.289,
+    "kl_std_dk": 0.0003
+   },
+   "g4": {
+    "ppl": {
+     "standard": 2160.3,
+     "dk": 2160.8,
+     "temp": 2160.6
+    },
+    "sigma_raw": 1.15,
+    "kl_std_dk": 0.0052
+   },
+   "note": "even at g=4 the LM operating point stays inert (KL ~ 0.005)"
+  },
+  "regime": {
+   "runs": 9,
+   "protocol": {
+    "train": 6000,
+    "epochs": 8,
+    "d_k": 32
+   },
+   "sigma_epoch": {
+    "standard": [
+     0.416,
+     0.538,
+     0.652,
+     0.899,
+     1.027,
+     1.073,
+     1.108,
+     1.11
+    ],
+    "dk": [
+     0.414,
+     0.546,
+     0.638,
+     0.846,
+     0.95,
+     0.988,
+     1.011,
+     1.011
+    ],
+    "temp": [
+     0.415,
+     0.54,
+     0.667,
+     0.94,
+     1.041,
+     1.075,
+     1.105,
+     1.111
+    ]
+   },
+   "kl_epoch": {
+    "standard": [
+     0.0011,
+     0.0019,
+     0.0032,
+     0.0053,
+     0.0057,
+     0.0059,
+     0.006,
+     0.006
+    ],
+    "dk": [
+     0.0011,
+     0.0021,
+     0.0038,
+     0.0057,
+     0.0065,
+     0.0067,
+     0.0067,
+     0.0068
+    ],
+    "temp": [
+     0.0011,
+     0.002,
+     0.0036,
+     0.0058,
+     0.0062,
+     0.0065,
+     0.0066,
+     0.0066
+    ]
+   },
+   "acc_epoch": {
+    "standard": [
+     84.93,
+     84.53,
+     84.23,
+     84.66,
+     85.12,
+     85.49,
+     85.66,
+     85.68
+    ],
+    "dk": [
+     84.87,
+     84.74,
+     84.01,
+     85.53,
+     85.27,
+     85.48,
+     85.77,
+     85.74
+    ],
+    "temp": [
+     84.88,
+     84.68,
+     84.17,
+     85.11,
+     85.23,
+     85.62,
+     85.85,
+     85.81
+    ]
+   },
+   "final_paired": {
+    "standard_minus_dk": {
+     "mean_pp": -0.058,
+     "p": 0.514
+    },
+    "standard_minus_temp": {
+     "mean_pp": -0.125,
+     "p": 0.417
+    }
+   },
+   "note": "12x the replica step budget moves sigma_raw from 0.42 to only 1.11 (KL ~ 0.006, still 500x below the KL=0.1 bite point); variants stay within 0.2 pp at every epoch"
+  },
+  "regime128": {
+   "runs": 9,
+   "protocol": {
+    "train": 6000,
+    "epochs": 8,
+    "d_k": 128,
+    "heads": 1
+   },
+   "sigma_epoch": {
+    "standard": [
+     1.462,
+     1.965,
+     2.555,
+     3.545,
+     4.45,
+     4.586,
+     4.578,
+     4.588
+    ],
+    "dk": [
+     1.444,
+     2.345,
+     3.175,
+     4.221,
+     5.056,
+     5.23,
+     5.301,
+     5.311
+    ],
+    "temp": [
+     1.454,
+     2.115,
+     3.012,
+     4.068,
+     4.867,
+     5.05,
+     5.088,
+     5.088
+    ]
+   },
+   "kl_epoch": {
+    "standard": [
+     0.004,
+     0.0126,
+     0.0172,
+     0.0226,
+     0.025,
+     0.0261,
+     0.0262,
+     0.0262
+    ],
+    "dk": [
+     0.0042,
+     0.0207,
+     0.0466,
+     0.0739,
+     0.0807,
+     0.0845,
+     0.0856,
+     0.0857
+    ],
+    "temp": [
+     0.0041,
+     0.017,
+     0.033,
+     0.0446,
+     0.0463,
+     0.0485,
+     0.0487,
+     0.0487
+    ]
+   },
+   "acc_epoch": {
+    "standard": [
+     84.91,
+     85.31,
+     84.84,
+     85.05,
+     85.53,
+     85.95,
+     85.88,
+     85.98
+    ],
+    "dk": [
+     84.87,
+     84.85,
+     83.97,
+     85.08,
+     85.23,
+     85.43,
+     85.59,
+     85.56
+    ],
+    "temp": [
+     84.89,
+     85.21,
+     84.43,
+     85.26,
+     85.33,
+     85.43,
+     85.45,
+     85.46
+    ]
+   },
+   "final_paired": {
+    "standard_minus_dk": {
+     "mean_pp": 0.417,
+     "p": 0.312
+    },
+    "standard_minus_temp": {
+     "mean_pp": 0.517,
+     "p": 0.066
+    }
+   },
+   "note": "with d_k=128 (1 head) the operating point reaches sigma ~ 4.6-5.3 and KL(std||dk) grows 200x to ~0.086; the Stage-1 ordering (std > temp > dk) begins to re-emerge (+0.42/+0.52 pp, p = 0.31/0.066, n = 3, uncorrected)"
+  },
+  "frontier": {
+   "protocol": {
+    "data": "wikitext-2-raw-v1 validation (160 seq x 128 tok, non-overlapping windows, no cache carry-over)",
+    "intervention": "inference-time divisor swap, no fine-tuning",
+    "note": "absolute ppl is protocol-dependent; contrasts are not"
+   },
+   "gpt2": {
+    "n_params": 124439808,
+    "n_layer": 12,
+    "d_head": 64,
+    "sigma_raw_mean": 62.556,
+    "sigma_post_standard_mean": 7.82,
+    "kl_std_dk_mean": 1.422,
+    "law_kl_std_dk_mean": 31.506,
+    "sigma_raw_layers": [
+     41.17,
+     27.06,
+     93.58,
+     131.82,
+     141.48,
+     61.83,
+     57.52,
+     55.72,
+     48.45,
+     39.86,
+     32.76,
+     19.41
+    ],
+    "ppl": {
+     "standard": 51.23,
+     "dk": 4791.65,
+     "temp": 79.13
+    },
+    "ppl_delta_pct": {
+     "dk": 9253.21,
+     "temp": 54.46
+    },
+    "H_layers_std": [
+     2.45,
+     2.93,
+     2.15,
+     1.67,
+     1.62,
+     1.38
+    ],
+    "H_layers_dk": [
+     3.81,
+     3.86,
+     3.72,
+     3.65,
+     3.61,
+     3.8
+    ]
+   },
+   "gpt2-medium": {
+    "n_params": 354826240,
+    "n_layer": 24,
+    "d_head": 64,
+    "sigma_raw_mean": 44.761,
+    "sigma_post_standard_mean": 5.595,
+    "kl_std_dk_mean": 1.51,
+    "law_kl_std_dk_mean": 14.211,
+    "ppl": {
+     "standard": 38.77,
+     "dk": 1585.7,
+     "temp": 49.06
+    },
+    "ppl_delta_pct": {
+     "dk": 3990.02,
+     "temp": 26.54
+    }
+   },
+   "note": "pretrained GPT-2 sits at sigma_raw ~ 45-63, orders of magnitude beyond the replica operating point; swapping ONLY the divisor at inference moves ppl by +54.5% (tau=2) to +9253% (1/d_k) on GPT-2 and +26.5%/+3990% on GPT-2-medium; attention under 1/d_k collapses towards uniformity (per-row H rises to ~3.6-3.9 vs 1.4-2.9 under the training divisor; row-horizon ceiling ln 64 = 4.16)"
+  },
+  "frontier_gpu": {
+   "script": "scripts/frontier/frontier_gpu_1b7b.py",
+   "models": [
+    "gpt2-large (0.8B)",
+    "gpt2-xl (1.5B)",
+    "pythia-1.4b/2.8b/6.9b",
+    "llama-3.2-1b/3b, qwen2.5-1.5b/7b"
+   ],
+   "outputs": "per-layer sigma_raw, per-variant ppl on WikiText-2, KL(std||dk)"
+  }
+ },
+ "STAGE3_RUNS": [
+  [
+   "Logit-gain sweep",
+   "g in {1,2,4,8,16,32} x 3 variants x 4 seeds",
+   72
+  ],
+  [
+   "Frontier-stabiliser bridge",
+   "QK-Norm / soft-cap arms x 4 seeds",
+   20
+  ],
+  [
+   "Regime-restored AG News",
+   "6,000 train, 8 epochs, per-epoch probes, d_k=32",
+   9
+  ],
+  [
+   "Regime-restored AG News (d_k=128)",
+   "as above, single head",
+   9
+  ],
+  [
+   "LM logit gain (seq 128)",
+   "g in {1,4} x 3 variants x 3 seeds",
+   18
+  ],
+  [
+   "Frontier divisor swap",
+   "GPT-2 + GPT-2-medium, inference-time, 3 divisors",
+   6
+  ]
+ ]
+}

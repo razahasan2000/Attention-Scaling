@@ -111,6 +111,9 @@ class TransformerEncoder(nn.Module):
         self.scaling = scaling
         self.tau = tau
         self.task_type = task_type
+        # v2: standard causal (autoregressive) masking for language modelling.
+        # Classification uses bidirectional attention with key padding only.
+        self.causal = (task_type == "language_modelling")
         
         # Token embeddings
         self.token_embedding = nn.Embedding(vocab_size, d_model)
@@ -167,35 +170,59 @@ class TransformerEncoder(nn.Module):
                 nn.init.zeros_(module.bias)
                 nn.init.ones_(module.weight)
     
+    def set_causal(self, causal: bool) -> None:
+        """Enable/disable causal (autoregressive) masking at runtime."""
+        self.causal = bool(causal)
+
     def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor = None,
-                labels: torch.Tensor = None) -> dict:
+                labels: torch.Tensor = None, causal: bool = None) -> dict:
         """
         Forward pass through the Transformer encoder.
         
         Args:
             input_ids: Token IDs of shape (batch_size, seq_len)
-            attention_mask: Attention mask of shape (batch_size, seq_len)
+            attention_mask: Optional key-padding mask of shape (batch_size, seq_len)
+                where 1 = real token, 0 = padding
             labels: Ground truth labels for classification or LM
+            causal: Override causal masking for this forward pass.
+                None -> use self.causal (True for language modelling).
+                With causal masking, position i attends only to positions <= i
+                (standard autoregressive factorisation).
             
         Returns:
-            Dictionary containing logits, loss (if labels provided), and attention weights
+            Dictionary containing logits, loss (if labels provided)
         """
         batch_size, seq_len = input_ids.shape
+        device = input_ids.device
+        use_causal = self.causal if causal is None else bool(causal)
         
         # Token embeddings + positional embeddings
         x = self.token_embedding(input_ids)
         x = self.pos_embedding(x)
         x = self.dropout(x)
         
-        # Create attention mask if not provided
+        # Key-padding mask (True = real token); pad id is 0
         if attention_mask is None:
-            attention_mask = (input_ids != 0).unsqueeze(1).unsqueeze(2)  # (batch, 1, 1, seq_len)
+            key_mask = (input_ids != 0)
         else:
-            attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
+            key_mask = attention_mask.bool()
+        
+        # Build the attention mask passed to the attention module
+        # (convention: 1/True = attend, 0/False = masked).
+        if use_causal:
+            # Causal (lower-triangular) mask ANDed with the key padding mask:
+            # position i attends to j <= i over real tokens only.
+            causal_sq = torch.tril(
+                torch.ones(seq_len, seq_len, dtype=torch.bool, device=device)
+            )  # (seq_len, seq_len)
+            attn_mask = key_mask[:, None, :] & causal_sq[None, :, :]  # (B, L, L)
+            attn_mask = attn_mask[:, None, :, :]  # (B, 1, L, L) broadcast over heads
+        else:
+            attn_mask = key_mask[:, None, None, :]  # (B, 1, 1, L)
         
         # Pass through encoder blocks
         for layer in self.layers:
-            x = layer(x, mask=attention_mask)
+            x = layer(x, mask=attn_mask)
         
         # Final LayerNorm
         x = self.final_norm(x)
@@ -203,13 +230,10 @@ class TransformerEncoder(nn.Module):
         # Task-dependent head
         if self.task_type == "classification":
             # Masked mean pooling over non-padding positions
-            if attention_mask is not None:
-                mask_float = attention_mask.squeeze(1).squeeze(1).float()  # (batch, seq_len)
-                mask_sum = mask_float.sum(dim=1, keepdim=True)  # (batch, 1)
-                masked_sum = (x * mask_float.unsqueeze(-1)).sum(dim=1)  # (batch, d_model)
-                pooled = masked_sum / mask_sum.clamp(min=1e-8)  # (batch, d_model)
-            else:
-                pooled = x.mean(dim=1)  # (batch, d_model)
+            mask_float = key_mask.float()  # (batch, seq_len)
+            mask_sum = mask_float.sum(dim=1, keepdim=True)  # (batch, 1)
+            masked_sum = (x * mask_float.unsqueeze(-1)).sum(dim=1)  # (batch, d_model)
+            pooled = masked_sum / mask_sum.clamp(min=1e-8)  # (batch, d_model)
             
             logits = self.classifier(pooled)  # (batch, num_classes)
             

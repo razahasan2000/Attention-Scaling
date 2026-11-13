@@ -79,15 +79,19 @@ class ScaledDotProductAttention(nn.Module):
         else:
             raise ValueError(f"Unknown scaling variant: {self.scaling}")
         
-        # Apply attention mask if provided
+        # v2 FIX: clamp BEFORE masking. Masking with -inf before the clamp
+        # previously leaked weight exp(-50) ~ 2e-22 into masked positions;
+        # clamping first lets -inf survive so masked positions receive
+        # EXACTLY zero attention weight (required for causal masking).
+        logits = torch.clamp(logits, min=-50, max=50)
         if mask is not None:
             logits = logits.masked_fill(mask == 0, float("-inf"))
         
-        # Clamp logits for numerical stability
-        logits = torch.clamp(logits, min=-50, max=50)
-        
-        # Apply softmax
+        # Apply softmax (masked positions -> exactly 0)
         attention_weights = F.softmax(logits, dim=-1)
+        # Guard against fully-masked rows (cannot occur with right padding
+        # + causal masks, but kept for safety on malformed inputs).
+        attention_weights = torch.nan_to_num(attention_weights, nan=0.0)
         
         # Compute weighted sum of values
         output = torch.matmul(attention_weights, V)
@@ -180,15 +184,12 @@ class MultiHeadSelfAttention(nn.Module):
             for h in range(self.n_heads):
                 logits[:, h, :, :] = logits[:, h, :, :] / self.per_head_scales[h]
             
-            # Apply attention mask if provided
+            # v2 FIX: clamp before mask (see ScaledDotProductAttention)
+            logits = torch.clamp(logits, min=-50, max=50)
             if mask is not None:
                 logits = logits.masked_fill(mask == 0, float("-inf"))
-            
-            # Clamp logits for numerical stability
-            logits = torch.clamp(logits, min=-50, max=50)
-            
-            # Apply softmax
             attention_weights = F.softmax(logits, dim=-1)
+            attention_weights = torch.nan_to_num(attention_weights, nan=0.0)
             attention_weights = self.dropout(attention_weights)
             
             # Compute weighted sum of values

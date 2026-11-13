@@ -1,0 +1,227 @@
+% ============================================================================
+% 5. Discussion  |  6. Limitations  |  7. Conclusion
+% ============================================================================
+\section{Discussion}\label{sec:discussion}
+
+\subsection{Principal interpretation}\label{sec:interpretation}
+The central finding is a \emph{pattern of conditionality}, now mapped along
+three axes. Along the task axis, the standard $\sqrt{\dk}$ divisor is
+significantly better than both alternatives on AG News at a 2-epoch budget~---
+with large and medium paired effect sizes~--- yet statistically
+indistinguishable from them on two binary sentiment datasets. Along the budget
+axis, its advantage on binary tasks dissolves by 25 epochs, and the Stage-2
+replica completion shows that the AG News effect itself does not survive a
+fivefold reduction in data and sequence length: under matched seeds the entire
+replica grid (core, $\dk$ grid, convergence training, corrected language
+modelling) is variant-invariant to within measurement resolution. Along the
+operating-point axis~--- the axis Stage 3 adds~--- the nulls themselves are
+regime facts: a quadratic power law on the raw logit scale predicts that the
+divisor contrast is inert below $\sigma \approx 1$ and decisive above it, the
+replica grids sit at $\sigma \approx 0.3$--$1.1$ (measured KL $\le 0.006$
+nats), forcing $\sigma$ an order of magnitude higher flips the sign of the
+effect at $g = 32$, and a pretrained GPT-2 sitting at $\sigma \approx 45$--63
+loses a factor of 94 in perplexity when the same constant is swapped to
+$1/\dk$ at inference. A one-line architectural constant inherited from
+\cite{vaswani2017} is therefore best understood not as a universally optimal
+choice but as a default whose benefit is confined to a specific operating
+point~--- full data scale, early in training, on multi-class topic
+classification~--- and whose influence vanishes once the softmax operates
+near uniformity, while at frontier operating points it is the alternatives
+that become untenable.
+
+\subsection{Scale dependence and the near-uniform regime}\label{sec:scale}
+The Stage-2 null results are not a failure of the manipulation: the
+diagnostics show the mechanism is present but quantitatively muted. At replica
+scale the raw pre-division logit standard deviation is of order 1, so after
+dividing by $\sqrt{\dk}$ (5.7--11.3) or $\dk$ (32--128) every variant's logits
+sit well inside the softmax's linear (near-uniform) regime, attention entropy
+is pinned at 4.05 of a possible 4.16 nats for all variants, and the Q/K
+gradient pathway carries two orders of magnitude less signal than the value
+pathway~--- an imbalance that AdamW's per-parameter scale normalisation then
+equalises away. Two consequences follow. First, the variance argument for
+$\sqrt{\dk}$ is a statement about logit variance \emph{relative to the
+softmax's dynamic range}; it predicts differences only in regimes where the
+unscaled logit variance is comparable to the divisor, which small-data,
+short-budget runs do not reach. Second, claims about scaling functions are
+claims about an operating point, and should be reported together with the
+logit scale that makes the divisor bite.
+Stage 3 turns this diagnosis from an explanation into a measurement. The
+power law of Eq.~\eqref{eq:law} quantifies the bite region; the gain sweep
+shows the outcome metric responding on cue once the operating point enters it
+(flat to $g \le 16$, $-1.4$\,pp for the standard divisor at $g = 32$); the
+regime-restored runs show that at $d_k = 32$ even $12\times$ the step budget
+leaves $\sigma$ at 1.1 (inertia is real), while at $d_k = 128$ the larger
+head drives $\sigma$ to $\approx 5$ and the Stage-1 ordering begins to
+re-emerge; and the pretrained decoder probe shows the same constant being
+\emph{decisive} ($+27$ to $+9{,}253\%$ perplexity) at GPT-2's native
+operating point. The Stage-1 AG News effect, observed precisely where raw
+logit variance comes closest to the divisor, remains plausible under this
+account~--- but until it is reproduced at full scale it should be treated as
+provisional rather than established.
+
+\subsection{Why would AG News care about the divisor?}\label{sec:why-agnews}
+Three observations combine into a coherent account. First, the variance argument
+behind $\sqrt{\dk}$ \cite{vaswani2017} implies that the $1/\dk$ divisor shrinks
+the logit standard deviation by a further factor of $\sqrt{\dk} \approx 5.7$;
+at initialization the attention logits of the $1/\dk$ variant have a standard
+deviation of order $1/\sqrt{\dk} \approx 0.18$ rather than 1, pushing the softmax
+towards uniformity. Second, the measured diagnostics match this account:
+attention entropy rises and maximum attention weight falls monotonically with
+$s$ (Section~\ref{sec:diagnostics}). Third, AG News is the task where
+failure-to-differentiate should bite hardest: it is 4-class, short-document, and
+topic-level, so early error correction plausibly benefits from a few sharp,
+content-word attention links, whereas binary sentiment over long reviews can be
+solved with diffuse pooling-like attention. The inter-head cosine similarity
+trend (0.23 $\to$ 0.42 as $s$ grows) adds that flatter scaling also erodes
+head diversity \cite{voita2019,michel2019}, reducing the ensemble capacity that
+multi-class discrimination can draw on. The mixed-scale ablation (E1), where
+keeping two sharp heads helped on SST-2, hints that diversity per se~--- not the
+global constant~--- is the operative resource.
+
+\subsection{Sharper attention as a free improvement direction}\label{sec:sharper}
+The temperature ablation points in the opposite direction: on both sentiment
+datasets the sharpest tested temperature ($\tau = 0.5$, i.e.\ doubling the logit
+scale relative to standard) produced the highest means, by about $+1.6$\,\pp{} on
+SST-2. This aligns with the distillation literature on attention temperature
+\cite{zhang2022temp,hinton2015} and with Scalable-Softmax's motivation
+\cite{nakanishi2025} that the effective temperature should not be treated as a
+universal constant. Given that temperature is parameter-free and computationally
+free (Section~\ref{sec:efficiency}), and that the 2-epoch AG News result shows
+temperature effects \emph{can} reach significance under matched conditions, the
+practical recommendation is straightforward: when training small transformers on
+a new task, sweep $\tau$ around 1 (e.g.\ $\{0.5, 1, 2\}$) under a seed-matched
+design before freezing the architecture. The cost is negligible; the present
+data suggest the yield is real, if task-dependent.
+
+\subsection{The early-training effect and its decay}\label{sec:early}
+On the binary tasks, extended training erased the differences (Section
+\ref{sec:budget}), and the Stage-2 convergence runs sharpen the picture: with
+model selection by validation loss, every variant's validation loss bottoms at
+the same epoch ($\approx$ 2 on SST-2, $\approx$ 1.6 on IMDB), early stopping
+halts at epochs 5--6, and the learning curves are indistinguishable at every
+epoch. Combined with the entropy-collapse literature
+\cite{zhai2023,dong2021}, a natural reading is that the divisor matters most
+while the attention distribution is still being shaped; once representations
+mature, the network can compensate for the initial sharpness of its attention.
+The learning-rate compensation ablations (E2/E4) add a useful negative result:
+the $1/\dk$ deficit is \emph{not} equivalent to a smaller effective learning rate
+that a per-block LR rescaling can restore~--- and the multi-seed replica
+ablations confirm the single-seed pattern (LR compensation neutral-to-harmful,
+mixed-scale heads neutral), while failing to reproduce the Stage-1 E1 excursion
+of $+1.6$\,\pp{} for mixed-scale heads on SST-2.
+
+\subsection{Implications for experimental practice}\label{sec:practice}
+Methodologically, this study is a demonstration that cheap architectural
+comparisons deserve the seed-matched treatment. Between-run comparisons at 2
+epochs on these datasets would need to overcome standard deviations of about
+1\,\pp{} (SST-2, IMDB) with between-run variance; the paired design recovers
+resolvable effects from 25 seeds even where the raw means differ by only
+0.1--0.3\,\pp{} (AG News). Given the prevalence of single-seed architectural
+claims in the scaling literature \cite{bouthillier2021,dodge2019,dror2018}, the
+protocol used here~--- bit-identical initialization, shared data order, paired
+tests, Holm correction, effect sizes~--- is directly reusable by practitioners
+evaluating any parameter-free modification (temperature, biases, clamps,
+positional offsets) and costs no additional compute beyond a handful of extra
+seeds.
+
+\subsection{Threats to validity}\label{sec:threats}
+Beyond the enumerated limitations, three threats deserve note. \emph{Construct}:
+test accuracy on subsampled training sets may not capture the behaviours that
+matter at scale; we mitigate by also measuring perplexity and mechanistic
+diagnostics, and by reporting both a full-scale and a replica stage.
+\emph{Internal}: all variants share code paths except one division~--- the
+manipulation is auditable in a single line~--- and unit tests plus the
+Stage-2 mask-verification suite pin down initialization identity and exact-zero
+masked attention, so the internal threat is minimal. The Stage-2 null results
+are consistent across five independent grids, which argues against a wiring
+error: a variant applied to the wrong tensor would not produce identical
+entropy \emph{and} identical accuracies \emph{and} the Stage-1 gradient-ratio
+signatures. \emph{External}: results at $d_{\text{model}} = 128$, 2 layers, and
+64--128-token sequences may not extrapolate to large models; the Stage-3
+programme addresses this directly~--- the power law makes the extrapolation
+quantitative, the pretrained-decoder probe confirms its direction and
+magnitude at 124M--355M scale, and the shipped GPU script extends the identical
+protocol to 1B--7B, but the trained (not inference-only) behaviour of models
+in that range remains to be measured.
+
+% ============================================================================
+\section{Limitations}\label{sec:limitations}
+The study has five principal limitations.
+\begin{enumerate}[leftmargin=1.9em]
+  \item \textbf{Replica scale.} Stage 2 documents a deliberate fivefold
+        reduction in data (2{,}000 vs.\ 10{,}000 examples) and sequence length
+        (64 vs.\ 128), with a 96k-token LM corpus. The replica null results are
+        statements about that operating point; they bound the Stage-1 AG News
+        effect's generality but cannot confirm or refute it at full scale.
+  \item \textbf{Model scale.} A 2-layer, $d_{\text{model}} = 128$ encoder is
+        three orders of magnitude smaller than frontier models. Stage 3
+        narrows this gap as far as the CPU sandbox allows: the operating-point
+        law is validated in simulation, the gain sweep and regime-restored
+        runs traverse the bite region from below, frontier stabilisers are
+        tested in context, and pretrained GPT-2 (124M, 355M) is probed at its
+        native operating point, where the divisor contrast is enormous.
+        What remains untested is \emph{trained} behaviour at 1B--7B: the
+        shipped GPU script covers the inference-time intervention and
+        diagnostics, but fine-tuning or training at those scales, and the
+        interaction of the divisor with QK-Norm or soft-capping \emph{during
+        training}, are beyond this study's compute.
+  \item \textbf{LM budget.} The corrected LM grid uses 96k training tokens and
+        3 epochs (perplexity $\approx$ 873); the leak probes show the v1
+        artifact's direction, but its fully collapsed state (ppl $\approx$ 1.08
+        at 25{,}000 GPU steps) is not reproduced at CPU scale. The Stage-3 LM
+        gain arm (sequence length 128, $g \le 4$) likewise operates in the
+        inert region, so the LM-scale divisor question remains open.
+  \item \textbf{Task scope.} Four text datasets; vision, speech, code, and
+        long-context regimes are untouched, as are encoder--decoder and
+        decoder-only architectures.
+  \item \textbf{Full-scale gaps.} The Stage-1 extended budget (30 of 450
+        planned full-scale runs) and the full-scale E1--E4 multi-seed arms
+        remain incomplete; the sequence-length axis of the sensitivity grid is
+        covered only implicitly (64-token replica vs.\ 128-token Stage 1).
+        These are the principal targets for the next full-scale campaign.
+\end{enumerate}
+
+% ============================================================================
+\section{Conclusion}\label{sec:conclusion}
+Under a seed-matched paired design with 787 completed runs across a GPU-scale
+stage, a replica-scale completion, and an operating-point programme, this
+study measured what one line of the Transformer~--- the $\sqrt{\dk}$ divisor
+in scaled dot-product attention~--- actually contributes. The answer is
+sharply conditional in a now-quantitative sense. At full data scale and a
+2-epoch budget, the standard divisor outperformed $1/\dk$ and temperature
+$\tau = 2$ on 4-class AG News ($+0.31$ and $+0.10$\,\pp, $p_{\text{Holm}} <
+0.05$, $d_z$ up to 1.52), but was indistinguishable on binary sentiment.
+Elsewhere the scaling function is empirically inert: the replica completion of
+the core grid, the $\dk \in \{32,64,128\}$ grid, train-to-convergence with
+early stopping, and the corrected causal-mask language-modelling grid (25
+seeds per arm, perple\-xity $\approx$ 873 with a verified exact-zero mask) all
+show differences within noise, and the original near-1 perplexities are
+diagnosed and reproduced-in-direction as a mask-leak artifact. Stage 3
+explains the inertness and bounds its reach. A second-order power law
+predicts that two divisors induce attention distributions separated by
+$\mathrm{KL} \approx \tfrac{1}{2}\Delta\beta^2\sigma^2(1-1/n)$: the replica
+grids sit at measured KL $\le 0.006$ nats, $12\times$ longer training leaves
+the operating point at $\sigma = 1.1$, injecting logit variance until
+KL $= 0.64$ nats makes the 2017 default the \emph{worst} variant
+($-1.4$\,\pp, $d_z = -1.76$), frontier stabilisers bound the logits but not
+the contrast, and in pretrained GPT-2 ($\sigma \approx 45$--63) the same
+no-retraining swap moves perplexity by $+27$--$55\%$ ($\tau = 2$) to
+$40$--$93\times$ ($1/\dk$). The practical conclusions are that $\sqrt{\dk}$
+remains a sound default, that the softmax temperature is a cheap knob worth
+tuning per task, that masking bugs in language-modelling pipelines are best
+caught by physically-motivated sanity floors on perplexity, that any claim
+about a parameter-free attention modification should report the operating
+point it was tested at (one forward pass suffices to measure $\sigma$), and
+that matched-seed paired designs are the cheap instrument that makes such
+claims testable.
+
+\section*{Data and code availability}
+The complete reproducibility package~--- source code, YAML configurations, unit
+tests, per-seed JSON records, statistical analysis outputs, figure-generation
+scripts, and this manuscript~--- is publicly available under an MIT licence at
+\url{https://github.com/razahasan2000/Attention-Scaling}. Supplementary material
+with full hyperparameters, per-seed summaries, diagnostics, and reproduction
+instructions accompanies this paper.
+
+\section*{Declaration of interests}
+The author declares no competing interests.

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --text: #111827; --text-sub: #6B7280; --border: #E5E7EB;
+    --connector: #94A3B8;
+  }
+  body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, 'DejaVu Sans', sans-serif;
+    background: #FFFFFF; color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  #root { width: 1000px; margin: 0 auto; padding: 40px 40px; background: #fff; }
+  .fig-title { font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 6px; }
+  .fig-sub { font-size: 15px; color: var(--text-sub); text-align: center; margin-bottom: 30px; }
+
+  .phase-group { background: #F8FAFC; border-radius: 12px; padding: 18px 22px 20px; }
+  .phase-title { font-size: 17px; font-weight: 700; padding: 9px 14px;
+    border-radius: 8px; margin-bottom: 14px; }
+  .phase-1 .phase-title { background: #F0F4F8; color: #334155; border-left: 4px solid #64748B; }
+  .phase-2 .phase-title { background: #E8EDF2; color: #1E3A5F; border-left: 4px solid #5B7A99; }
+  .phase-3 .phase-title { background: #E0E7EF; color: #1E3050; border-left: 4px solid #4A6B8A; }
+  .phase-4 .phase-title { background: #D8E0EA; color: #172540; border-left: 4px solid #3A5C7A; }
+
+  .phase-steps { display: flex; flex-direction: column; gap: 8px; }
+  .phase-step { font-size: 14.5px; color: var(--text); padding: 9px 14px;
+    background: #fff; border-radius: 6px; border: 1px solid var(--border); line-height: 1.45; }
+  .step-num { display: inline-block; width: 22px; height: 22px; line-height: 22px;
+    text-align: center; border-radius: 50%; font-size: 12px; font-weight: 600;
+    margin-right: 9px; background: #E2E8F0; color: #475569; }
+  .phase-1 .step-num { background: #E2E8F0; color: #475569; }
+  .phase-2 .step-num { background: #DBEAFE; color: #1E3A5F; }
+  .phase-3 .step-num { background: #D0D9E4; color: #1E3050; }
+  .phase-4 .step-num { background: #C7D2E0; color: #172540; }
+
+  .variant-row { display: flex; gap: 14px; margin-top: 4px; }
+  .variant-chip { flex: 1; background: #fff; border: 1.5px solid #94A3B8;
+    border-radius: 8px; text-align: center; padding: 10px 8px; }
+  .variant-chip.std { border-color: #0077BB; background: #EFF6FF; }
+  .variant-chip.tmp { border-color: #009988; background: #E6F5F3; }
+  .variant-chip.dk  { border-color: #EE7733; background: #FDF1E7; }
+  .variant-chip .vn { font-size: 15px; font-weight: 700; }
+  .variant-chip.std .vn { color: #1E40AF; }
+  .variant-chip.tmp .vn { color: #00695F; }
+  .variant-chip.dk .vn { color: #B4500F; }
+  .variant-chip .vd { font-size: 12.5px; color: var(--text-sub); margin-top: 3px;
+    font-family: 'Times New Roman', Georgia, serif; font-style: italic; }
+
+  .arrow-down { text-align: center; color: var(--connector); font-size: 26px;
+    line-height: 1; margin: 8px 0; }
+  .pair-note { margin-top: 10px; text-align: center; font-size: 13px; color: var(--text-sub); }
+  .stat-chips { display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+  .stat-chip { background: #fff; border: 1px solid var(--border); border-radius: 16px;
+    padding: 6px 14px; font-size: 13px; color: #334155; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="fig-title">Matched-seed paired experimental design</div>
+  <div class="fig-sub">Every seed produces one paired observation per comparison, isolating the scaling function as the only manipulated difference</div>
+
+  <div class="phase-group phase-1">
+    <div class="phase-title">Stage 1 &#8212; Shared randomness for each seed s &#8712; {1001, &#8230;, 1025}</div>
+    <div class="phase-steps">
+      <div class="phase-step"><span class="step-num">1</span>Seed-derived random number generator state is captured once per seed</div>
+      <div class="phase-step"><span class="step-num">2</span>All three variants are instantiated from a <b>bit-identical</b> initial state &#952;<sub>0</sub>(s) &#8212; verified by unit tests</div>
+      <div class="phase-step"><span class="step-num">3</span>Training-example order fixed by a seeded permutation generator; optimizer state trajectory and budget identical</div>
+    </div>
+  </div>
+
+  <div class="arrow-down">&#8595;</div>
+
+  <div class="phase-group phase-2">
+    <div class="phase-title">Stage 2 &#8212; Matched training runs (2 epochs for classification; 25,000 steps for LM)</div>
+    <div class="variant-row">
+      <div class="variant-chip std"><div class="vn">Standard</div><div class="vd">QK&#7481;/&#8730;d<sub>k</sub></div></div>
+      <div class="variant-chip tmp"><div class="vn">Temperature</div><div class="vd">QK&#7481;/(&#964;&#8730;d<sub>k</sub>), &#964; = 2</div></div>
+      <div class="variant-chip dk"><div class="vn">Alternative</div><div class="vd">QK&#7481;/d<sub>k</sub></div></div>
+    </div>
+    <div class="pair-note">Same batches &#183; same AdamW schedule &#183; same hyperparameters &#183; only the divisor s differs</div>
+  </div>
+
+  <div class="arrow-down">&#8595;</div>
+
+  <div class="phase-group phase-3">
+    <div class="phase-title">Stage 3 &#8212; Per-seed evaluation</div>
+    <div class="phase-steps">
+      <div class="phase-step"><span class="step-num">4</span>Test accuracy a<sub>std</sub>(s), a<sub>&#964;</sub>(s), a<sub>dk</sub>(s) recorded on the frozen test split</div>
+    </div>
+  </div>
+
+  <div class="arrow-down">&#8595;</div>
+
+  <div class="phase-group phase-4">
+    <div class="phase-title">Stage 4 &#8212; Paired statistical analysis (unit: within-seed difference)</div>
+    <div class="phase-steps">
+      <div class="phase-step"><span class="step-num">5</span>d(s) = a<sub>std</sub>(s) &#8722; a<sub>v</sub>(s) gives n = 25 paired observations per dataset and variant</div>
+    </div>
+    <div class="stat-chips">
+      <div class="stat-chip">Paired t-test</div>
+      <div class="stat-chip">Wilcoxon signed-rank</div>
+      <div class="stat-chip">Cohen&#8217;s d<sub>z</sub></div>
+      <div class="stat-chip">95% t-based CI</div>
+      <div class="stat-chip">Holm&#8211;Bonferroni (&#945; = .05)</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

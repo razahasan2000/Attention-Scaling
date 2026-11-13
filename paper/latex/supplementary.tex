@@ -1,0 +1,1046 @@
+% ============================================================================
+% Supplementary Material — Attention Scaling Study
+% ============================================================================
+\documentclass[10pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{newtxtext,newtxmath}
+\usepackage{microtype}
+\usepackage{geometry}
+\geometry{a4paper, top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+\setlength{\parindent}{1.2em}
+\setlength{\parskip}{1pt}
+\widowpenalty=10000
+\clubpenalty=10000
+\setlength{\emergencystretch}{2em}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{adjustbox}
+\usepackage{xcolor}
+\usepackage{caption}
+\captionsetup{font=small, labelfont=bf, skip=6pt}
+\usepackage{enumitem}
+\setlist{itemsep=2pt, topsep=3pt}
+\usepackage[numbers,sort&compress]{natbib}
+\bibliographystyle{unsrtnat}
+\usepackage{fancyhdr}
+\setlength{\headheight}{14pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\itshape Supplementary material --- scaling functions in Transformer self-attention}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\usepackage[colorlinks=true, linkcolor=blue!45!black, citecolor=blue!45!black,
+            urlcolor=blue!45!black, bookmarks=true, unicode=true]{hyperref}
+\hypersetup{
+  pdftitle={Supplementary Material: A Seed-Matched Empirical Comparison of Scaling Functions in Transformer Self-Attention},
+  pdfauthor={Raza Hasan},
+  pdfsubject={Supplementary material: full specifications, per-seed results, diagnostics, and reproduction instructions},
+  pdfkeywords={Transformer, attention, scaling, supplementary}
+}
+\newcommand{\dk}{d_k}
+\newcommand{\pp}{\,pp}
+
+\begin{document}
+
+\begin{center}
+  {\LARGE\bfseries Supplementary Material\\[6pt]}
+  {\large A Seed-Matched Empirical Comparison of Scaling Functions\\[3pt]
+   in Transformer Self-Attention\par}
+  \vspace{12pt}
+  {\normalsize Raza Hasan --- Independent Researcher\par}
+  \vspace{3pt}
+  {\small\url{https://github.com/razahasan2000/Attention-Scaling}\par}
+  \vspace{6pt}
+  {\small Preprint --- November 2026\par}
+\end{center}
+\vspace{4pt}
+\noindent\rule{\textwidth}{0.4pt}
+
+\noindent This supplement provides the complete experimental documentation for
+the main manuscript: the full architecture specification (S1), dataset and
+preprocessing details (S2), hyperparameters (S3), the experiment manifest (S4),
+per-seed summaries for the Stage-1 GPU-scale grids (S5), the complete
+statistical analysis (S6), training-budget sensitivity (S7), focused ablations
+E1--E4 (S8), attention and optimisation diagnostics (S9), efficiency
+measurements (S10), the figure index (S11), and reproduction instructions
+(S12). This revision adds the Stage-2 replica-completion documentation:
+replica protocol specification (S13), Stage-2 per-seed records (S14), mask
+verification and leak probes (S15), and Stage-2 diagnostics with the LM
+convergence probe (S16). All numbers are generated from the committed per-seed
+records in the repository; the analysis scripts that recompute every table are
+included in the package.
+
+\section*{S1. Full architecture specification}\label{sup:arch}
+\addcontentsline{toc}{section}{S1. Full architecture specification}
+
+\subsection*{S1.1 Layer inventory}
+\begin{itemize}[leftmargin=1.6em]
+  \item \textbf{Token embeddings}: \texttt{nn.Embedding(18855, 128, padding\_idx=0)}.
+  \item \textbf{Positional embeddings}: learned \texttt{nn.Parameter} of shape
+        $(1, 128, 128)$, initialised as $\mathcal{N}(0, 0.02^2)$.
+  \item \textbf{Encoder blocks} ($\times 2$): pre-LN Transformer block ---
+        $\operatorname{LayerNorm} \to$ multi-head self-attention $\to$ residual
+        add, then $\operatorname{LayerNorm} \to$ feed-forward (GELU) $\to$
+        residual add. Query, key, value, and output projections are bias-free
+        \texttt{nn.Linear(128, 128)}; the feed-forward is
+        $128 \to 256 \to 128$ with GELU.
+  \item \textbf{Final LayerNorm}: \texttt{nn.LayerNorm(128)}.
+  \item \textbf{Classification head}: \texttt{nn.Linear(128, num\_classes)}.
+  \item \textbf{Language-modelling head}: \texttt{nn.Linear(128, 18855,
+        bias=False)} with weight tying to the token embedding.
+\end{itemize}
+
+\subsection*{S1.2 Dimensions and counts}
+\begin{table}[H]
+  \centering
+  \caption{Architecture dimensions and parameter counts (identical across all
+  scaling variants).}
+  \label{tab:s1-dims}
+  \small
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l l l}
+    \toprule
+    \textbf{Parameter} & \textbf{Value} & \textbf{Notes} \\
+    \midrule
+    $d_{\text{model}}$ & 128 & embedding width \\
+    Heads $h$ & 4 & per block \\
+    $\dk = d_v$ & 32 & per-head dimension \\
+    Layers $L$ & 2 & pre-LN \\
+    $d_{\text{ff}}$ & 256 & feed-forward width \\
+    Dropout & 0.1 & embeddings, attention output, FFN \\
+    Max sequence length & 128 & right padding, attention mask \\
+    Vocabulary & 18{,}855 & classification and LM \\
+    Logit clamp & $[-50, 50]$ & numerical stability \\
+    \midrule
+    Parameters (classification) & 2{,}695{,}556 & all variants identical \\
+    Parameters (LM) & 4{,}120{,}576 & tied LM head \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+\subsection*{S1.3 Scaling variants}
+For $Q, K, V \in \mathbb{R}^{n \times \dk}$ and effective divisor $s$:
+\begin{align*}
+  \text{Standard:}\quad & \operatorname{softmax}\!\left(QK^{\top}/\sqrt{\dk}\right)V,
+  & s &= \sqrt{32} \approx 5.6569, \\
+  \text{Temperature:}\quad & \operatorname{softmax}\!\left(QK^{\top}/(\tau\sqrt{\dk})\right)V,
+  & s &= \tau\sqrt{32} \approx 11.3137 \;\; (\tau = 2), \\
+  \text{Alternative:}\quad & \operatorname{softmax}\!\left(QK^{\top}/\dk\right)V,
+  & s &= 32.
+\end{align*}
+The mixed-scale ablation arm (\texttt{multiscale\_v1}) divides the logits of
+heads 1--2 by $\sqrt{\dk}$ (standard) and heads 3--4 by $\dk$; the
+learning-rate compensation arm (\texttt{dk\_lrcomp}) multiplies the learning
+rates of $W_q$ and $W_k$ in the $1/\dk$ variant by $\sqrt{\dk} \approx 5.66$.
+
+\subsection*{S1.4 Unit tests}
+Five test suites (22 tests) cover: bit-identical initialization across variants
+for a fixed seed; gradient flow through every variant; output shapes and
+dtype contracts; masked-attention correctness (padding positions receive
+negligible weight); and data-pipeline determinism (identical batch order for
+identical seeds). Run with \texttt{pytest tests/}.
+
+\section*{S2. Dataset and preprocessing details}\label{sup:data}
+
+\subsection*{S2.1 Sources}
+\begin{table}[H]
+  \centering
+  \caption{HuggingFace dataset identifiers.}
+  \small
+  \begin{tabular}{l l l}
+    \toprule
+    \textbf{Dataset} & \textbf{HF identifier} & \textbf{Configuration} \\
+    \midrule
+    AG News    & \texttt{fancyzhx/ag\_news} & default \\
+    SST-2      & \texttt{nyu-mll/glue} & \texttt{sst2} \\
+    IMDB       & \texttt{stanfordnlp/imdb} & default \\
+    WikiText-2 & \texttt{Salesforce/wikitext} & \texttt{wikitext-2-v1} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection*{S2.2 Splits and tokenization}
+Classification training sets are subsampled to 10{,}000 examples with a 20\%
+held-out validation split (SST-2 uses the official GLUE validation/test splits:
+1{,}115 / 1{,}821); test sets are the frozen official test partitions. Text is
+tokenised with the regular expression \texttt{[a-z0-9']+} over lowercased input
+(classification) or whitespace splitting (LM, with an \texttt{<eos>} token).
+Vocabularies keep the top 18{,}855 tokens at minimum frequency 2 (plus special
+tokens) and are built from training data only. Label mappings preserve the
+original class identities (AG News 1--4 $\to$ 0--3; IMDB neg/pos $\to$ 0/1).
+Sequences are right-padded to 128 positions; attention masks exclude padding.
+
+\section*{S3. Full hyperparameters}\label{sup:hyper}
+\begin{table}[H]
+  \centering
+  \caption{Optimisation configuration (all grids).}
+  \small
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l l}
+    \toprule
+    \textbf{Parameter} & \textbf{Value} \\
+    \midrule
+    Optimiser & AdamW \cite{loshchilov2019} \\
+    Learning rate & $3 \times 10^{-4}$ \\
+    Weight decay & 0.01 \\
+    Betas / $\epsilon$ & $(0.9, 0.999)$ / $10^{-8}$ \\
+    LR schedule & linear warmup over the first 5\% of steps, then cosine decay to 0 \\
+    Gradient clipping & $\max\|g\|_2 = 1.0$ \\
+    Logit clamp & $[-50, 50]$ \\
+    Mixed precision & disabled (reproducibility) \\
+    Batch size (classification / LM) & 64 / 16 \\
+    Eval batch size (classification / LM) & 64 / 32 \\
+    \midrule
+    Budgets & core: 2 epochs (classification), 25{,}000 steps (LM); \\
+            & extended: 25 epochs; ablations E1--E4: 5 epochs \\
+    Checkpoints & epochs 2/5/10/15/20/25 (extended); steps 5k/10k/15k/20k/25k (LM) \\
+    Metrics & accuracy, macro-F1, loss (classification); perplexity, loss (LM) \\
+    Seeds & 1001--1025 (core); 1001--1003 (temperature ablation) \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+\section*{S4. Complete experiment manifest}\label{sup:manifest}
+The programme is complete in three stages (Table~\ref{tab:s4-manifest}):
+787 runs in total, 314 at GPU scale (Stage 1), 339 at replica scale
+(Stage 2; 312 pre-registered completions plus 27 mask-artifact probes), and
+134 in the Stage-3 operating-point programme (128 matched-seed training runs
+plus 6 pretrained-model evaluations; Sections S17--S18). Relative to the
+original 951-run full-scale plan, the Stage-1 extended budget (30 of 450
+planned runs) and the full-scale multi-seed E1--E4 arms remain open; every
+other grid is complete in at least one stage, and the replica stage adds the
+head-dimension grid that the original plan sketched as ``model-size
+sensitivity''.
+
+\begin{table}[H]
+  \centering
+  \caption{Completed experiment manifest (both stages).}
+  \label{tab:s4-manifest}
+  \small
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l l l r}
+    \toprule
+    \textbf{Grid} & \textbf{Design} & \textbf{Stage} & \textbf{Runs} \\
+    \midrule
+    Core classification & 3 variants $\times$ 25 seeds $\times$ 3 datasets & 1 & 225 \\
+    Temperature ablation & 4 $\tau$ $\times$ 3 seeds $\times$ 2 datasets & 1 & 24 \\
+    Extended budget & 3 variants $\times$ 5 seeds $\times$ 2 datasets, 25 epochs & 1 & 30 \\
+    Core LM (v1 protocol) & 3 variants, 25{,}000 steps & 1 & 25 \\
+    Focused ablations E1--E4 & single-seed arms, 5 epochs & 1 & 10 \\
+    \midrule
+    Replica core classification & 3 variants $\times$ 25 seeds, AG News & 2 & 75 \\
+    Replica LM (corrected causal mask) & 3 variants $\times$ 25 seeds & 2 & 75 \\
+    Head-dimension grid & $\dk \in \{32,64,128\}$ $\times$ 3 variants $\times$ 12 seeds & 2 & 108 \\
+    Train-to-convergence & 3 variants $\times$ 5 seeds $\times$ 2 datasets & 2 & 30 \\
+    Replica ablations E1--E4 & 4 arms $\times$ 3 seeds $\times$ 2 datasets & 2 & 24 \\
+    Mask-artifact probes & leaky vs.\ causal, 3 and 10 epochs & 2 & 27 \\
+    \midrule
+    Logit-gain sweep & $g \in \{1,2,4,8,16,32\}$ $\times$ 3 variants $\times$ 4 seeds & 3 & 72 \\
+    Regime-restored AG News & 6{,}000 train, 8 epochs, probes, $\dk \in \{32,128\}$ & 3 & 18 \\
+    Frontier-stabiliser bridge & QK-Norm / soft-cap arms $\times$ 4 seeds & 3 & 20 \\
+    LM logit gain & $g \in \{1,4\}$ $\times$ 3 variants $\times$ 3 seeds, seq 128 & 3 & 18 \\
+    Frontier divisor swap & GPT-2 + GPT-2-medium, inference-time & 3 & 6 \\
+    \midrule
+    \textbf{Total} & & & \textbf{787} \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+\section*{S5. Per-seed results summary}\label{sup:perseeds}
+\begin{table}[H]
+  \centering
+  \caption{Core classification grids: per-seed statistics over 25 matched seeds
+  (accuracy fraction). SD is the across-seed standard deviation.}
+  \small
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l l c c c c}
+    \toprule
+    \textbf{Dataset} & \textbf{Variant} & \textbf{Mean} & \textbf{SD} &
+    \textbf{Min} & \textbf{Max} \\
+    \midrule
+    AG News & Standard & 0.9123 & 0.0025 & 0.9068 & 0.9156 \\
+            & Temp ($\tau=2$) & 0.9113 & 0.0026 & 0.9058 & 0.9149 \\
+            & $1/\dk$ & 0.9092 & 0.0032 & 0.9021 & 0.9141 \\
+    \midrule
+    SST-2 & Standard & 0.8066 & 0.0115 & 0.7826 & 0.8310 \\
+          & Temp ($\tau=2$) & 0.8070 & 0.0104 & 0.7854 & 0.8295 \\
+          & $1/\dk$ & 0.8062 & 0.0106 & 0.7831 & 0.8267 \\
+    \midrule
+    IMDB & Standard & 0.8193 & 0.0099 & 0.7980 & 0.8378 \\
+         & Temp ($\tau=2$) & 0.8193 & 0.0093 & 0.8002 & 0.8364 \\
+         & $1/\dk$ & 0.8196 & 0.0091 & 0.7995 & 0.8352 \\
+    \midrule
+    WikiText-2 (ppl, v1 artefact$^\dagger$) & Standard ($n{=}15$) & 1.0917 & 0.0061 & --- & --- \\
+         & Temp ($\tau=2$, $n{=}7$) & 1.0882 & 0.0056 & --- & --- \\
+         & $1/\dk$ ($n{=}3$) & 1.0809 & 0.0021 & --- & --- \\
+    \bottomrule
+    \multicolumn{6}{l}{\footnotesize $^\dagger$Superseded v1 leaky-mask values; the corrected 25-seed protocol is tabulated in S14.}
+  \end{tabular*}
+\end{table}
+
+\noindent Stage-2 per-seed records (replica core, corrected LM, head-dimension
+grid, convergence training, and replica ablations) are tabulated in
+Section~S14.
+
+\section*{S6. Full statistical analysis}\label{sup:stats}
+
+\subsection*{S6.1 Paired comparisons (core classification, $n = 25$)}
+\begin{table}[H]
+  \centering
+  \caption{Complete paired statistics. diff $=$ baseline $-$ variant
+  (positive favours standard scaling); $p_{\text{Holm}}$ corrects across the
+  two comparisons within each dataset.}
+  \small
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l l c c c c c}
+    \toprule
+    \textbf{Dataset} & \textbf{Comparison} & \textbf{diff} & \textbf{95\% CI} &
+    \textbf{$d_z$} & \textbf{$p$} & \textbf{$p_{\text{Holm}}$} \\
+    \midrule
+    AG News & $1/\dk$ vs.\ std & $+0.0031$ & $[+0.0022, +0.0039]$ & $1.52$ & $<0.001$ & $<0.001$ \\
+            & $\tau{=}2$ vs.\ std & $+0.0010$ & $[+0.0002, +0.0017]$ & $0.53$ & $0.013$ & $0.013$ \\
+    \midrule
+    SST-2 & $1/\dk$ vs.\ std & $+0.0004$ & $[-0.0023, +0.0031]$ & $0.06$ & $0.780$ & $0.781$ \\
+          & $\tau{=}2$ vs.\ std & $-0.0005$ & $[-0.0031, +0.0021]$ & $-0.07$ & $0.718$ & $0.718$ \\
+    \midrule
+    IMDB & $1/\dk$ vs.\ std & $-0.0004$ & $[-0.0011, +0.0004]$ & $-0.19$ & $0.352$ & $0.703$ \\
+         & $\tau{=}2$ vs.\ std & $-0.0001$ & $[-0.0006, +0.0005]$ & $-0.04$ & $0.831$ & $0.831$ \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+\subsection*{S6.2 Effect-size interpretation}
+Following Cohen \cite{cohen1988}: $|d_z| < 0.2$ negligible; $0.2$--$0.5$ small;
+$0.5$--$0.8$ medium; $> 0.8$ large. Only the two AG News comparisons exceed the
+negligible band ($d_z = 1.52$ large; $d_z = 0.53$ medium).
+
+\section*{S7. Training-budget sensitivity}\label{sup:budget}
+\begin{table}[H]
+  \centering
+  \caption{Extended budget (5 seeds, checkpoints at 2/5/10/25 epochs): test
+  accuracy by variant. Differences decay to seed-noise level by 25 epochs.}
+  \small
+  \begin{tabular*}{0.95\textwidth}{@{\extracolsep{\fill}} l l c c c c}
+    \toprule
+    \textbf{Dataset} & \textbf{Variant} & \textbf{2 ep} & \textbf{5 ep} &
+    \textbf{10 ep} & \textbf{25 ep} \\
+    \midrule
+    SST-2 & Standard & 0.813 & 0.828 & 0.835 & 0.842 \\
+          & Temp ($\tau=2$) & 0.815 & 0.829 & 0.836 & 0.843 \\
+          & $1/\dk$ & 0.815 & 0.827 & 0.834 & 0.841 \\
+    \midrule
+    IMDB & Standard & 0.822 & 0.831 & 0.838 & 0.845 \\
+         & Temp ($\tau=2$) & 0.822 & 0.832 & 0.839 & 0.846 \\
+         & $1/\dk$ & 0.822 & 0.830 & 0.837 & 0.844 \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+\section*{S8. Focused ablations E1--E4}\label{sup:ablations}
+Single-seed arms (seed 0), 5 epochs. \texttt{multiscale\_v1} divides the logits
+of heads 1--2 by $\sqrt{\dk}$ and heads 3--4 by $\dk$; \texttt{dk\_lrcomp}
+multiplies the Q/K learning rates of the $1/\dk$ variant by $\sqrt{\dk}$.
+
+\begin{table}[H]
+  \centering
+  \caption{Focused ablation results (test accuracy).}
+  \small
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l l l c c l}
+    \toprule
+    \textbf{ID} & \textbf{Dataset} & \textbf{Arm} & \textbf{Acc.} &
+    \textbf{$\Delta$ vs.\ std} & \textbf{Reading} \\
+    \midrule
+    E1 & SST-2 & standard & 0.8062 & --- & \multirow{2}{*}{mixed-scale $+1.6$\,pp} \\
+       &       & multiscale\_v1 & 0.8222 & $+1.60$\,pp & \\
+    \midrule
+    E2 & SST-2 & standard & 0.8268 & --- & \multirow{3}{*}{compensation fails} \\
+       &       & $1/\dk$ & 0.8142 & $-1.26$\,pp & \\
+       &       & $1/\dk$ + LR comp. & 0.8108 & $-1.60$\,pp & \\
+    \midrule
+    E3 & IMDB & standard & 0.8152 & --- & \multirow{2}{*}{no difference} \\
+       &      & multiscale\_v1 & 0.8166 & $+0.14$\,pp & \\
+    \midrule
+    E4 & IMDB & standard & 0.8183 & --- & \multirow{3}{*}{compensation fails} \\
+       &      & $1/\dk$ & 0.8145 & $-0.38$\,pp & \\
+       &      & $1/\dk$ + LR comp. & 0.8157 & $-0.26$\,pp & \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+All four Stage-1 arms are single-seed and hypothesis-generating. The Stage-2
+replica advances both ablation questions to 3 matched seeds per arm
+(Section~S14): the mixed-scale result is null ($+0.04$\,pp SST-2, $+0.05$\,pp
+IMDB), and learning-rate compensation remains neutral-to-harmful
+($-1.30$\,pp SST-2, $-0.27$\,pp IMDB), consistent with the Stage-1 reading.
+
+\section*{S9. Attention and optimisation diagnostics}\label{sup:diagnostics}
+\begin{table}[H]
+  \centering
+  \caption{Diagnostics at epoch 1 (seed 0). Entropy and head similarity
+  averaged over heads and positions; gradient norms are $\ell_2$ norms at the
+  first optimisation step.}
+  \small
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l c c c}
+    \toprule
+    \textbf{Metric} & \textbf{Standard} & \textbf{Temp ($\tau=2$)} & \textbf{$1/\dk$} \\
+    \midrule
+    Mean attention entropy (nats) & 2.14 & 2.31 & 2.48 \\
+    Max attention weight & 0.32 & 0.28 & 0.24 \\
+    Inter-head cosine similarity & 0.23 & 0.31 & 0.42 \\
+    $\|\partial L/\partial Q\|$ & 0.042 & 0.021 & 0.011 \\
+    $\|\partial L/\partial K\|$ & 0.041 & 0.020 & 0.010 \\
+    $\|\partial L/\partial V\|$ & 0.038 & 0.039 & 0.037 \\
+    \midrule
+    Theoretical Q/K ratio ($1/s$ vs.\ standard) & 1.000 & 0.500 & 0.177 \\
+    Observed Q ratio & 1.000 & 0.500 & 0.262 \\
+    Observed K ratio & 1.000 & 0.488 & 0.244 \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+Larger divisors produce flatter (higher-entropy), more similar heads, and
+attenuate Q/K gradients by approximately $1/s$; value gradients are unaffected,
+matching the analytical derivative of scaled dot-product attention.
+
+\section*{S10. Efficiency analysis}\label{sup:efficiency}
+\begin{table}[H]
+  \centering
+  \caption{Efficiency measurements (identical parameter counts by construction;
+  differences within run-to-run noise).}
+  \small
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l c c c}
+    \toprule
+    \textbf{Metric} & \textbf{Standard} & \textbf{Temp ($\tau=2$)} & \textbf{$1/\dk$} \\
+    \midrule
+    Parameters (classification) & 2{,}695{,}556 & 2{,}695{,}556 & 2{,}695{,}556 \\
+    Parameters (LM) & 4{,}120{,}576 & 4{,}120{,}576 & 4{,}120{,}576 \\
+    Epoch time, SST-2 (s) & 32.1 & 32.3 & 32.0 \\
+    Epoch time, AG News (s) & 59.8 & 60.1 & 59.5 \\
+    Peak GPU memory (GB) & 5.2 & 5.2 & 5.2 \\
+    Inference latency, 1k samples (s) & 0.84 & 0.85 & 0.84 \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+\section*{S11. Figure index}\label{sup:figures}
+\begin{table}[H]
+  \centering
+  \caption{All figures are regenerated at 300 DPI from the committed per-seed
+  records by \texttt{scripts/generate\_figures.py}-equivalent analysis code.}
+  \small
+  \begin{tabular}{l l}
+    \toprule
+    \textbf{File} & \textbf{Content} \\
+    \midrule
+    \texttt{fig\_architecture.png} & Pre-LN encoder architecture and scaling variants \\
+    \texttt{fig\_design.png} & Matched-seed paired experimental design \\
+    \texttt{fig\_main\_performance.png} & Core-grid accuracy by variant and dataset \\
+    \texttt{fig\_paired\_differences.png} & Paired differences with 95\% CIs \\
+    \texttt{fig\_temperature\_ablation.png} & Accuracy vs.\ temperature $\tau$ \\
+    \texttt{fig\_training\_curves.png} & Extended-budget convergence \\
+    \texttt{fig\_head\_diversity.png} & Entropy, max weight, head cosine \\
+    \texttt{fig\_gradient\_ratios.png} & Gradient norms vs.\ $1/s$ theory \\
+    \texttt{fig\_efficiency.png} & Epoch time and inference latency \\
+    \texttt{fig\_lm\_perplexity.png} & WikiText-2 perplexity by variant (v1 record) \\
+    \texttt{fig\_stage2\_core.png} & Replica core means and paired differences \\
+    \texttt{fig\_dk\_grid.png} & Head-dimension grid: accuracy and gap vs.\ $\dk$ \\
+    \texttt{fig\_lm\_corrected.png} & Corrected LM perplexity and mask-artifact probes \\
+    \texttt{fig\_convergence.png} & Train-to-convergence learning curves \\
+    \texttt{fig\_regime\_law.png} & Divisor power law and entropy collapse (Stage 3) \\
+    \texttt{fig\_gain\_sweep.png} & Logit-gain sweep: operating point and accuracy (Stage 3) \\
+    \texttt{fig\_frontier.png} & Pretrained GPT-2 operating point and divisor swap (Stage 3) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section*{S12. Reproduction instructions}\label{sup:repro}
+\begin{verbatim}
+# 1. Environment (Python >= 3.10)
+pip install torch torchvision torchaudio
+pip install numpy scipy matplotlib PyYAML datasets tqdm \
+            transformers tokenizers accelerate scikit-learn
+
+# 2. Preflight validation (environment, configs, 22 unit tests)
+python scripts/validate.py
+
+# 3. Core grid: 3 variants x 25 seeds x 3 datasets (225 runs)
+python scripts/run_experiments.py --config-dir configs \
+       --output-dir results --grid core
+
+# 4. Temperature ablation (tau in {0.5, 1.0, 1.5, 2.0}; 24 runs)
+python scripts/run_temp_ablation.py
+
+# 5. Extended 25-epoch budget and model-size sensitivity
+python scripts/run_experiments.py --config-dir configs \
+       --output-dir results --grid extended
+python scripts/run_model_size.py
+
+# 6. Focused ablations E1-E4
+python scripts/run_ablations.py
+
+# 7. Statistical analysis and figures
+python scripts/analyse_results.py --results-dir results \
+       --output-dir results/statistical_tests \
+       --datasets agnews sst2 imdb wikitext2
+python scripts/generate_figures.py results/statistical_tests figures
+\end{verbatim}
+
+\vspace{4pt}
+\noindent\textbf{Stage-2 replica completion (this revision).} The replica stage
+ships as a self-contained suite with its own runner, aggregation, and
+verification scripts:
+
+\begin{verbatim}
+# Stage 2: data preparation (replica subsets and vocabularies)
+python scripts/experiments/prepare_data.py
+
+# Mask-verification suite (asserts exact-zero future/padding attention)
+python scripts/experiments/verify_mask.py
+
+# Grids (resume-safe; append-only JSONL records)
+python scripts/experiments/runner.py --phase lm     --procs 2   # 75 runs
+python scripts/experiments/runner.py --phase core   --procs 2   # 75 runs
+python scripts/experiments/runner.py --phase grid   --procs 2   # 108 runs
+python scripts/experiments/runner.py --phase conv   --procs 2   # 30 runs
+python scripts/experiments/runner.py --phase abl    --procs 2   # 24 runs
+python scripts/experiments/runner.py --phase lmleak --procs 2   # 9 probe runs
+python scripts/experiments/runner.py --phase lmc    --procs 2   # 18 probe runs
+
+# Attention diagnostics and paired statistics
+python scripts/experiments/diagnostics.py
+python scripts/experiments/aggregate.py
+\end{verbatim}
+
+Every run emits a per-seed JSON record (configuration hash, training history,
+test metrics); the committed \texttt{results/} directory contains the records
+used in this paper, so all tables and figures can be regenerated without
+re-training.
+
+
+\section*{S13. Stage-2 replica protocol specification}\label{sup:replica}
+\addcontentsline{toc}{section}{S13. Stage-2 replica protocol specification}
+
+Stage 2 executes every preregistered grid on a 2-core CPU sandbox
+(3\,GB RAM, PyTorch 2.15.0 CPU, one torch thread per worker, two worker
+processes). The architecture, variant definitions, matched-seed construction,
+optimizer, and analysis pipeline are identical to Stage 1; only the data and
+step budgets are reduced, as follows.
+
+\begin{table}[H]
+  \centering
+  \caption{Stage-2 replica configuration.}
+  \small
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l l l}
+    \toprule
+    \textbf{Component} & \textbf{Classification replica} & \textbf{LM replica} \\
+    \midrule
+    Training data & 2{,}000 examples per dataset & 96{,}000 tokens (WikiText-2 train head) \\
+    Validation & 500 examples & 40{,}000 tokens (official validation head) \\
+    Test & AG News 4{,}000 / SST-2 872 / IMDB 2{,}500 & validation perplexity \\
+    Sequence length & 64 (right-padded) & 64 (non-overlapping chunks) \\
+    Vocabularies & 7{,}234 / 2{,}249 / 12{,}000 & 5{,}655 \\
+    $d_{\text{model}}$ / heads & 128 / 4 ($\dk = 32$) & 96 / 3 ($\dk = 32$) \\
+    Layers / $d_{\text{ff}}$ / dropout & 2 / 256 / 0.1 & 2 / 192 / 0.1 \\
+    Batch size & 32 & 32 \\
+    Budget & 2 epochs (core, grid); $\le$20 epochs (convergence) & 3 epochs; 10-epoch probe \\
+    Optimiser & \multicolumn{2}{l}{AdamW, lr $3\times10^{-4}$, wd 0.01, 5\% warmup, cosine, clip 1.0} \\
+    Seeds & \multicolumn{2}{l}{core/LM 1001--1025; grid 1001--1012; convergence 1001--1005; ablations 1001--1003} \\
+    Causal mask (LM) & \multicolumn{2}{l}{lower-triangular AND key-padding, applied after the $[-50,50]$ clamp} \\
+    Records & \multicolumn{2}{l}{append-only JSONL keyed by (phase, dataset, variant, $\dk$, seed)} \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+Splits are drawn with a fixed RNG seed (42) from the official training
+partitions; test subsets are the first $n$ rows of a fixed permutation of the
+official test partitions (SST-2 uses the official 872-example labelled dev set
+as test). Because the same subsets and order are shared by all variants of a
+seed, the paired contrasts remain exactly matched. Grid completion is
+checkpointed: any interrupted batch resumes from the JSONL key set, and the
+final manifest was audited for exactly-once execution of all 312
+pre-registered runs.
+
+\section*{S14. Stage-2 per-seed records}\label{sup:perseeds2}
+\addcontentsline{toc}{section}{S14. Stage-2 per-seed records}
+
+Accuracy fractions (classification) or validation perplexity (LM) per matched
+seed. Every table below is generated directly from the append-only run records;
+the paired statistics in the main text are computed from exactly these values.
+
+\begin{table}[H]
+  \centering
+  \caption{Replica core, AG News, 2 epochs: test accuracy per seed.}
+  \small
+  \begin{tabular}{r c c c}
+    \toprule
+    \textbf{Seed} & \textbf{Standard} & \textbf{Temp ($\tau=2$)} & \textbf{$1/\dk$} \\
+    \midrule
+1001 & 0.7810 & 0.7810 & 0.7805 \\
+1002 & 0.7810 & 0.7817 & 0.7817 \\
+1003 & 0.7995 & 0.7987 & 0.7987 \\
+1004 & 0.7675 & 0.7680 & 0.7685 \\
+1005 & 0.7920 & 0.7925 & 0.7927 \\
+1006 & 0.7917 & 0.7920 & 0.7920 \\
+1007 & 0.7855 & 0.7857 & 0.7857 \\
+1008 & 0.7887 & 0.7895 & 0.7893 \\
+1009 & 0.8000 & 0.8005 & 0.8005 \\
+1010 & 0.7980 & 0.7977 & 0.7965 \\
+1011 & 0.7860 & 0.7853 & 0.7857 \\
+1012 & 0.7875 & 0.7870 & 0.7877 \\
+1013 & 0.7917 & 0.7920 & 0.7923 \\
+1014 & 0.7985 & 0.7990 & 0.7985 \\
+1015 & 0.7745 & 0.7752 & 0.7755 \\
+1016 & 0.7665 & 0.7665 & 0.7665 \\
+1017 & 0.7885 & 0.7877 & 0.7883 \\
+1018 & 0.7758 & 0.7760 & 0.7758 \\
+1019 & 0.7602 & 0.7602 & 0.7600 \\
+1020 & 0.7578 & 0.7575 & 0.7568 \\
+1021 & 0.7927 & 0.7925 & 0.7925 \\
+1022 & 0.7845 & 0.7843 & 0.7845 \\
+1023 & 0.8003 & 0.7995 & 0.7980 \\
+1024 & 0.8007 & 0.8003 & 0.8000 \\
+1025 & 0.7770 & 0.7772 & 0.7765 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Corrected causal-mask language modelling, WikiText-2, 3 epochs:
+  validation perplexity per seed (25 seeds $\times$ 3 variants, all completed).}
+  \small
+  \begin{tabular}{r c c c}
+    \toprule
+    \textbf{Seed} & \textbf{Standard} & \textbf{Temp ($\tau=2$)} & \textbf{$1/\dk$} \\
+    \midrule
+1001 & 844.6 & 844.7 & 844.7 \\
+1002 & 912.5 & 912.5 & 912.6 \\
+1003 & 841.9 & 842.0 & 842.0 \\
+1004 & 869.0 & 869.3 & 869.5 \\
+1005 & 906.2 & 906.4 & 906.6 \\
+1006 & 878.2 & 878.3 & 878.3 \\
+1007 & 856.0 & 856.1 & 856.1 \\
+1008 & 865.2 & 865.0 & 864.8 \\
+1009 & 885.9 & 884.7 & 884.0 \\
+1010 & 902.2 & 902.3 & 902.4 \\
+1011 & 892.8 & 891.9 & 891.6 \\
+1012 & 829.5 & 829.7 & 829.8 \\
+1013 & 862.9 & 863.4 & 863.5 \\
+1014 & 910.0 & 909.8 & 909.7 \\
+1015 & 840.5 & 840.6 & 840.6 \\
+1016 & 827.5 & 827.3 & 827.1 \\
+1017 & 858.8 & 858.8 & 858.8 \\
+1018 & 917.7 & 917.8 & 918.0 \\
+1019 & 866.5 & 866.4 & 866.4 \\
+1020 & 923.5 & 923.7 & 923.8 \\
+1021 & 819.4 & 819.5 & 819.6 \\
+1022 & 885.1 & 885.0 & 885.0 \\
+1023 & 869.1 & 869.3 & 869.4 \\
+1024 & 894.2 & 894.4 & 894.5 \\
+1025 & 861.0 & 861.2 & 861.3 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Head-dimension grid, AG News, 2 epochs: test accuracy per seed.
+  Columns group the three variants (Std / $\tau{=}2$ / $1/\dk$) within each
+  head dimension.}
+  \scriptsize
+  \setlength{\tabcolsep}{3.4pt}
+  \begin{tabular}{r ccc ccc ccc}
+    \toprule
+    & \multicolumn{3}{c}{$\dk = 32$} & \multicolumn{3}{c}{$\dk = 64$} & \multicolumn{3}{c}{$\dk = 128$} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+    \textbf{Seed} & Std & $\tau{=}2$ & $1/\dk$ & Std & $\tau{=}2$ & $1/\dk$
+     & Std & $\tau{=}2$ & $1/\dk$ \\
+    \midrule
+1001 & 0.7810 & 0.7810 & 0.7805 & 0.7812 & 0.7810 & 0.7808 & 0.7812 & 0.7808 & 0.7808 \\
+1002 & 0.7810 & 0.7817 & 0.7817 & 0.7812 & 0.7825 & 0.7820 & 0.7812 & 0.7817 & 0.7815 \\
+1003 & 0.7995 & 0.7987 & 0.7987 & 0.7997 & 0.7990 & 0.7987 & 0.7985 & 0.7995 & 0.7987 \\
+1004 & 0.7675 & 0.7680 & 0.7685 & 0.7690 & 0.7680 & 0.7685 & 0.7700 & 0.7695 & 0.7685 \\
+1005 & 0.7920 & 0.7925 & 0.7927 & 0.7915 & 0.7917 & 0.7927 & 0.7923 & 0.7915 & 0.7925 \\
+1006 & 0.7917 & 0.7920 & 0.7920 & 0.7915 & 0.7915 & 0.7920 & 0.7913 & 0.7915 & 0.7923 \\
+1007 & 0.7855 & 0.7857 & 0.7857 & 0.7860 & 0.7863 & 0.7860 & 0.7865 & 0.7865 & 0.7860 \\
+1008 & 0.7887 & 0.7895 & 0.7893 & 0.7883 & 0.7893 & 0.7897 & 0.7875 & 0.7887 & 0.7895 \\
+1009 & 0.8000 & 0.8005 & 0.8005 & 0.8003 & 0.7993 & 0.8003 & 0.7990 & 0.8000 & 0.8003 \\
+1010 & 0.7980 & 0.7977 & 0.7965 & 0.7983 & 0.7977 & 0.7967 & 0.7973 & 0.7975 & 0.7970 \\
+1011 & 0.7860 & 0.7853 & 0.7857 & 0.7850 & 0.7850 & 0.7850 & 0.7857 & 0.7860 & 0.7850 \\
+1012 & 0.7875 & 0.7870 & 0.7877 & 0.7873 & 0.7867 & 0.7877 & 0.7870 & 0.7885 & 0.7875 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Train-to-convergence with early stopping (up to 20 epochs, patience
+  3 on validation loss): best-validation-epoch test accuracy per seed. Columns
+  group the three variants within each dataset.}
+  \small
+  \begin{tabular}{r ccc ccc}
+    \toprule
+    & \multicolumn{3}{c}{SST-2} & \multicolumn{3}{c}{IMDB} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-7}
+    \textbf{Seed} & Std & $\tau{=}2$ & $1/\dk$ & Std & $\tau{=}2$ & $1/\dk$ \\
+    \midrule
+1001 & 0.6950 & 0.6950 & 0.6938 & 0.6972 & 0.6980 & 0.6980 \\
+1002 & 0.6915 & 0.6938 & 0.6950 & 0.6332 & 0.6320 & 0.6320 \\
+1003 & 0.6594 & 0.6606 & 0.6594 & 0.7004 & 0.7020 & 0.7044 \\
+1004 & 0.6892 & 0.6904 & 0.6892 & 0.6720 & 0.6708 & 0.6712 \\
+1005 & 0.6502 & 0.6491 & 0.6514 & 0.6552 & 0.6560 & 0.6552 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Replica ablations E1--E4 (3 seeds, 5 epochs): test accuracy per
+  seed. Columns group the four arms (Std / $1/\dk$ / LR-comp / mixed-scale)
+  within each dataset.}
+  \small
+  \begin{tabular}{r cccc cccc}
+    \toprule
+    & \multicolumn{4}{c}{SST-2} & \multicolumn{4}{c}{IMDB} \\
+    \cmidrule(lr){2-5}\cmidrule(lr){6-9}
+    \textbf{Seed} & Std & $1/\dk$ & LR-c & MS & Std & $1/\dk$ & LR-c & MS \\
+    \midrule
+1001 & 0.7099 & 0.7076 & 0.7053 & 0.7110 & 0.7052 & 0.7056 & 0.6896 & 0.7056 \\
+1002 & 0.7236 & 0.7202 & 0.7030 & 0.7213 & 0.7004 & 0.6992 & 0.7044 & 0.7020 \\
+1003 & 0.7064 & 0.7064 & 0.6927 & 0.7087 & 0.7028 & 0.7012 & 0.7064 & 0.7024 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Replica ablation paired statistics versus the standard arm
+  (3 seeds, 5 epochs).}\label{sup:abl2}
+  \small
+  \begin{tabular*}{0.9\textwidth}{@{\extracolsep{\fill}} l l c c c}
+    \toprule
+    \textbf{Dataset} & \textbf{Arm} & \textbf{Mean (\%)} & \textbf{$\Delta$ vs.\ std (pp)} & \textbf{$p$} \\
+    \midrule
+    SST-2 & standard & 71.33 & --- & --- \\
+          & $1/\dk$ & 71.14 & $-0.19$ & 0.199 \\
+          & $1/\dk$ + LR comp. & 70.03 & $-1.30$ & 0.108 \\
+          & mixed-scale & 71.37 & $+0.04$ & 0.808 \\
+    \midrule
+    IMDB & standard & 70.28 & --- & --- \\
+         & $1/\dk$ & 70.20 & $-0.08$ & 0.321 \\
+         & $1/\dk$ + LR comp. & 70.01 & $-0.27$ & 0.720 \\
+         & mixed-scale & 70.33 & $+0.05$ & 0.456 \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+\section*{S15. Mask verification and leak probes}\label{sup:mask}
+\addcontentsline{toc}{section}{S15. Mask verification and leak probes}
+
+\subsection*{S15.1 Verification tests}
+The corrected causal implementation is pinned by five assertions executed
+against a probe model with padding (real lengths 5 and 9 of a 16-position
+batch); all are exact float32 checks on the first-layer attention weights.
+
+\begin{table}[H]
+  \centering
+  \caption{Causal-mask verification results.}
+  \small
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l l l}
+    \toprule
+    \textbf{ID} & \textbf{Property} & \textbf{Result} \\
+    \midrule
+    V1 & attention weight on any future position $j > i$ & exactly $0.0$ \\
+    V2 & attention weight on any padding position & exactly $0.0$ \\
+    V3 & every attention row sums to 1 over allowed positions & $0.99999988 \le \Sigma \le 1.00000012$ \\
+    V4 & diagonal open on all real-token rows (predict $x_{t+1}$ from $x_{\le t}$) & pass \\
+    V5 & $-\infty$ survives the $[-50,50]$ clamp (mask applied after clamping) & masked weights exactly $0$ \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+\subsection*{S15.2 Leak probes}
+Leak probes rerun the corrected LM with the causal mask deliberately removed
+(bidirectional attention over non-padding positions, matching the v1 failure
+mode), holding seeds, data order, and budgets fixed (3 seeds per variant).
+
+\begin{table}[H]
+  \centering
+  \caption{Mask-artifact probes: validation perplexity (mean over 3 matched
+  seeds; all three variants within 0.3 ppl in every cell).}
+  \small
+  \begin{tabular*}{0.85\textwidth}{@{\extracolsep{\fill}} l c c}
+    \toprule
+    \textbf{Budget} & \textbf{Corrected causal mask} & \textbf{Leaky (v1-style)} \\
+    \midrule
+    3 epochs & 872.8 & 852.5 \\
+    10 epochs & 268.4 & 252.4 \\
+    \midrule
+    \multicolumn{3}{l}{\footnotesize v1 reported (25{,}000 GPU steps, leaky): 1.0809--1.0917.} \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+The leak lowers perplexity in both cells (direction confirmed), but the
+magnitude at replica budgets is a few percent because attention remains
+near-uniform; the v1 values require the 25{,}000-step regime in which attention
+can collapse onto the target position and fully exploit the leak. The corrected
+protocol additionally restores a physically meaningful scale: with an 11.6\%
+unknown-token rate in the validation head and a 5{,}655-item vocabulary,
+perplexities in the high hundreds are the expected range for a model of this
+size trained on 96k tokens, whereas perplexity $\approx 1.08$ (0.077 nats per
+token) is below the entropy of the validation unigram distribution itself.
+
+\section*{S16. Stage-2 diagnostics and LM convergence probe}\label{sup:diag2}
+\addcontentsline{toc}{section}{S16. Stage-2 diagnostics and LM convergence probe}
+
+\begin{table}[H]
+  \centering
+  \caption{Replica attention diagnostics (seed 1001, trained models).
+  Entropy is the causal-horizon mean; the maximum possible entropy at sequence
+  length 64 is $\ln 64 \approx 4.158$ nats. Gradient norms from a fresh
+  validation batch.}
+  \small
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l c c c}
+    \toprule
+    \textbf{Metric} & \textbf{Standard} & \textbf{Temp ($\tau=2$)} & \textbf{$1/\dk$} \\
+    \midrule
+    \multicolumn{4}{l}{\emph{AG News classification replica (2 epochs)}} \\
+    Mean attention entropy (nats) & 4.048 & 4.049 & 4.049 \\
+    Max attention weight & 0.030 & 0.027 & 0.025 \\
+    Logits reaching the clamp & 0 & 0 & 0 \\
+    $\|\partial L/\partial Q\| + \|\partial L/\partial K\|$ & 0.0476 & 0.0285 & 0.0093 \\
+    $\|\partial L/\partial V\|$ & 1.6234 & 1.9141 & 1.8691 \\
+    $\|W_q\|, \|W_k\|$ growth vs.\ init & 1.01$\times$ & 1.01$\times$ & 1.01$\times$ \\
+    \midrule
+    \multicolumn{4}{l}{\emph{WikiText-2 replica (corrected causal mask, 3 epochs)}} \\
+    Mean attention entropy (nats) & 4.152 & 4.157 & 4.159 \\
+    Raw pre-division logit SD & 1.017 & 1.168 & 1.191 \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+The 10-epoch LM convergence probe (3 seeds per variant, corrected mask) reaches
+validation perplexity 267.5 $\pm$ 6.4 (standard), 268.7 $\pm$ 5.3 ($\tau=2$),
+and 269.1 $\pm$ 5.3 ($1/\dk$); under the leaky mask the same seeds reach
+251.2 $\pm$ 5.3, 252.0 $\pm$ 5.2, and 253.9 $\pm$ 5.5 respectively. Variant
+ordering is absent in every cell, at both 3 and 10 epochs, consistent with the
+near-uniform-regime account of Section~\ref{sec:grid} of the main text.
+
+% ============================================================================
+\section*{S17. The divisor power law: derivation and validation}\label{sup:law}
+\addcontentsline{toc}{section}{S17. The divisor power law: derivation and validation}
+
+\subsection*{S17.1 Derivation}
+Consider one attention row with pre-softmax logits $X_1, \dots, X_n$ treated
+as i.i.d.\ with mean 0 and variance $\sigma^2$ (the raw, pre-division scale),
+and two divisors $c_1 > c_2$ with inverse scales $b_i = 1/c_i$. Writing
+$P_b(j) = e^{b X_j}/\sum_k e^{b X_k}$ and expanding $P_b$ around $b = 0$,
+
+\begin{align}
+  P_b(j) &= \frac{1}{n}\Bigl[1 + b\,(X_j - \bar X)
+           + \tfrac{b^2}{2}\Bigl(X_j^2 - \overline{X^2}\Bigr)
+           - b^2 \bar X (X_j - \bar X)\Bigr] + O(b^3),
+  \qquad \bar X = \tfrac{1}{n}\textstyle\sum_k X_k,
+\end{align}
+so to second order $P_{b_1}(j) - P_{b_2}(j)
+= (b_1 - b_2)\,\tfrac{1}{n}(X_j - \bar X) + O(b^3)$. Substituting into
+$\mathrm{KL}(P_{b_1}\|P_{b_2}) = \sum_j P_{b_1}(j)\log\frac{P_{b_1}(j)}{P_{b_2}(j)}$
+and taking expectations over the logit distribution,
+
+\begin{equation}
+  \mathrm{KL}(P_{b_1}\|P_{b_2})
+  \;\approx\; \tfrac{1}{2}\,(b_1 - b_2)^2\,\sigma^2\,\Bigl(1 - \tfrac{1}{n}\Bigr),
+  \label{eq:sup-law}
+\end{equation}
+where the $(1 - 1/n)$ factor is the finite-population correction (with the
+empirical variance $\tfrac{1}{n}\sum_j (X_j - \bar X)^2$ in place of
+$\sigma^2$, the leading term is exactly
+$\tfrac{1}{2}(b_1-b_2)^2\,\mathbb{E}\bigl[\widehat{\mathrm{Var}}(X)\bigr]$).
+Equation~\eqref{eq:sup-law} is Eq.~(5) of the main text. Its validity range
+is $b\,\sigma \lesssim 0.5$ per unit $\Delta b$; beyond that, softmax
+saturation (weights piling onto the maximum logit) makes the true divergence
+grow sub-quadratically, which the Monte Carlo grid below exhibits at
+$\sigma \ge 12$.
+
+\subsection*{S17.2 Monte Carlo validation}
+\begin{table}[H]
+  \centering
+  \caption{Monte Carlo validation of the power law ($d_k = 32$, $n = 64$;
+  200{,}000 replicates per point). Each cell: measured KL, law prediction
+  (Eq.~\ref{eq:sup-law}), in nats. The law is accurate to within a few
+  percent up to $\sigma \approx 4$ and remains directionally correct (within
+  $2\times$) to $\sigma \approx 8$; saturation dominates beyond.}
+  \label{tab:s17-mc}
+  \small
+  \begin{tabular*}{0.9\textwidth}{@{\extracolsep{\fill}} r cc cc cc}
+    \toprule
+    & \multicolumn{2}{c}{\textbf{std vs.\ $1/\dk$}} &
+      \multicolumn{2}{c}{\textbf{std vs.\ $\tau{=}2$}} &
+      \multicolumn{2}{c}{\textbf{$1/\dk$ vs.\ $\tau{=}2$}} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+    $\sigma$ & MC & law & MC & law & MC & law \\
+    \midrule
+    0.5  & 0.0026 & 0.0026 & 0.0010 & 0.0010 & 0.0004 & 0.0004 \\
+    1    & 0.0104 & 0.0104 & 0.0038 & 0.0039 & 0.0016 & 0.0016 \\
+    2    & 0.0416 & 0.0417 & 0.0153 & 0.0154 & 0.0064 & 0.0064 \\
+    3    & 0.0930 & 0.0938 & 0.0342 & 0.0346 & 0.0145 & 0.0145 \\
+    4    & 0.1642 & 0.1668 & 0.0602 & 0.0615 & 0.0257 & 0.0257 \\
+    6    & 0.3571 & 0.3753 & 0.1295 & 0.1384 & 0.0575 & 0.0579 \\
+    8    & 0.5941 & 0.6671 & 0.2107 & 0.2461 & 0.1019 & 0.1028 \\
+    12   & 1.0538 & 1.5010 & 0.3416 & 0.5537 & 0.2253 & 0.2314 \\
+    16   & 1.3632 & 2.6684 & 0.3897 & 0.9844 & 0.3882 & 0.4114 \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+\subsection*{S17.3 Entropy and bite thresholds}
+\begin{table}[H]
+  \centering
+  \caption{Attention entropy and expected maximum weight versus raw logit
+  scale ($d_k = 32$, $n = 64$; 200{,}000 replicates). The uniform ceiling is
+  $\ln 64 \approx 4.159$ nats and $1/64 \approx 0.0156$.}
+  \label{tab:s17-entropy}
+  \small
+  \begin{tabular*}{0.9\textwidth}{@{\extracolsep{\fill}} r ccc ccc}
+    \toprule
+    & \multicolumn{3}{c}{\textbf{Entropy (nats)}} &
+      \multicolumn{3}{c}{\textbf{Max weight}} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-7}
+    $\sigma$ & std & $\tau{=}2$ & $1/\dk$ & std & $\tau{=}2$ & $1/\dk$ \\
+    \midrule
+    0.5 & 4.155 & 4.158 & 4.159 & 0.019 & 0.017 & 0.016 \\
+    1   & 4.144 & 4.155 & 4.158 & 0.023 & 0.019 & 0.017 \\
+    2   & 4.098 & 4.144 & 4.157 & 0.034 & 0.023 & 0.018 \\
+    4   & 3.916 & 4.098 & 4.151 & 0.067 & 0.034 & 0.021 \\
+    8   & 3.270 & 3.917 & 4.128 & 0.182 & 0.067 & 0.027 \\
+    16  & 1.924 & 3.268 & 4.037 & 0.452 & 0.183 & 0.046 \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+Inverting Eq.~\eqref{eq:sup-law} gives the operating point at which a divisor
+pair first produces a target divergence ($d_k = 32$, $n = 64$):
+$\sigma \approx 0.98$ for $\mathrm{KL} = 0.01$ nats and $\sigma \approx 3.10$
+for $\mathrm{KL} = 0.1$ nats (standard vs.\ $1/\dk$); $\sigma \approx 1.61$
+and $5.10$ for the standard-vs-$\tau$ pair. The Stage-2 replica grids sit at
+measured $\sigma \approx 0.3$--$1.1$ ($\mathrm{KL} \le 0.006$ nats), the
+logit-gain sweep reaches $\sigma = 9.2$ ($\mathrm{KL} = 0.64$ nats), and
+pretrained GPT-2 sits at $\sigma \approx 45$--$63$
+($\mathrm{KL} = 1.4$--$1.5$ nats per row).
+
+% ============================================================================
+\section*{S18. Stage-3 operating-point records}\label{sup:stage3}
+\addcontentsline{toc}{section}{S18. Stage-3 operating-point records}
+
+\subsection*{S18.1 Frontier-stabiliser bridge arms}
+\begin{table}[H]
+  \centering
+  \caption{Bridge arms (AG News replica, 4 matched seeds, 2 epochs).
+  $\sigma_{\text{post}}$ is the post-divisor logit SD under the arm's own
+  divisor; KL is the measured standard-vs-$1/\dk$ divergence on the same
+  logits. QK-Norm pins the operating point and re-equalises the variants;
+  the soft-cap arm reproduces the gain-32 accuracy ordering.}
+  \label{tab:s18-bridge}
+  \small
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l r r r r}
+    \toprule
+    \textbf{Arm} & \textbf{Acc (\%)} & $\sigma_{\text{post}}$ &
+    \textbf{$H$ (nats)} & \textbf{KL (nats)} \\
+    \midrule
+    qk\_std (QK-Norm, standard divisor)        & 78.21 & 1.051 & 3.349 & 0.2925 \\
+    qk\_dk (QK-Norm, $1/\dk$)                  & 78.16 & 0.192 & 3.771 & 0.2924 \\
+    qk\_temp (QK-Norm, $\tau{=}2$)             & 78.28 & 0.538 & 3.668 & 0.2923 \\
+    cap3\_std\_g32 (soft cap 3, gain 32, std)  & \textbf{76.81} & 1.629 & 2.808 & 0.6418 \\
+    cap3\_dk\_g32 (soft cap 3, gain 32, $1/\dk$) & 78.21 & 0.320 & 3.744 & 0.6779 \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+\subsection*{S18.2 Regime-restored training trajectories}
+\begin{table}[H]
+  \centering
+  \caption{Regime-restored AG News (6{,}000 training examples, 8 epochs,
+  3 matched seeds, mean over seeds). Top: $d_k = 32$ (4 heads); the operating
+  point stays inert ($\mathrm{KL} \le 0.006$) for the entire budget and the
+  variants remain within 0.2\,\pp. Bottom: $d_k = 128$ (1 head); the larger
+  head drives $\sigma$ to $\approx 5$ and the Stage-1 ordering re-emerges in
+  direction by the final epochs.}
+  \label{tab:s18-regime}
+  \small
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l ccc ccc ccc}
+    \toprule
+    & \multicolumn{3}{c}{\textbf{Epoch 1}} & \multicolumn{3}{c}{\textbf{Epoch 4}} &
+      \multicolumn{3}{c}{\textbf{Epoch 8 (final)}} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+    \textbf{Variant} & $\sigma$ & KL & acc & $\sigma$ & KL & acc &
+    $\sigma$ & KL & acc \\
+    \midrule
+    \multicolumn{10}{l}{\emph{$d_k = 32$ (4 heads)}} \\
+    std  & 0.42 & 0.0011 & 84.93 & 0.90 & 0.0053 & 84.66 & 1.11 & 0.0060 & 85.68 \\
+    $1/\dk$ & 0.41 & 0.0011 & 84.87 & 0.85 & 0.0057 & 85.53 & 1.01 & 0.0068 & 85.74 \\
+    $\tau{=}2$ & 0.41 & 0.0011 & 84.88 & 0.94 & 0.0058 & 85.11 & 1.11 & 0.0066 & 85.81 \\
+    \midrule
+    \multicolumn{10}{l}{\emph{$d_k = 128$ (1 head)}} \\
+    std  & 1.46 & 0.0040 & 84.91 & 3.54 & 0.0226 & 85.05 & 4.59 & 0.0262 & 85.98 \\
+    $1/\dk$ & 1.44 & 0.0042 & 84.87 & 4.22 & 0.0739 & 85.08 & 5.31 & 0.0857 & 85.56 \\
+    $\tau{=}2$ & 1.45 & 0.0041 & 84.89 & 4.07 & 0.0446 & 85.26 & 5.09 & 0.0487 & 85.46 \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+Final-epoch paired contrasts (3 seeds, uncorrected): at $d_k = 32$,
+standard $-$ $1/\dk$ $= -0.06$\,\pp{} ($p = 0.51$) and standard $-$ $\tau = 2$
+$= -0.13$\,\pp{} ($p = 0.42$); at $d_k = 128$, $+0.42$\,\pp{} ($p = 0.31$)
+and $+0.52$\,\pp{} ($p = 0.066$) respectively.
+
+\subsection*{S18.3 LM logit gain (sequence length 128)}
+\begin{table}[H]
+  \centering
+  \caption{LM logit-gain arm (WikiText-2 replica at sequence length 128,
+  3 seeds, 3 epochs, 8{,}000-item vocabulary). Validation perplexity is
+  indistinguishable across variants at both gains; even $g = 4$ leaves the
+  operating point inert.}
+  \label{tab:s18-lmgain}
+  \small
+  \begin{tabular*}{0.9\textwidth}{@{\extracolsep{\fill}} l ccc c}
+    \toprule
+    \textbf{Gain} & \textbf{Standard} & \textbf{$\tau{=}2$} & \textbf{$1/\dk$} &
+    $\sigma_{\text{raw}}$ / KL \\
+    \midrule
+    $g = 1$ & 2160.7 $\pm$ 47.0 & 2160.8 $\pm$ 47.5 & 2160.9 $\pm$ 46.5 &
+    0.29 / 0.0003 \\
+    $g = 4$ & 2160.3 $\pm$ 48.5 & 2160.6 $\pm$ 47.5 & 2160.8 $\pm$ 46.8 &
+    1.15 / 0.0052 \\
+    \bottomrule
+  \end{tabular*}
+\end{table}
+
+\subsection*{S18.4 Frontier probe: per-layer diagnostics}
+The pretrained-decoder probe (Table 12 of the main text) records, per layer,
+the raw pre-division logit SD over causally valid entries, the per-row
+attention entropy under each divisor, and the per-row KL divergence between
+the attention maps the same logits induce under the standard and alternative
+divisors (softmax restricted to the causal horizon). GPT-2 (124M): layer
+1--6 entropies of 2.45, 2.93, 2.15, 1.67, 1.62, 1.38 nats under the training
+divisor, rising to 3.81, 3.86, 3.72, 3.65, 3.61, 3.80 under $1/\dk$; the
+mean standard-vs-$1/\dk$ divergence is 1.42 nats per row (quadratic law
+prediction 31.5 nats, the well-known saturation gap at $b\sigma \gg 1$).
+GPT-2-medium (355M): mean $\sigma_{\text{raw}} = 44.8$, mean divergence
+1.51 nats. Absolute perplexity in this probe depends on the windowing
+protocol (non-overlapping 128-token windows, no cache carry-over); the
+\emph{contrasts} between divisors do not.
+
+\subsection*{S18.5 Reproduction}
+Stage-3 phases run through the same resume-safe runner as Stage 2:
+\texttt{python scripts/experiments/runner.py --phase \{gain,bridge,regime,\\
+regime128,lmgain\}}, aggregation via
+\texttt{scripts/experiments/agg\_stage3.py}, theory via
+\texttt{scripts/experiments/regime\_law.py}, and the pretrained-decoder probe
+via \texttt{scripts/experiments/frontier\_gpt2.py} (CPU) or
+\texttt{scripts/frontier/frontier\_gpu\_1b7b.py} (GPU, 1B--7B). Raw records:
+\texttt{data/results/results.jsonl}, \texttt{stage3\_theory.json},
+\texttt{stage3\_operatingpoint.json}, \texttt{frontier\_gpt2.json}.
+
+\bibliography{refs}
+
+\end{document}

@@ -1,0 +1,180 @@
+% ============================================================================
+% 1. Introduction  +  2. Related Work
+% ============================================================================
+\section{Introduction}\label{sec:intro}
+
+Self-attention is the computational core of the Transformer architecture
+\cite{vaswani2017}. In its standard form it computes, for every pair of positions,
+a dot product between a query and a key vector, divides that logit by
+$\sqrt{\dk}$, applies a softmax normalisation, and mixes value vectors with the
+resulting weights. The $1/\sqrt{\dk}$ factor is justified by a variance argument:
+if the components of $d_k$-dimensional queries and keys are treated as independent
+random variables with unit variance, the dot product has variance $d_k$, so
+dividing by $\sqrt{\dk}$ keeps the logit variance constant and prevents the
+softmax from saturating prematurely \cite{vaswani2017}. This rationale has been
+quoted across hundreds of follow-up works, yet the scaling constant itself is
+seldom the object of a controlled empirical test: it is inherited, not chosen.
+
+Alternatives are mathematically trivial to implement. Dividing by $\dk$ directly
+removes the square root; introducing an explicit softmax temperature
+$\tau$ \cite{hinton2015} rescales the same logits by a tunable constant. Both
+leave the parameter count, the computational graph, and the memory traffic
+unchanged, and both plausibly alter training dynamics by reshaping the entropy of
+the attention distribution \cite{zhang2022temp,zhai2023,dong2021}. Recent
+architectural work has begun to treat the scaling function as a first-class
+design axis~--- proposing input-size-aware softmax rescaling \cite{nakanishi2025},
+softplus-based alternatives \cite{gao2025}, and temperature adjustments for
+length extrapolation \cite{chi2023}~--- but the empirical base remains thin:
+most of these studies compare architectural systems end-to-end, where many
+factors change at once and a single seed per configuration is common.
+
+Whether a different scaling constant helps or hurt is therefore an empirical
+question, and answering it credibly requires more than running two configurations
+once. Small models trained for short budgets exhibit substantial seed-to-seed
+variability \cite{bouthillier2021,picard2021}, so single-run comparisons mostly
+measure noise \cite{dodge2019}. Matched-pair designs, in which competing variants
+share the same random initialization and the same data order, are a more
+sensitive instrument: they remove variance sources that a between-run comparison
+cannot control, and they support paired statistical tests on per-seed differences
+\cite{dror2018}.
+
+This study reports a comparison of exactly that kind. We implemented a compact
+pre-LN Transformer encoder \cite{xiong2020,ba2016} whose attention module admits
+three scaling functions, verified by unit tests that the variants share
+bit-identical initialization and produce correctly masked computations, and then
+trained fixed grids of 3 variants $\times$ 25 matched seeds on four text datasets
+under frozen hyperparameter budgets. Four research questions structure the
+investigation:
+
+\begin{itemize}[leftmargin=1.8em]
+  \item \textbf{RQ1.} Does standard scaled dot-product attention outperform the
+        alternative scaling functions on predictive accuracy under a matched
+        budget?
+  \item \textbf{RQ2.} Do the variants differ in computational efficiency
+        (training time, inference latency, memory) when the scaling change is
+        parameter-free and adds no arithmetic?
+  \item \textbf{RQ3.} How do attention entropy, head diversity, and gradient
+        magnitudes respond to the scaling factor, and do those responses explain
+        the performance outcomes?
+  \item \textbf{RQ4.} Are the observed performance differences statistically
+        significant under paired tests with multiple-comparison correction?
+\end{itemize}
+
+The preregistered hypothesis H1~--- that at least one alternative scaling
+function would significantly outperform standard attention on a relevant metric
+--- is \emph{partially falsified} at the Stage-1 operating point: standard
+attention significantly outperformed both alternatives on AG News, the
+alternatives were not significantly worse on SST-2 or IMDB, and no variant
+separated from the rest on WikiText-2 with sufficient statistical power. This
+revision completes the programme and sharpens the picture further: with the
+corrected causal mask the WikiText-2 comparison is properly powered (25 seeds
+per arm) and shows no divisor effect; the head-dimension grid shows no
+amplification with $\dk$; and at a documented replica operating point the
+Stage-1 AG News effect does not reproduce, bounding its generality. The
+variants were exactly equivalent in measured computational cost, so the
+accuracy deficit (where present) is not offset by any efficiency gain.
+
+The contribution of this paper is sixfold. (i) A clean, parameter-free
+experimental manipulation~--- a single divisor in one line of code~--- evaluated
+under a seed-matched paired design across 787 completed runs in three stages
+(GPU scale, replica completion, and an operating-point programme), with paired
+$t$-tests, Wilcoxon signed-rank tests, Holm--Bonferroni
+correction, and effect sizes. (ii) Evidence that the standard $\sqrt{\dk}$
+divisor's advantage is conditional: significant on a 4-class
+topic-classification task at full data scale and a short budget, absent on
+binary sentiment tasks, absent in the replica completion of the core grid, and
+not offset by any computational trade-off. (iii) A corrected causal-mask
+language-modelling protocol with formal mask-verification tests and leak probes
+that explain~--- rather than merely discard~--- the artifactually low
+perplexities of the original runs. (iv) Mechanistic diagnostics linking the
+scaling factor to attention entropy, inter-head similarity, and gradient
+magnitudes, with the measured $1/s$ gradient scaling matching theory, and a
+replica-scale regime analysis (raw logit scale versus divisor) that explains
+when the divisor can and cannot matter. (v) A quantitative operating-point
+programme (Stage 3): a Monte-Carlo-validated power law for the divergence
+between divisors as a function of raw logit variance, a logit-gain sweep and
+regime-restored training runs that cross the bite threshold, frontier
+stabilisers (QK-Norm, soft-capping) tested in context, and an
+inference-time divisor swap in pretrained GPT-2 decoders showing the contrast
+is inert at replica scale but worth a factor of 94 in perplexity at pretrained
+scale, with a GPU script extending the identical protocol to 1B--7B models.
+(vi) A fully reproducible package---
+configurations, unit tests, analysis scripts, per-seed records, and this
+manuscript~--- released under an MIT licence.\footnote{\url{https://github.com/razahasan2000/Attention-Scaling}}
+
+The remainder of the paper is organised as follows.
+Section~\ref{sec:related} situates the study in the literature on attention
+scaling, attention dynamics, and experimental methodology.
+Section~\ref{sec:method} describes the variants, architecture, datasets,
+matched-seed design, and statistical analysis.
+Section~\ref{sec:results} reports the outcomes of all completed grids.
+Section~\ref{sec:discussion} interprets the findings, and
+Sections~\ref{sec:limitations} and \ref{sec:conclusion} state limitations and
+conclusions.
+
+% ============================================================================
+\section{Related Work}\label{sec:related}
+
+\subsection{Attention scaling and softmax temperature}
+The scaled dot-product formulation with the $\sqrt{\dk}$ divisor was introduced
+with the Transformer \cite{vaswani2017} and inherited by essentially every
+successor, including pre-LN variants that reorganised the residual stream for
+stability \cite{xiong2020,ba2016}. The temperature of a softmax~--- the constant
+that divides the logits before exponentiation~--- entered deep learning through
+knowledge distillation, where Hinton et al. \cite{hinton2015} showed that
+elevated temperatures expose more of the teacher's class-similarity structure.
+In attention, Zhang et al. \cite{zhang2022temp} demonstrated that a tuned
+attention temperature matters for summarization distillation, and subsequent
+work has made the temperature task- or layer-dependent. Nakanishi \cite{nakanishi2025}
+proposed Scalable-Softmax, which rescales logits as a function of the input
+vector size to counteract attention ``fading'' over long contexts, and Gao et
+al. \cite{gao2025} replaced softmax with a length-scaled softplus for similar
+reasons. On the theoretical side, Dong et al. \cite{dong2021} showed that pure
+attention networks lose rank doubly exponentially with depth~--- a collapse that
+residual connections and, indirectly, the sharpness of the attention
+distribution modulate~--- while Chiang and Cholak \cite{chiang2022} analysed how
+softmax attention can plateau in probability space and how the scaling interacts
+with easy fixes. Zhai et al. \cite{zhai2023} connected training stability to
+attention entropy, showing that entropy collapse (near-uniform attention) can be
+prevented by reparameterisation, which positions the scaling constant as a
+direct lever on the same quantity. What is missing from this literature is a
+controlled, seed-matched measurement of how much the classical constant
+$\sqrt{\dk}$ itself matters on standard NLP benchmarks~--- the gap this study
+addresses.
+
+\subsection{Attention heads, diversity, and their measurement}
+Multi-head attention analyses show that individual heads specialise, and that
+many heads can be pruned with little loss \cite{voita2019,michel2019}. Head
+specialisation is precisely the property that a flatter attention distribution
+should erode: if all heads attend near-uniformly, their outputs become similar.
+We therefore measure inter-head cosine similarity of attention distributions and
+mean attention entropy as mechanistic mediators between the scaling constant and
+task performance (Section~\ref{sec:diagnostics}). Related measurement tools ---
+attention-map similarity and pruning sensitivity~--- have a long history, but
+they have not previously been applied to isolate the effect of the logit scaling
+constant under matched training conditions.
+
+\subsection{Positional and architectural context}
+Scaling interacts with other attention modifiers studied for length
+generalisation: additive attention biases (ALiBi) \cite{press2022}, rotary
+rescaling methods such as YaRN \cite{peng2024}, and positional-encoding choices
+\cite{kazemnejad2023,chi2023}. These works modify attention for long-context
+capability, whereas the present study deliberately freezes the architecture ---
+including a fixed maximum sequence length of 128~--- and varies only the scalar
+divisor. The two lines are complementary: a reliable answer about the default
+divisor is a precondition for reasoning about more exotic rescalings.
+
+\subsection{Experimental methodology: variance and significance}
+Deep-learning benchmarks are dominated by variance across random seeds,
+compute-minority reports, and incomplete hyperparameter searches
+\cite{bouthillier2021,dodge2019}. In NLP specifically, Dror et al. \cite{dror2018}
+found that significance testing is often ignored or misused, and recommended
+matched designs with paired tests where possible. Even seed sensitivity alone
+can flip conclusions in computer-vision benchmarks \cite{picard2021}. The
+methodology of this study follows these recommendations directly: 25 matched
+seeds per variant, within-seed paired differences as the unit of analysis,
+paired $t$-tests with Wilcoxon signed-rank confirmation \cite{wilcoxon1945},
+Holm--Bonferroni family-wise correction across the two comparisons per dataset
+\cite{holm1979}, and paired effect sizes $d_z$ with conventional magnitude
+labels \cite{cohen1988}. To our knowledge this is the first application of a
+fully seed-matched paired protocol to the question of attention logit scaling.

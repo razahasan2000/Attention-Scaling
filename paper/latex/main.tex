@@ -1,0 +1,153 @@
+% ============================================================================
+% A Seed-Matched Empirical Comparison of Scaling Functions in Transformer
+% Self-Attention
+%
+% Compile: tectonic main.tex (via pdf.py convert.latex)
+% Structure: main.tex + sec_intro.tex + sec_method.tex + sec_results.tex
+%            + sec_discussion.tex + refs.bib + figures/
+% ============================================================================
+\documentclass[11pt,a4paper]{article}
+
+% ----- Fonts ----------------------------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{newtxtext,newtxmath}      % Times-like text + matching math
+\usepackage{microtype}
+
+% ----- Layout ---------------------------------------------------------------
+\usepackage{geometry}
+\geometry{a4paper, top=2.6cm, bottom=2.6cm, left=2.5cm, right=2.5cm}
+\setlength{\parindent}{1.2em}
+\setlength{\parskip}{1pt}
+\widowpenalty=10000
+\clubpenalty=10000
+\setlength{\emergencystretch}{2em}
+
+% ----- Math / tables / figures ---------------------------------------------
+\usepackage{amsmath}   % newtxmath supplies AMS symbols; do NOT load amssymb
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{adjustbox}
+\usepackage{xcolor}
+\usepackage{caption}
+\captionsetup{font=small, labelfont=bf, skip=6pt}
+\usepackage{enumitem}
+\setlist{itemsep=2pt, topsep=3pt}
+
+% ----- Bibliography ---------------------------------------------------------
+\usepackage[numbers,sort&compress]{natbib}
+\bibliographystyle{unsrtnat}
+
+% ----- Headers / footers ----------------------------------------------------
+\usepackage{fancyhdr}
+\setlength{\headheight}{14pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\itshape Scaling functions in Transformer self-attention}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\thepage}%
+  \renewcommand{\headrulewidth}{0pt}}
+
+% ----- Hyperref (LAST) ------------------------------------------------------
+\usepackage[colorlinks=true, linkcolor=blue!45!black,
+            citecolor=blue!45!black, urlcolor=blue!45!black,
+            bookmarks=true, bookmarksnumbered=true, unicode=true]{hyperref}
+
+\hypersetup{
+  pdftitle={A Seed-Matched Empirical Comparison of Scaling Functions in Transformer Self-Attention},
+  pdfauthor={Raza Hasan},
+  pdfsubject={Empirical comparison of attention scaling functions under a seed-matched paired design},
+  pdfkeywords={Transformer, attention, scaling, softmax temperature, seed-matched design, paired statistics, reproducibility}
+}
+
+% ----- Shorthand -------------------------------------------------------------
+\newcommand{\dk}{d_k}
+\newcommand{\pp}{percentage points}
+
+\begin{document}
+
+% ============================================================================
+% Title block (hand-crafted; no \maketitle)
+% ============================================================================
+\begin{center}
+  {\LARGE\bfseries A Seed-Matched Empirical Comparison of Scaling Functions\\[3pt]
+   in Transformer Self-Attention\par}
+  \vspace{14pt}
+  {\large Raza Hasan\par}
+  \vspace{3pt}
+  {\small Independent Researcher\par}
+  \vspace{2pt}
+  {\small\texttt{razahasan2000@gmail.com} \;\textperiodcentered\;
+         \url{https://github.com/razahasan2000/Attention-Scaling}\par}
+  \vspace{8pt}
+  {\small Preprint~--- November 2026\par}
+\end{center}
+\vspace{6pt}
+
+\noindent\textbf{Abstract.}
+The scaled dot-product attention of the Transformer divides query--key logits by
+$\sqrt{\dk}$, a design choice inherited from the original architecture and rarely
+tested in isolation. This study reports a seed-matched empirical comparison of three
+parameter-free scaling functions for softmax self-attention: the standard
+$1/\sqrt{\dk}$ divisor, an alternative $1/\dk$ divisor that removes the square root,
+and an explicit softmax temperature $\tau = 2$ applied on top of the standard
+divisor. Because all three variants rescale the same logits, every seed yields
+bit-identical initialization, identical batch order, and identical optimization
+settings across variants, so paired per-seed differences isolate the scaling
+function as the only manipulated factor. The completed programme comprises 787
+runs in three stages. At GPU scale (314 runs; 25 matched seeds per variant on
+AG News, SST-2, and IMDB, plus ablations), standard scaling significantly
+outperformed both alternatives on AG News ($+0.31$\,\pp{} over $1/\dk$,
+$d_z = 1.52$, $p_{\text{Holm}} < 0.001$; $+0.10$\,\pp{} over $\tau=2$) and was
+indistinguishable on the binary tasks, and a $\tau = 0.5$ temperature looked
+most promising on sentiment. This revision completes the preregistered grids
+that Stage 1 left open, on a documented replica protocol (339 further
+seed-matched runs on a 2-core CPU sandbox): the 25-seed replica core, a
+corrected causal-mask WikiText-2 language-modelling grid (25 seeds $\times$ 3
+variants), a head-dimension grid $\dk \in \{32, 64, 128\}$,
+train-to-convergence with early stopping, and multi-seed E1--E4 ablations.
+Three results stand out. First, the corrected mask restores physically
+plausible perplexity ($\approx$ 873 versus the artefactual 1.08--1.09 of the
+original non-causal pipeline; deliberate leak probes reproduce the artifact's
+direction) and shows no divisor effect at matched power ($|d_z| \le 0.01$).
+Second, at replica scale the AG News advantage does not reproduce (paired
+difference $-0.01$\,\pp, 95\% CI $[-0.04, +0.02]$), the $\dk$ grid shows no
+amplification (trend $p = 0.85$), and early stopping selects the same epoch
+with indistinguishable learning curves for all variants. Third, diagnostics
+explain the nulls: at reduced scale the raw logit standard deviation
+($\approx$ 1) sits far below every divisor, so all variants operate in the
+softmax's near-uniform regime where the scaling constant is inert. The
+$\sqrt{\dk}$ divisor's benefit is therefore conditional on the operating
+point~--- clearest at full data scale, early in training, on multi-class
+classification~--- the softmax temperature remains a parameter-free knob worth
+tuning, and architectural comparisons should report the compute regime that
+makes the manipulation bite. A third stage quantifies that regime: a
+Monte-Carlo-validated power law on the raw logit scale predicts where the
+divisor contrast is inert ($\mathrm{KL} < 0.01$ nats below $\sigma \approx 1$),
+logit-gain and regime-restored runs cross that threshold on cue, and an
+inference-time divisor swap in pretrained GPT-2 decoders~--- whose raw logit
+scale is two orders of magnitude larger~--- moves perplexity by $+27$ to
+$+55\%$ ($\tau = 2$) and by $40$ to $93\times$ ($1/\dk$) without any
+retraining, with a GPU script extending the identical protocol to 1B--7B
+models. The divisor is thus neither useless nor universal: it is an
+operating-point-dependent constant, and the operating point is measurable in
+one forward pass.
+
+\vspace{5pt}
+\noindent\textbf{Keywords:} Transformer; self-attention; scaling functions; softmax
+temperature; seed-matched design; paired statistics; effect sizes; reproducibility.
+
+\vspace{4pt}
+\noindent\rule{\textwidth}{0.4pt}
+
+\input{sec_intro}
+\input{sec_method}
+\input{sec_results}
+\input{sec_discussion}
+
+\bibliography{refs}
+
+\end{document}

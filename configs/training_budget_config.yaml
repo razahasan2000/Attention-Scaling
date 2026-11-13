@@ -1,5 +1,14 @@
 # Training Budget Configuration
 
+# v2: train-to-convergence protocol (early stopping on validation loss).
+# Selected automatically when the run_id carries the '_conv' suffix.
+convergence:
+  epochs: 30            # hard cap; early stopping usually finishes sooner
+  checkpoint_epochs: [2, 5, 10, 15, 20, 25, 30]
+  early_stopping_patience: 5   # stop after 5 epochs without val-loss improvement
+  early_stopping_min_delta: 0.0
+  description: "Train to convergence with early stopping on validation loss (patience 5); best-val state restored before test evaluation. Learning curves stored in training_history."
+
 # Core classification grid (2 epochs)
 core_classification:
   epochs: 2
@@ -8,6 +17,13 @@ core_classification:
   datasets: ["agnews", "sst2", "imdb"]
   variants: ["standard", "temp", "dk"]
   seeds: "primary"  # 25 seeds
+
+# v2: head-dimension sensitivity grid (d_k in {32, 64, 128}).
+# d_model stays 128, so the head count becomes 4 / 2 / 1 and the parameter
+# count is IDENTICAL across the grid (verified by tests/test_dk_grid.py).
+head_dim_grid:
+  head_dims: [32, 64, 128]
+  description: "Head-dimension sensitivity: d_model=128 fixed, n_heads = d_model / d_k in {4, 2, 1}; protocol selectable via the runner (--protocol core|conv)."
 
 # Extended ablation experiments (5 epochs)
 classification_ablation:

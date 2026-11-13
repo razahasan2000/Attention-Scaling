@@ -181,10 +181,26 @@ class ClassificationTrainer:
     def train(self, X_train: np.ndarray, y_train: np.ndarray,
               X_val: np.ndarray, y_val: np.ndarray,
               num_epochs: int, batch_size: int, eval_batch_size: int,
-              checkpoint_epochs: List[int], seed: int) -> Dict:
-        """Full training loop with checkpointing."""
+              checkpoint_epochs: List[int], seed: int,
+              early_stopping_patience: int = 0,
+              early_stopping_min_delta: float = 0.0) -> Dict:
+        """Full training loop with checkpointing and optional early stopping.
+
+        v2: when ``early_stopping_patience`` > 0, training monitors the
+        validation loss and stops after that many consecutive epochs without
+        an improvement of at least ``early_stopping_min_delta``. The best
+        (lowest-val-loss) state is restored before returning, so reported
+        test metrics always correspond to the best validation epoch.
+        """
         # Generator for reproducible batch order
         gen = torch.Generator(device="cpu").manual_seed(seed)
+
+        # --- v2 early-stopping state --------------------------------------
+        best_val_loss = float("inf")
+        best_epoch = 0
+        best_state = None
+        epochs_without_improvement = 0
+        early_stopped = False
 
         for epoch in range(1, num_epochs + 1):
             self.current_epoch = epoch
@@ -215,6 +231,16 @@ class ClassificationTrainer:
                   f"val_acc={val_metrics.get('accuracy', 0):.4f}, "
                   f"val_f1={val_metrics.get('macro_f1', 0):.4f} ({epoch_time:.1f}s)")
 
+            # --- v2 early stopping bookkeeping ---------------------------
+            val_loss = val_metrics.get("val_loss", float("inf"))
+            if val_loss < best_val_loss - early_stopping_min_delta:
+                best_val_loss = val_loss
+                best_epoch = epoch
+                best_state = copy.deepcopy(self.model.state_dict())
+                epochs_without_improvement = 0
+            else:
+                epochs_without_improvement += 1
+
             # Save checkpoint if this epoch is in checkpoint_epochs
             if epoch in checkpoint_epochs or epoch == num_epochs:
                 checkpoint_metrics = {
@@ -226,6 +252,28 @@ class ClassificationTrainer:
                 }
                 self.save_checkpoint(epoch, val_metrics.get("val_loss", float('inf')), checkpoint_metrics)
 
+            # --- v2 early stopping check ---------------------------------
+            if (early_stopping_patience > 0
+                    and epochs_without_improvement >= early_stopping_patience
+                    and epoch < num_epochs):
+                early_stopped = True
+                print(f"Early stopping at epoch {epoch} "
+                      f"(best epoch {best_epoch}, val_loss {best_val_loss:.4f})")
+                break
+
+        # --- v2 restore best validation state ----------------------------
+        if best_state is not None:
+            self.model.load_state_dict(best_state)
+
+        self.early_stop_info = {
+            "enabled": early_stopping_patience > 0,
+            "early_stopped": early_stopped,
+            "best_epoch": best_epoch,
+            "best_val_loss": best_val_loss if best_epoch else None,
+            "epochs_run": len(self.training_history),
+            "patience": early_stopping_patience,
+            "min_delta": early_stopping_min_delta,
+        }
         return self.training_history
 
     def save_checkpoint(self, epoch: int, metric: float, checkpoint_metrics: Dict):
@@ -502,6 +550,42 @@ class LMTrainer:
         return checkpoint
 
 
+def _apply_lr_compensation(trainer: "ClassificationTrainer", model: nn.Module,
+                           lrcomp: Dict) -> None:
+    """v2: rebuild the optimizer with a compensated learning-rate group.
+
+    Used by the dk_lrcomp ablation arms: parameters whose name contains any
+    entry of ``lrcomp['modules']`` (default W_q, W_k) get
+    ``lr * lrcomp['ratio']``; all other parameters keep the base LR.
+    The LR scheduler is rebuilt on the new optimizer so warmup/cosine
+    semantics are preserved.
+    """
+    ratio = float(lrcomp.get("ratio", 1.0))
+    modules = lrcomp.get("modules", ["W_q", "W_k"])
+    base_lr = trainer.config.get("learning_rate", 3e-4)
+    wd = trainer.config.get("weight_decay", 0.01)
+    betas = trainer.config.get("betas", (0.9, 0.999))
+    eps = trainer.config.get("eps", 1e-8)
+
+    base_params, comp_params = [], []
+    for name, p in model.named_parameters():
+        if any(m in name for m in modules):
+            comp_params.append(p)
+        else:
+            base_params.append(p)
+
+    trainer.optimizer = AdamW(
+        [
+            {"params": base_params, "lr": base_lr},
+            {"params": comp_params, "lr": base_lr * ratio},
+        ],
+        weight_decay=wd, betas=betas, eps=eps,
+    )
+    total_steps = trainer.config.get("max_steps", 1000)
+    warmup_steps = int(total_steps * trainer.config.get("warmup_frac", 0.05))
+    trainer.scheduler = trainer._create_scheduler(total_steps, warmup_steps)
+
+
 def train_classification_model(model: nn.Module, prepared_data: PreparedData,
                                config: dict, device: torch.device,
                                output_dir: str, run_id: str) -> Dict:
@@ -531,9 +615,22 @@ def train_classification_model(model: nn.Module, prepared_data: PreparedData,
 
     trainer = ClassificationTrainer(model, trainer_config, device, output_dir, run_id)
 
-    budget_config = config.get('training_budgets', {}).get('classification_core', {})
-    epochs = budget_config.get('epochs', 2)
-    checkpoint_epochs = budget_config.get('checkpoint_epochs', [2])
+    # v2: dk_lrcomp ablation arms pass config['lr_compensation']
+    lrcomp = config.get('lr_compensation')
+    if lrcomp:
+        _apply_lr_compensation(trainer, model, lrcomp)
+
+    # v2: budget selection. The run_id suffix chooses the protocol:
+    #   '_conv'  -> convergence training with early stopping on val loss
+    #   default  -> classification_core (2-epoch legacy protocol)
+    if run_id.endswith('_conv') or '_conv_' in run_id:
+        budget_config = config.get('training_budgets', {}).get('convergence', {})
+    else:
+        budget_config = config.get('training_budgets', {}).get('classification_core', {})
+    epochs = budget_config.get('epochs', budget_config.get('max_epochs', 2))
+    checkpoint_epochs = budget_config.get('checkpoint_epochs', [epochs])
+    es_patience = int(budget_config.get('early_stopping_patience', 0))
+    es_min_delta = float(budget_config.get('early_stopping_min_delta', 0.0))
 
     # Get dataset config from dataset_configs
     dataset_name = prepared_data.metadata.get('dataset', 'agnews')
@@ -548,7 +645,9 @@ def train_classification_model(model: nn.Module, prepared_data: PreparedData,
         prepared_data.X_train, prepared_data.y_train,
         prepared_data.X_val, prepared_data.y_val,
         epochs, batch_size, eval_batch_size,
-        checkpoint_epochs, seed
+        checkpoint_epochs, seed,
+        early_stopping_patience=es_patience,
+        early_stopping_min_delta=es_min_delta,
     )
 
     # Final test evaluation
@@ -559,6 +658,7 @@ def train_classification_model(model: nn.Module, prepared_data: PreparedData,
         'validation_history': trainer.validation_history,
         'test_metrics': test_metrics,
         'checkpoint_history': trainer.checkpoint_history,
+        'early_stop_info': getattr(trainer, 'early_stop_info', {}),
     }
 
 
