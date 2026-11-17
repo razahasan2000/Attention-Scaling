@@ -41,11 +41,8 @@ $$
 For one attention row with raw logits $z=(z_1,\ldots,z_n)$, the probability assigned to valid position $i$ is:
 
 $$
-P_\beta(i)
-=
-\frac{\exp(\beta z_i)}
-{\displaystyle\sum_{j=1}^{n}\exp(\beta z_j)},
-\qquad i=1,\ldots,n.
+P_\beta(i) \;=\; \frac{\exp(\beta z_i)}{\displaystyle\sum_{j=1}^{n}\exp(\beta z_j)},
+\qquad i = 1,\ldots,n,
 $$
 
 Here, $n$ is the number of positions attended to by that query after applying the attention mask.
