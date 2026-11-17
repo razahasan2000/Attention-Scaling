@@ -370,12 +370,12 @@ The publication figures are already stored in [figures/](figures/). The current 
 
 The GPT-2 evaluation swaps the attention divisor at inference time while retaining pretrained weights. It reads the WikiText-2 validation parquet file at data/raw/wt2_valid.parquet.
 
-\`\`\`bash
+```bash
 python scripts/experiments/frontier_gpt2.py \
   --models gpt2,gpt2-medium \
   --nseq 160 \
   --seqlen 128
-\`\`\`
+```
 
 The results are written to results/frontier_gpt2.json.
 
