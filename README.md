@@ -310,16 +310,16 @@ Run the commands from the repository root. Prepare the raw dataset files describ
 
 ### 7.1 Prepare the replica datasets and verify masking
 
-\`\`\`bash
+```bash
 python scripts/experiments/prepare_data.py
 python scripts/experiments/verify_mask.py
-\`\`\`
+```
 
 ### 7.2 Run Stage 2
 
 The runner is resume-safe. It skips completed jobs, and its default wall-time limit is 520 seconds per invocation. Re-run a phase command until it reports that there is nothing left to do.
 
-\`\`\`bash
+```bash
 python scripts/experiments/runner.py --phase core --procs 2
 python scripts/experiments/runner.py --phase lm --procs 2
 python scripts/experiments/runner.py --phase grid --procs 2
@@ -327,17 +327,17 @@ python scripts/experiments/runner.py --phase conv --procs 2
 python scripts/experiments/runner.py --phase abl --procs 2
 python scripts/experiments/runner.py --phase lmleak --procs 2
 python scripts/experiments/runner.py --phase lmc --procs 2
-\`\`\`
+```
 
 ### 7.3 Run Stage 3
 
-\`\`\`bash
+```bash
 python scripts/experiments/runner.py --phase gain --procs 2
 python scripts/experiments/runner.py --phase bridge --procs 2
 python scripts/experiments/runner.py --phase regime --procs 2
 python scripts/experiments/runner.py --phase regime128 --procs 2
 python scripts/experiments/runner.py --phase lmgain --procs 2
-\`\`\`
+```
 
 The GPT-2 and GPT-2-medium inference evaluations are run separately as described in Section 8.
 
@@ -345,18 +345,18 @@ The GPT-2 and GPT-2-medium inference evaluations are run separately as described
 
 After the relevant phase records have been generated:
 
-\`\`\`bash
+```bash
 python scripts/experiments/aggregate.py
 python scripts/experiments/agg_stage3.py
-\`\`\`
+```
 
 The Stage 2 aggregator writes results/aggregate.json; the Stage 3 aggregator writes results/stage3_operatingpoint.json. These scripts expect the corresponding completed records in results/results.jsonl.
 
 ### 7.5 Run the tests
 
-\`\`\`bash
+```bash
 python -m pytest tests/
-\`\`\`
+```
 
 The tests cover attention scaling, causal masking, configuration handling, data preparation, head-dimension grids, early stopping, gradient paths, and seed matching.
 
@@ -383,12 +383,12 @@ The results are written to results/frontier_gpt2.json.
 
 The optional GPU script supports inference-time divisor evaluation for supported Hugging Face decoder architectures. For example:
 
-\`\`\`bash
+```bash
 python scripts/frontier/frontier_gpu_1b7b.py \
   --model gpt2-xl \
   --nseq 500 \
   --seqlen 256
-\`\`\`
+```
 
 The script can load WikiText-2 validation data through the Hugging Face datasets library, or accept a local parquet file through --data. GPU memory requirements depend on the selected model, sequence length, batch size, and precision. Some model repositories require authentication and licence acceptance.
 
