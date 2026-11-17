@@ -128,7 +128,7 @@ The results are conditional on the operating point and experimental regime. The 
 
 The following tree reflects the files and directories present on the repository's main branch. It lists repository resources only; manuscript and supplementary files are intentionally excluded.
 
-\`\`\`text
+```text
 Attention-Scaling/
 ├── LICENSE
 ├── README.md
@@ -218,7 +218,7 @@ Attention-Scaling/
     ├── test_early_stopping.py
     ├── test_gradient_paths.py
     └── test_seed_match.py
-\`\`\`
+```
 
 ### 4.1 Key implementation and result files
 
