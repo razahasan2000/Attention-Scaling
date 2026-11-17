@@ -17,15 +17,15 @@ $$
 For a scaling divisor $s$, the attention output is
 
 $$
-\operatorname{Attention}(Q,K,V;s)
-= \operatorname{softmax}\!\left(\frac{Z}{s}\right)V .
+\mathrm{Attention}(Q,K,V;s)
+= \mathrm{softmax}\left(\frac{Z}{s}\right)V .
 $$
 
 It is also useful to define the inverse-divisor coefficient $\beta = 1/s$. The same expression can then be written as
 
 $$
-\operatorname{Attention}(Q,K,V;\beta)
-= \operatorname{softmax}(\beta Z)\,V .
+\mathrm{Attention}(Q,K,V;\beta)
+= \mathrm{softmax}(\beta Z)\,V .
 $$
 
 ### 1.1 The three scaling variants
