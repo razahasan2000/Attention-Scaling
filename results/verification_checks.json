@@ -1,0 +1,292 @@
+[
+ {
+  "id": "runs.total_jsonl",
+  "status": "PASS",
+  "detail": "results.jsonl records=467 (claim 467)"
+ },
+ {
+  "id": "runs.stage2",
+  "status": "PASS",
+  "detail": "Stage-2 runs=339 (claim 339)"
+ },
+ {
+  "id": "runs.stage3",
+  "status": "PASS",
+  "detail": "Stage-3 jsonl=128 + 6 frontier evals = 134 (claim 134)"
+ },
+ {
+  "id": "runs.grand",
+  "status": "PASS",
+  "detail": "314+339+128+6 = 787 (claim 787)"
+ },
+ {
+  "id": "stage2.core.paired_dk",
+  "status": "PASS",
+  "detail": "recomputed diff=-0.0001 t=-0.6547 dz=-0.1309 vs stored dz=-0.1309"
+ },
+ {
+  "id": "stage2.core.paired_temp",
+  "status": "PASS",
+  "detail": "recomputed diff=2e-05 t=0.2002 dz=0.04003 vs stored dz=0.04003"
+ },
+ {
+  "id": "stage2.lm.paired_dk",
+  "status": "PASS",
+  "detail": "recomputed diff=0.00544168 t=0.0502 dz=0.01004 vs stored dz=0.01004"
+ },
+ {
+  "id": "stage2.lm.paired_temp",
+  "status": "PASS",
+  "detail": "recomputed diff=0.00175319 t=0.02505 dz=0.00501 vs stored dz=0.00501"
+ },
+ {
+  "id": "law.sigma_KL0.01_std_dk",
+  "status": "PASS",
+  "detail": "recomputed sigma=0.9795 vs stored 0.979"
+ },
+ {
+  "id": "law.sigma_KL0.1_std_dk",
+  "status": "PASS",
+  "detail": "recomputed sigma=3.0974 vs stored 3.097"
+ },
+ {
+  "id": "law.sigma_KL0.01_std_temp",
+  "status": "PASS",
+  "detail": "recomputed sigma=1.6126 vs stored 1.613"
+ },
+ {
+  "id": "law.sigma_KL0.1_std_temp",
+  "status": "PASS",
+  "detail": "recomputed sigma=5.0996 vs stored 5.1"
+ },
+ {
+  "id": "law.delta_beta",
+  "status": "PASS",
+  "detail": "1/sqrt(32)-1/32=0.145527 vs stored 0.14553"
+ },
+ {
+  "id": "law.montecarlo",
+  "status": "PASS",
+  "detail": "MC KL=0.04151 vs law=0.04169 at sigma=2"
+ },
+ {
+  "id": "frontier.gpt2.dk_pct",
+  "status": "PASS",
+  "detail": "gpt2 dk: 9253.21% (stored 9253.21%)"
+ },
+ {
+  "id": "frontier.gpt2.temp_pct",
+  "status": "PASS",
+  "detail": "gpt2 temp: 54.46% (stored 54.46%)"
+ },
+ {
+  "id": "frontier.gpt2-medium.dk_pct",
+  "status": "PASS",
+  "detail": "gpt2-medium dk: 3990.02% (stored 3990.02%)"
+ },
+ {
+  "id": "frontier.gpt2-medium.temp_pct",
+  "status": "PASS",
+  "detail": "gpt2-medium temp: 26.54% (stored 26.54%)"
+ },
+ {
+  "id": "frontier.gpt2.standard_value",
+  "status": "PASS",
+  "detail": "claimed 51.23 vs raw 51.23"
+ },
+ {
+  "id": "doc.gpt2.standard",
+  "status": "PASS",
+  "detail": "51.23 appears in manuscript/README"
+ },
+ {
+  "id": "frontier.gpt2.temp_value",
+  "status": "PASS",
+  "detail": "claimed 79.13 vs raw 79.13"
+ },
+ {
+  "id": "doc.gpt2.temp",
+  "status": "PASS",
+  "detail": "79.13 appears in manuscript/README"
+ },
+ {
+  "id": "frontier.gpt2.dk_value",
+  "status": "PASS",
+  "detail": "claimed 4,791.65 vs raw 4791.65"
+ },
+ {
+  "id": "doc.gpt2.dk",
+  "status": "PASS",
+  "detail": "4,791.65 appears in manuscript/README"
+ },
+ {
+  "id": "frontier.med.standard_value",
+  "status": "PASS",
+  "detail": "claimed 38.77 vs raw 38.77"
+ },
+ {
+  "id": "doc.med.standard",
+  "status": "PASS",
+  "detail": "38.77 appears in manuscript/README"
+ },
+ {
+  "id": "frontier.med.temp_value",
+  "status": "PASS",
+  "detail": "claimed 49.06 vs raw 49.06"
+ },
+ {
+  "id": "doc.med.temp",
+  "status": "PASS",
+  "detail": "49.06 appears in manuscript/README"
+ },
+ {
+  "id": "frontier.med.dk_value",
+  "status": "PASS",
+  "detail": "claimed 1,585.70 vs raw 1585.7"
+ },
+ {
+  "id": "doc.med.dk",
+  "status": "PASS",
+  "detail": "1,585.70 appears in manuscript/README"
+ },
+ {
+  "id": "frontier.entropy_range",
+  "status": "PASS",
+  "detail": "pooled H_standard [1.23,3.46] (claim 1.2-3.5), H_dk [3.61,3.87] (claim 3.6-3.9)"
+ },
+ {
+  "id": "doc.entropy_range_text",
+  "status": "PASS",
+  "detail": "corrected entropy range 1.2\u20133.5 present in manuscript"
+ },
+ {
+  "id": "frontier.sigma_range",
+  "status": "PASS",
+  "detail": "layer-mean sigma_raw gpt2=62.6, medium=44.8 (claim 45-63)"
+ },
+ {
+  "id": "doc.sigma_layermean",
+  "status": "PASS",
+  "detail": "manuscript qualifies sigma_raw as layer means"
+ },
+ {
+  "id": "gain.kl_low",
+  "status": "PASS",
+  "detail": "g=1 KL(std||dk)=0.00090 (claim 0.0009)"
+ },
+ {
+  "id": "gain.kl_high",
+  "status": "PASS",
+  "detail": "g=32 KL(std||dk)=0.6418 (claim 0.64)"
+ },
+ {
+  "id": "gain.acc32",
+  "status": "PASS",
+  "detail": "g=32 acc std=76.812, dk=78.212 (claim 76.81 vs 78.21)"
+ },
+ {
+  "id": "gain.dz",
+  "status": "PASS",
+  "detail": "g=32 dz=-1.759 (claim -1.76)"
+ },
+ {
+  "id": "gain.sigma_lo",
+  "status": "PASS",
+  "detail": "g=1 sigma_raw=0.3262 (claim 0.33)"
+ },
+ {
+  "id": "gain.sigma_hi",
+  "status": "PASS",
+  "detail": "g=32 sigma_raw=9.2123 (claim 9.21)"
+ },
+ {
+  "id": "regime.sigma32",
+  "status": "PASS",
+  "detail": "regime d_k=32 final sigma_raw=1.1104 (claim 1.11)"
+ },
+ {
+  "id": "regime.sigma128",
+  "status": "PASS",
+  "detail": "regime d_k=128 max sigma_raw=4.588 (claim ~5)"
+ },
+ {
+  "id": "bridge.qknorm_raw_pinned",
+  "status": "PASS",
+  "detail": "QK-Norm sigma_raw = ['5.943', '6.151', '6.084'] pinned ~6.0 across arms"
+ },
+ {
+  "id": "bridge.qknorm_sigma_post_std",
+  "status": "PASS",
+  "detail": "QK-Norm sigma_post under standard divisor = 1.0506 (claim ~1.05)"
+ },
+ {
+  "id": "bridge.qknorm_acc",
+  "status": "PASS",
+  "detail": "QK-Norm acc spread=0.1190 pp ([78.206, 78.162, 78.281]) (claim re-equalised)"
+ },
+ {
+  "id": "lm.ppl",
+  "status": "PASS",
+  "detail": "WikiText-2 ppl=872.80 (claim ~873)"
+ },
+ {
+  "id": "lm.invariance",
+  "status": "PASS",
+  "detail": "LM paired dz(dk)=0.0100 (claim variant-invariant)"
+ },
+ {
+  "id": "mask.V1V5",
+  "status": "PASS",
+  "detail": "V1-V5 causal-mask invariants all hold"
+ },
+ {
+  "id": "doc.manuscript_ppl_873",
+  "status": "PASS",
+  "detail": "ppl 873 present in manuscript PDF text: True"
+ },
+ {
+  "id": "doc.manuscript_stage2_dz_small",
+  "status": "PASS",
+  "detail": "stage2 dz small present in manuscript PDF text: True"
+ },
+ {
+  "id": "doc.manuscript_law_text",
+  "status": "PASS",
+  "detail": "law text present in manuscript PDF text: True"
+ },
+ {
+  "id": "doc.manuscript_law_sigma_3.1",
+  "status": "PASS",
+  "detail": "law sigma 3.1 present in manuscript PDF text: True"
+ },
+ {
+  "id": "doc.manuscript_frontier_gpt2_dk",
+  "status": "PASS",
+  "detail": "frontier gpt2 dk present in manuscript PDF text: True"
+ },
+ {
+  "id": "doc.manuscript_frontier_pct",
+  "status": "PASS",
+  "detail": "frontier pct present in manuscript PDF text: True"
+ },
+ {
+  "id": "latex.figures",
+  "status": "PASS",
+  "detail": "16 includegraphics refs, missing: none"
+ },
+ {
+  "id": "latex.cites",
+  "status": "PASS",
+  "detail": "32 cite keys, unresolved: none"
+ },
+ {
+  "id": "studydata.lm_mean",
+  "status": "PASS",
+  "detail": "study_data.py contains LM ppl 872.8 consistent with aggregate.json"
+ },
+ {
+  "id": "doc.tau05",
+  "status": "PASS",
+  "detail": "tau=0.5 sentiment claim present in manuscript (math-italic tau)"
+ }
+]

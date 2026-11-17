@@ -1,0 +1,119 @@
+# Seed Configuration for Attention Scaling Study
+
+# Primary seed schedule (25 matched seeds)
+# These seeds are used across all primary experimental conditions
+# to ensure matched initialisation and data ordering
+primary_seeds:
+  - 1001
+  - 1002
+  - 1003
+  - 1004
+  - 1005
+  - 1006
+  - 1007
+  - 1008
+  - 1009
+  - 1010
+  - 1011
+  - 1012
+  - 1013
+  - 1014
+  - 1015
+  - 1016
+  - 1017
+  - 1018
+  - 1019
+  - 1020
+  - 1021
+  - 1022
+  - 1023
+  - 1024
+  - 1025
+
+# Ablation experiment seeds
+ablation_seeds:
+  e1_sst2_multiscale:
+    description: "SST-2 multi-scale heads at 5 epochs"
+    dataset: "sst2"
+    epochs: 5
+    variants: ["standard", "multiscale_v1"]
+    seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  # 10 seeds
+
+  e2_sst2_lrcomp:
+    description: "SST-2 LR compensation for dk variant at 5 epochs"
+    dataset: "sst2"
+    epochs: 5
+    variants: ["standard", "dk", "dk_lrcomp"]
+    seeds: [0, 1, 2, 3, 4, 5, 6]
+    lr_compensation:
+      base_variant: "dk"
+      lr_ratio: 5.656854249492381  # sqrt(d_k)
+
+  e3_imdb_multiscale:
+    description: "IMDB multi-scale heads at 5 epochs"
+    dataset: "imdb"
+    epochs: 5
+    variants: ["standard", "multiscale_v1"]
+    seeds: [0, 1, 2, 3, 4, 5, 6]
+
+  e4_imdb_lrcomp:
+    description: "IMDB LR compensation for dk variant"
+    dataset: "imdb"
+    epochs: 5
+    variants: ["standard", "dk", "dk_lrcomp"]
+    seeds: [0, 1, 2, 3, 4]
+    lr_compensation:
+      base_variant: "dk"
+      lr_ratio: 5.656854249492381  # sqrt(d_k)
+
+# Extended budget experiments (10 epochs, 5 seeds)
+extended_budget_seeds:
+  - 1001
+  - 1002
+  - 1003
+  - 1004
+  - 1005
+
+# Temperature sensitivity ablation seeds
+temperature_ablation_seeds:
+  - 1001
+  - 1002
+  - 1003
+
+# Model size sensitivity seeds
+model_size_seeds:
+  - 1001
+  - 1002
+  - 1003
+
+# Sequence length sensitivity seeds
+seq_len_seeds:
+  - 1001
+  - 1002
+  - 1003
+
+# Verification settings
+verification:
+  # Whether to verify bit-identical initialization across variants
+  verify_bit_identical_init: true
+  
+  # Whether to verify identical data ordering
+  verify_data_order: true
+  
+  # Whether to verify gradient flow
+  verify_gradient_flow: true
+  
+  # Tolerance for numerical differences
+  numerical_tolerance: 1e-7
+
+# RNG settings
+rng:
+  python_seed: 42
+  numpy_seed: 42
+  torch_seed: 42
+  cuda_deterministic: true
+  cuda_benchmark: false
+
+# Run ID format
+run_id_format: "{dataset}_{variant}_seed_{seed}_{budget}"
+# Example: agnews_standard_seed_1001_25epoch

@@ -1,0 +1,54 @@
+{
+ "cls_agnews_seed1001": {
+  "standard": {
+   "entropy": 4.048,
+   "max_weight": 0.03,
+   "clamp_frac": 0.0,
+   "grad_QK": 0.0476,
+   "grad_V": 1.6234,
+   "Wq_norm_ratio": 1.01,
+   "Wk_norm_ratio": 1.01
+  },
+  "dk": {
+   "entropy": 4.049,
+   "max_weight": 0.025,
+   "clamp_frac": 0.0,
+   "grad_QK": 0.0093,
+   "grad_V": 1.8691,
+   "Wq_norm_ratio": 1.01,
+   "Wk_norm_ratio": 1.01
+  },
+  "temp": {
+   "entropy": 4.049,
+   "max_weight": 0.027,
+   "clamp_frac": 0.0,
+   "grad_QK": 0.0285,
+   "grad_V": 1.9141,
+   "Wq_norm_ratio": 1.01,
+   "Wk_norm_ratio": 1.01
+  }
+ },
+ "lm_seed1001": {
+  "standard": {
+   "entropy": 4.152,
+   "max_weight": 0.02,
+   "clamp_frac": 0.0,
+   "raw_logit_std": 1.017,
+   "ppl": 847.5
+  },
+  "dk": {
+   "entropy": 4.159,
+   "max_weight": 0.016,
+   "clamp_frac": 0.0,
+   "raw_logit_std": 1.191,
+   "ppl": 843.6
+  },
+  "temp": {
+   "entropy": 4.157,
+   "max_weight": 0.018,
+   "clamp_frac": 0.0,
+   "raw_logit_std": 1.168,
+   "ppl": 843.1
+  }
+ }
+}
