@@ -265,7 +265,7 @@ Stage 2 is a reduced-scale replica and does not use the same data scale and sequ
 
 The Stage 2 preparation script expects the following files under **data/raw/**:
 
-\`\`\`text
+```text
 data/
 └── raw/
     ├── agnews_train.csv
@@ -277,7 +277,7 @@ data/
     ├── imdb_test.parquet
     ├── wt2_train.parquet
     └── wt2_valid.parquet
-\`\`\`
+```
 
 The preparation script does not download these files automatically. Obtain each dataset from its original provider, prepare the files in the expected format, and follow the relevant dataset terms. The dataset files are not redistributed in this repository.
 
