@@ -1,66 +1,107 @@
-# Attention Scaling in Transformer Self-Attention
-
-This repository contains the implementation, experiment configurations, analysis scripts, verification checks, result records, and figures for the study:
-
-**A Seed-Matched Empirical Comparison of Scaling Functions in Transformer Self-Attention**
+# A Seed-Matched Empirical Comparison of Scaling Functions in Transformer Self-Attention
 
 **Authors:** Raza Hasan, Vishal Dattana, and Salman Mahmood
 
-The study investigates how alternative scaling divisors affect attention distributions and model behaviour under controlled, seed-matched experimental conditions. This repository supports inspection and reproduction of the computational work. The manuscript and journal supplementary material are maintained separately for publication and are not hosted here.
+This repository contains the code, experiment configurations, tests, result records, analysis scripts, and figures associated with the study. The manuscript and supplementary material are intended for separate journal publication and are **not stored in this repository**.
 
----
+## 1. Research overview
 
-## Research overview
+The study investigates how the scaling divisor in Transformer self-attention affects attention distributions and model behaviour. The central question is when changing the divisor becomes consequential, given the scale of the raw attention logits.
 
-Scaled dot-product attention is commonly written as
+For query matrix $Q$, key matrix $K$, value matrix $V$, and per-head key dimension $d_k$, define the raw attention-logit matrix as
 
-\[
-\operatorname{Attention}(Q,K,V)
+$$
+Z = QK^\top.
+$$
+
+The attention output for a divisor $s$ is
+
+$$
+\operatorname{Attention}(Q,K,V;s)
 =
-\operatorname{softmax}\left(\frac{QK^\top}{s}\right)V,
-\]
+\operatorname{softmax}\left(\frac{Z}{s}\right)V.
+$$
 
-where \(s\) is the scaling divisor and \(d_k\) is the key/query head dimension.
+Equivalently, define the inverse-divisor coefficient $b=1/s$. Then
 
-This study compares three scaling choices:
+$$
+\operatorname{Attention}(Q,K,V;b)
+=
+\operatorname{softmax}(bZ)V.
+$$
 
-| Variant | Scaling divisor | Attention logits |
+### 1.1 Scaling variants
+
+| Variant | Divisor $s$ | Inverse-divisor coefficient $b=1/s$ |
+|---|---:|---:|
+| Standard | $\sqrt{d_k}$ | $1/\sqrt{d_k}$ |
+| Reciprocal-dimension | $d_k$ | $1/d_k$ |
+| Temperature, $\tau=2$ | $\tau\sqrt{d_k}=2\sqrt{d_k}$ | $1/(2\sqrt{d_k})$ |
+
+For a single attention row with raw logits $z=(z_1,\ldots,z_n)$, the corresponding probability distribution is
+
+$$
+P_b(i)
+=
+\frac{\exp(bz_i)}
+{\displaystyle\sum_{j=1}^{n}\exp(bz_j)},
+\qquad i=1,\ldots,n.
+$$
+
+Here, $n$ is the number of valid positions attended to in that row. Masked positions are excluded.
+
+## 2. Operating-point relationship
+
+The manuscript defines the operating point using the standard deviation $\sigma$ of the **raw, pre-division attention logits**. It is measured before applying any of the three scaling divisors.
+
+For two inverse-divisor coefficients $b_1$ and $b_2$, the second-order softmax approximation reported in the manuscript is
+
+$$
+D_{\mathrm{KL}}\!\left(P_{b_1}\,\middle\|\,P_{b_2}\right)
+\approx
+\frac{1}{2}(b_1-b_2)^2\sigma^2
+\left(1-\frac{1}{n}\right).
+\tag{1}
+$$
+
+In this expression:
+
+- $D_{\mathrm{KL}}(P_{b_1}\|P_{b_2})$ is the Kullback-Leibler divergence between the two attention distributions.
+- $b_1$ and $b_2$ are the inverse-divisor coefficients, not the divisors themselves.
+- $\sigma$ is the standard deviation of the raw attention logits before scaling.
+- $n$ is the number of valid positions in the attention row.
+- The factor $(1-1/n)$ is the finite-population correction in the approximation.
+
+Equation (1) describes a second-order approximation, not an exact identity for all logit scales. It captures the approximately quadratic increase in distributional divergence with $\sigma$ while the approximation is valid. At larger scales, softmax saturation causes the measured divergence to depart from the quadratic prediction. The manuscript and supplementary derivation discuss the assumptions and validation range.
+
+The practical implication is that different divisors can produce very similar attention distributions when the raw-logit operating point is low, while their effects can become pronounced at higher operating points. The relevant $\sigma$ should therefore be measured and reported rather than replaced by a universal fixed threshold.
+
+## 3. Experimental programme
+
+The manuscript reports **787 completed runs** across three stages:
+
+| Stage | Completed runs | Focus |
 |---|---:|---|
-| Standard | \(\sqrt{d_k}\) | \(QK^\top/\sqrt{d_k}\) |
-| Reciprocal-dimension | \(d_k\) | \(QK^\top/d_k\) |
-| Temperature (\(\tau=2\)) | \(2\sqrt{d_k}\) | \(QK^\top/(2\sqrt{d_k})\) |
-
-The variants are compared while controlling the experimental setup, including matched random seeds and model initialisation where specified by each experimental stage. The purpose is to isolate the effect of the attention-logit divisor rather than attribute differences to unrelated changes in training conditions.
-
-## Experimental programme
-
-The manuscript reports a three-stage experimental programme comprising **787 completed runs**:
-
-| Stage | Runs | Purpose |
-|---|---:|---|
-| Stage 1 | 314 | Primary seed-matched comparison across the classification tasks |
-| Stage 2 | 339 | Reduced-scale replication, additional diagnostics, convergence and masking investigations |
+| Stage 1 | 314 | Primary seed-matched comparisons |
+| Stage 2 | 339 | Reduced-scale replication, diagnostics, convergence and masking investigations |
 | Stage 3 | 134 | Operating-point analysis, logit-gain and stabilisation experiments, and pretrained-model evaluations |
 | **Total** | **787** | |
 
-Stage 2 includes 27 mask-artifact probes in addition to the planned experimental runs. Stage 3 includes 128 matched-seed training runs and six pretrained-model evaluations.
+Stage 2 includes 27 mask-artifact probes. Stage 3 includes 128 matched-seed training runs and six pretrained-model evaluations.
 
-### Main experimental considerations
+The study uses AG News, SST-2, IMDB, and WikiText-2. Its analyses include paired-seed comparisons, attention diagnostics, head-dimension and logit-gain investigations, QK normalisation, soft-capping, causal-mask verification, and inference-time divisor swaps in pretrained GPT-2 models.
 
-- **Matched-seed comparisons:** paired experimental conditions are evaluated using shared seeds to support controlled comparisons.
-- **Multiple tasks:** the study includes AG News, SST-2, IMDB, and WikiText-2.
-- **Attention operating point:** the analysis examines the standard deviation of raw attention logits before divisor scaling and relates it to changes in attention distributions.
-- **Mask verification:** causal and padding masks are checked explicitly. The study identifies and investigates a masking artefact that affected earlier language-modelling results.
-- **Additional diagnostics:** the later stages examine head dimension, logit gain, QK normalisation, soft-capping, and inference-time divisor changes in pretrained GPT-2 models.
+The results are operating-point dependent. This README should not be interpreted as claiming that one divisor is universally optimal across tasks, model scales, or training regimes. The Stage 2 reduced-scale AG News replication did not reproduce the Stage 1 separation, and the corrected language-modelling mask is essential when interpreting the WikiText-2 experiments.
 
-The results do not support a universal claim that one divisor is always best. The observed effect depends on the task, experimental regime, and attention-logit operating point. In particular, the reduced-scale Stage 2 replication did not reproduce the Stage 1 AG News separation, while the binary sentiment comparisons were statistically indistinguishable in the reported primary comparisons. The corrected WikiText-2 masking experiments are important when interpreting the language-modelling results.
+## 4. Repository structure
 
-## Repository structure
-
-The links below point to files and directories currently present in this repository.
+The tree below reflects the files and directories currently present on the repository's main branch. It is a repository map, not a list of manuscript or supplementary files.
 
 \`\`\`text
 Attention-Scaling/
+├── LICENSE
+├── README.md
+├── requirements.txt
 ├── configs/
 │   ├── dataset_configs.yaml
 │   ├── experiment_config.yaml
@@ -70,13 +111,22 @@ Attention-Scaling/
 │   └── training_budget_config.yaml
 ├── figures/
 │   ├── fig_architecture.png
+│   ├── fig_convergence.png
 │   ├── fig_design.png
+│   ├── fig_dk_grid.png
+│   ├── fig_efficiency.png
+│   ├── fig_frontier.png
+│   ├── fig_gain_sweep.png
+│   ├── fig_gradient_ratios.png
+│   ├── fig_head_diversity.png
+│   ├── fig_lm_corrected.png
+│   ├── fig_lm_perplexity.png
 │   ├── fig_main_performance.png
 │   ├── fig_paired_differences.png
-│   ├── fig_convergence.png
-│   ├── fig_lm_corrected.png
 │   ├── fig_regime_law.png
-│   └── ...
+│   ├── fig_stage2_core.png
+│   ├── fig_temperature_ablation.png
+│   └── fig_training_curves.png
 ├── results/
 │   ├── aggregate.json
 │   ├── diagnostics.json
@@ -84,110 +134,135 @@ Attention-Scaling/
 │   ├── mask_verification.json
 │   ├── results.jsonl
 │   ├── stage3_operatingpoint.json
-│   └── stage3_theory.json
+│   ├── stage3_theory.json
+│   ├── verification_checks.json
+│   └── verification_checks_dev.json
 ├── scripts/
+│   ├── analyse_results.py
 │   ├── experiments/
-│   │   ├── runner.py
-│   │   ├── common.py
-│   │   ├── prepare_data.py
-│   │   ├── verify_mask.py
-│   │   ├── aggregate.py
 │   │   ├── agg_stage3.py
+│   │   ├── aggregate.py
+│   │   ├── clean_results.py
+│   │   ├── common.py
+│   │   ├── diagnostics.py
+│   │   ├── frontier_gpt2.py
+│   │   ├── prepare_data.py
+│   │   ├── prepare_regime.py
 │   │   ├── regime_law.py
-│   │   └── frontier_gpt2.py
+│   │   ├── runner.py
+│   │   ├── smoke_stage3.py
+│   │   └── verify_mask.py
 │   ├── frontier/
 │   │   └── frontier_gpu_1b7b.py
-│   ├── analyse_results.py
 │   ├── generate_figures.py
-│   └── ...
+│   ├── run_ablations.py
+│   ├── run_ablations_complete.py
+│   ├── run_all_v2.py
+│   ├── run_experiments.py
+│   ├── run_model_size.py
+│   ├── run_temp_ablation.py
+│   ├── smoke_v2.py
+│   ├── validate.py
+│   └── verify_numbers.py
 ├── src/
+│   ├── analysis/
+│   │   └── analyze_results.py
 │   ├── attention/
 │   │   └── scaling.py
-│   ├── analysis/
 │   ├── data/
+│   │   ├── __init__.py
+│   │   └── prepare.py
 │   ├── evaluation/
+│   │   └── evaluator.py
 │   ├── models/
+│   │   └── transformer_encoder.py
 │   └── training/
-├── tests/
-├── requirements.txt
-└── LICENSE
+│       └── trainer.py
+└── tests/
+    ├── test_attention_scale.py
+    ├── test_causal_mask.py
+    ├── test_config.py
+    ├── test_data_prepare.py
+    ├── test_dk_grid.py
+    ├── test_early_stopping.py
+    ├── test_gradient_paths.py
+    └── test_seed_match.py
 \`\`\`
 
-### Useful code and result links
+### 4.1 Key implementation and result files
 
-| Resource | Description |
+| Path | Purpose |
 |---|---|
-| [src/attention/scaling.py](src/attention/scaling.py) | Attention scaling implementations |
-| [src/models/transformer_encoder.py](src/models/transformer_encoder.py) | Transformer encoder implementation |
-| [src/training/trainer.py](src/training/trainer.py) | Training implementation |
-| [scripts/experiments/runner.py](scripts/experiments/runner.py) | Experiment runner for the staged experiment phases |
-| [scripts/experiments/common.py](scripts/experiments/common.py) | Shared experiment utilities and model construction |
-| [scripts/experiments/prepare_data.py](scripts/experiments/prepare_data.py) | Preparation of replica-scale datasets |
-| [scripts/experiments/verify_mask.py](scripts/experiments/verify_mask.py) | Causal and padding mask verification |
+| [src/attention/scaling.py](src/attention/scaling.py) | Attention scaling implementation |
+| [src/models/transformer_encoder.py](src/models/transformer_encoder.py) | Transformer encoder |
+| [src/training/trainer.py](src/training/trainer.py) | Training routines |
+| [src/data/prepare.py](src/data/prepare.py) | Data preparation implementation |
+| [scripts/experiments/common.py](scripts/experiments/common.py) | Shared experiment and model utilities |
+| [scripts/experiments/runner.py](scripts/experiments/runner.py) | Staged experiment runner |
+| [scripts/experiments/prepare_data.py](scripts/experiments/prepare_data.py) | Replica dataset preparation |
+| [scripts/experiments/verify_mask.py](scripts/experiments/verify_mask.py) | Causal and padding mask checks |
 | [scripts/experiments/aggregate.py](scripts/experiments/aggregate.py) | Aggregation of experiment results |
-| [scripts/experiments/agg_stage3.py](scripts/experiments/agg_stage3.py) | Stage 3 result aggregation |
-| [scripts/experiments/regime_law.py](scripts/experiments/regime_law.py) | Operating-point and regime-law analysis |
-| [scripts/experiments/frontier_gpt2.py](scripts/experiments/frontier_gpt2.py) | Inference-time evaluation on GPT-2 and GPT-2-medium |
-| [scripts/frontier/frontier_gpu_1b7b.py](scripts/frontier/frontier_gpu_1b7b.py) | Script for inference-time divisor evaluation on supported larger pretrained models |
-| [results/aggregate.json](results/aggregate.json) | Aggregated experimental statistics |
+| [scripts/experiments/agg_stage3.py](scripts/experiments/agg_stage3.py) | Stage 3 aggregation |
+| [scripts/experiments/regime_law.py](scripts/experiments/regime_law.py) | Operating-point analysis |
+| [scripts/experiments/frontier_gpt2.py](scripts/experiments/frontier_gpt2.py) | GPT-2 and GPT-2-medium inference evaluation |
+| [scripts/frontier/frontier_gpu_1b7b.py](scripts/frontier/frontier_gpu_1b7b.py) | Optional larger-model inference evaluation script |
+| [results/aggregate.json](results/aggregate.json) | Aggregated statistics |
 | [results/results.jsonl](results/results.jsonl) | Experiment-level result records |
-| [results/stage3_operatingpoint.json](results/stage3_operatingpoint.json) | Stage 3 operating-point results |
-| [results/mask_verification.json](results/mask_verification.json) | Saved mask verification results |
+| [results/stage3_operatingpoint.json](results/stage3_operatingpoint.json) | Stage 3 operating-point records |
+| [results/stage3_theory.json](results/stage3_theory.json) | Stage 3 theoretical analysis records |
+| [results/mask_verification.json](results/mask_verification.json) | Mask verification output |
 
-## Experimental model and datasets
+## 5. Model and datasets
 
-The primary encoder described in the manuscript uses a pre-layer-normalised Transformer architecture with two Transformer blocks, model width 128, four attention heads, head dimension 32, feed-forward dimension 256, maximum sequence length 128, GELU activation, and dropout 0.1. The reported training setup includes AdamW, learning rate \(3\times10^{-4}\), weight decay 0.01, gradient clipping at 1.0, and FP32 computation.
+The primary encoder described in the manuscript uses a pre-layer-normalised Transformer with two blocks, model width 128, four attention heads, head dimension 32, feed-forward dimension 256, maximum sequence length 128, GELU activation, and dropout 0.1. The reported optimisation setup includes AdamW, learning rate $3\times10^{-4}$, weight decay 0.01, gradient clipping at 1.0, and FP32 computation.
 
-The programme also contains reduced-scale replica experiments. Their settings are not identical to the primary encoder configuration. Consult the relevant configuration files and experiment records when reproducing a particular stage.
+The repository also contains reduced-scale replica experiments. Their settings differ from the primary encoder configuration. Use the stage-specific configuration files and experiment records when reproducing a particular condition.
 
-The datasets used in the study are:
+| Dataset | Task |
+|---|---|
+| AG News | Four-class news classification |
+| SST-2 | Binary sentiment classification |
+| IMDB | Binary movie-review sentiment classification |
+| WikiText-2 | Language modelling |
 
-- **AG News:** multi-class news classification.
-- **SST-2:** binary sentiment classification.
-- **IMDB:** binary movie-review sentiment classification.
-- **WikiText-2:** language modelling.
+The datasets are not redistributed in this repository. Obtain them from their original providers and follow the corresponding terms of use. The preparation scripts expect local dataset files in the paths specified in the code and configuration.
 
-Dataset preparation scripts expect source data in the local data directory. The datasets themselves are not redistributed by this repository. Follow the original dataset providers' terms and instructions for obtaining them.
+## 6. Installation
 
-## Installation
-
-Use Python 3.10 or later where possible. Install the dependencies from the repository root:
+Clone the repository and install its Python dependencies:
 
 \`\`\`bash
 git clone https://github.com/razahasan2000/Attention-Scaling.git
 cd Attention-Scaling
 
 python -m venv .venv
+
 # Linux or macOS
 source .venv/bin/activate
+
 # Windows PowerShell
-# .venv\\Scripts\\Activate.ps1
+# .venv\Scripts\Activate.ps1
 
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 \`\`\`
 
-For a CPU-only PyTorch installation, install the appropriate CPU build of PyTorch before installing the remaining requirements, following the official [PyTorch installation instructions](https://pytorch.org/get-started/locally/).
+For a CPU-only PyTorch installation, use the appropriate command from the official [PyTorch installation guide](https://pytorch.org/get-started/locally/).
 
-## Reproduction workflow
+## 7. Reproduction workflow
 
-The commands below illustrate the repository's experiment workflow. Run them from the repository root. Dataset files must first be placed in the local paths expected by the preparation script.
+Run commands from the repository root. Prepare the required local dataset files before running the preparation script.
 
-### 1. Prepare replica-scale datasets
+### 7.1 Prepare data and verify the language-modelling mask
 
 \`\`\`bash
 python scripts/experiments/prepare_data.py
-\`\`\`
-
-### 2. Verify causal and padding masks
-
-\`\`\`bash
 python scripts/experiments/verify_mask.py
 \`\`\`
 
-### 3. Run experiment phases
+### 7.2 Run experiment phases
 
-The experiment runner supports named phases. For example:
+The experiment runner accepts a phase name. The following are examples of supported phases:
 
 \`\`\`bash
 python scripts/experiments/runner.py --phase core --procs 2
@@ -197,88 +272,47 @@ python scripts/experiments/runner.py --phase lm --procs 2
 python scripts/experiments/runner.py --phase gain --procs 2
 \`\`\`
 
-The runner records completed jobs and skips matching completed entries when resumed. Check the runner and configuration files for the exact jobs, seed ranges, and settings associated with each phase. The phases above are examples, not a claim that running only these commands reproduces every run in the 787-run programme.
+The runner records completed jobs and skips matching completed entries when resumed. Consult the runner for the complete phase definitions, seed ranges, and job settings. These example commands do not, by themselves, reproduce all 787 reported runs.
 
-### 4. Aggregate results
+### 7.3 Aggregate results and generate figures
 
 \`\`\`bash
 python scripts/experiments/aggregate.py
 python scripts/experiments/agg_stage3.py
-\`\`\`
-
-### 5. Generate figures
-
-\`\`\`bash
 python scripts/generate_figures.py
 \`\`\`
 
-### 6. Run tests
+### 7.4 Run tests
 
 \`\`\`bash
 pytest tests/
 \`\`\`
 
-The test suite includes checks for attention scaling, causal masking, configuration handling, data preparation, head-dimension grids, early stopping, gradient paths, and seed matching.
+## 8. Pretrained-model inference evaluation
 
-## Pretrained-model inference evaluations
-
-The repository includes scripts that change the attention scaling divisor at inference time while retaining pretrained model weights.
-
-For GPT-2 and GPT-2-medium:
+The GPT-2 evaluation swaps the attention divisor at inference time while retaining the pretrained weights:
 
 \`\`\`bash
-python scripts/experiments/frontier_gpt2.py \\
-  --models gpt2,gpt2-medium \\
-  --nseq 160 \\
+python scripts/experiments/frontier_gpt2.py \
+  --models gpt2,gpt2-medium \
+  --nseq 160 \
   --seqlen 128
 \`\`\`
 
-For larger supported Hugging Face decoder models, the GPU-oriented script is:
+The repository also includes [scripts/frontier/frontier_gpu_1b7b.py](scripts/frontier/frontier_gpu_1b7b.py), which provides an inference-time evaluation pathway for supported larger Hugging Face decoder models. The presence of this script does not mean that 1B–7B model experiments were completed as part of the reported 787 runs. The reported pretrained-model evaluations are GPT-2 (124M) and GPT-2-medium (355M).
 
-\`\`\`bash
-python scripts/frontier/frontier_gpu_1b7b.py --model gpt2-xl --nseq 500 --seqlen 256
-\`\`\`
+## 9. Publication and supplementary material
 
-Additional model identifiers and options are documented in the script. Access to gated models may require Hugging Face authentication and acceptance of the model provider's terms.
+The manuscript and supplementary material will be published separately through the journal. Neither document is included in this repository. The final article DOI and the publisher-hosted supplementary-material URL can be added here once the journal publication details are confirmed.
 
-**Scope note:** the larger-model script provides an evaluation pathway. Its presence does not mean that a full set of 1B–7B model experiments was completed as part of the reported study. The manuscript's reported pretrained-model evaluations should be distinguished from optional runs a user may execute with this script.
+## 10. Data and code availability
 
-## Interpreting the operating-point analysis
+The source code, configurations, tests, result records, analysis scripts, and figures are available in this repository. Dataset files are obtained from their original providers and are not redistributed here. The manuscript and supplementary material are separate publication resources.
 
-The study considers the standard deviation of the raw attention logits before scaling. For a simplified comparison of two divisor coefficients \(b_1\) and \(b_2\), the theoretical analysis relates the divergence between the resulting attention distributions to the raw-logit variance and the number of attention positions.
+## 11. Citation
 
-This relationship is used as an operating-point analysis, not as a universal decision rule with fixed standard-deviation cut-offs. The realised effect should be interpreted using the relevant model, task, sequence length, and empirical diagnostics.
+Please cite the associated article using its final published bibliographic details once available. The final DOI will be added here after publication.
 
-## Figures
+## 12. License
 
-The [figures directory](figures/) contains generated figures associated with the experiments. Selected figures include:
-
-- [Experimental architecture](figures/fig_architecture.png)
-- [Experimental design](figures/fig_design.png)
-- [Main performance comparison](figures/fig_main_performance.png)
-- [Paired differences](figures/fig_paired_differences.png)
-- [Corrected language-modelling results](figures/fig_lm_corrected.png)
-- [Operating-point regime analysis](figures/fig_regime_law.png)
-- [Frontier evaluation](figures/fig_frontier.png)
-
-## Publication and supplementary material
-
-The manuscript and its supplementary material are intended for separate publication through the journal. They are deliberately **not included in this GitHub repository**.
-
-Once the journal publication is available, this section can be updated with:
-- the final article DOI and journal landing page;
-- the journal-hosted supplementary-material link.
-
-No DOI or journal supplementary URL is specified here until the final publication details are confirmed.
-
-## Citation
-
-If you use this code, please cite the associated article after its publication. The final bibliographic reference and DOI will be added to this section when available.
-
-## Data and code availability
-
-The code, experiment configurations, result records, verification outputs, and generated figures are available in this repository. Dataset files are obtained from their respective sources and are not redistributed here. The manuscript and supplementary material will be made available separately through the journal's publication platform.
-
-## License
-
-This repository is released under the [MIT License](LICENSE).
+This project is released under the [MIT License](LICENSE).
