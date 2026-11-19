@@ -1,4 +1,4 @@
-# A Seed-Matched Empirical Comparison of Scaling Functions in Transformer Self-Attention
+# Operating-Point Dependence of Scaling Functions in Transformer Self-Attention: A Seed-Matched Empirical Study
 
 **Authors:** Raza Hasan, Vishal Dattana, and Salman Mahmood
 
